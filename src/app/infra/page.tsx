@@ -2,7 +2,8 @@ import { InfrastructureView } from '@/components/InfrastructureView'
 import { ClientLayout } from '@/components/layout/client-layout'
 import { HelpCircle } from 'lucide-react'
 
-export default function InfraPage({ searchParams }: { searchParams: { component?: string } }) {
+export default async function InfraPage({ searchParams }: { searchParams: Promise<{ component?: string }> }) {
+  const params = await searchParams
   return (
     <ClientLayout>
       <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -44,7 +45,7 @@ export default function InfraPage({ searchParams }: { searchParams: { component?
         <div className="flex-1 overflow-hidden">
           <InfrastructureView 
             className="w-full h-full"
-            highlightComponentId={searchParams.component}
+            highlightComponentId={params.component}
           />
         </div>
       </div>
