@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const user = await getUser()
@@ -19,7 +19,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const memberId = params.memberId
+    const { memberId } = await params
 
     // Prevent users from removing themselves
     if (memberId === user.id) {
