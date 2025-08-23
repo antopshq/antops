@@ -1,0 +1,123 @@
+/* ReactFlow Z-Index Fixes for Zone Subflows */
+
+/* Ensure handles are always on top */
+.react-flow__handle {
+  z-index: 1000 !important;
+}
+
+/* Ensure selected nodes are on top */
+.react-flow__node.selected {
+  z-index: 999 !important;
+}
+
+/* Zone nodes should have lower z-index */
+.react-flow__node[data-nodetype="zone"] {
+  z-index: 1 !important;
+}
+
+/* Infrastructure nodes should have higher z-index */
+.react-flow__node[data-nodetype="infrastructure"] {
+  z-index: 10 !important;
+}
+
+/* Infrastructure nodes inside zones should have highest z-index */
+.react-flow__node[data-nodetype="infrastructure"][data-parent] {
+  z-index: 50 !important;
+}
+
+/* Force edges to appear above everything except nodes and handles */
+.react-flow__edges {
+  z-index: 100 !important;
+}
+
+.react-flow__edge {
+  z-index: 100 !important;
+}
+
+.react-flow__edge path {
+  z-index: 100 !important;
+}
+
+.react-flow__edge-path {
+  z-index: 100 !important;
+}
+
+.react-flow__edge-text {
+  z-index: 101 !important;
+}
+
+/* Ensure edge container is above zones */
+.react-flow .react-flow__edges {
+  z-index: 100 !important;
+}
+
+/* Alternative approach - force SVG elements */
+.react-flow svg .react-flow__edge {
+  z-index: 100 !important;
+}
+
+/* Ensure the entire edge layer is positioned correctly */
+.react-flow__renderer .react-flow__edges {
+  z-index: 100 !important;
+  position: relative;
+}
+
+/* Additional specific targeting for SVG layers */
+.react-flow .react-flow__renderer {
+  position: relative;
+}
+
+.react-flow .react-flow__renderer > * {
+  position: relative;
+}
+
+/* Force edges SVG layer above nodes */
+.react-flow .react-flow__renderer .react-flow__edges {
+  z-index: 100 !important;
+  position: relative;
+}
+
+.react-flow .react-flow__renderer .react-flow__nodes {
+  z-index: 1 !important;
+  position: relative;
+}
+
+/* Ensure zone nodes specifically have lower z-index */
+.react-flow .react-flow__renderer .react-flow__nodes .react-flow__node-zone {
+  z-index: 1 !important;
+}
+
+/* Alternative approach: Force edge rendering order */
+.react-flow .react-flow__renderer {
+  display: flex;
+  flex-direction: column;
+}
+
+.react-flow .react-flow__renderer .react-flow__nodes {
+  order: 1;
+  z-index: 1;
+}
+
+.react-flow .react-flow__renderer .react-flow__edges {
+  order: 2;
+  z-index: 100;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.react-flow .react-flow__renderer .react-flow__edges svg {
+  pointer-events: auto;
+}
+
+/* Last resort: Force SVG rendering order */
+.react-flow svg g.react-flow__edges {
+  z-index: 100 !important;
+}
+
+.react-flow svg g.react-flow__nodes {
+  z-index: 1 !important;
+}
