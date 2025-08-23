@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 
 export async function PUT(
   request: Request,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const user = await getUser()
@@ -27,7 +27,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
-    const memberId = params.memberId
+    const { memberId } = await params
 
     // Get the target member's current role
     const supabase = await createSupabaseServerClient()

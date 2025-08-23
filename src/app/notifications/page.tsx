@@ -5,7 +5,7 @@ import { ClientLayout } from '@/components/layout/client-layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Bell, CheckCircle, Clock, AlertTriangle, Send, MarkEmailRead } from 'lucide-react'
+import { Bell, CheckCircle, Clock, AlertTriangle, Send, Mail } from 'lucide-react'
 import Link from 'next/link'
 
 interface Notification {
@@ -174,7 +174,7 @@ export default function NotificationsPage() {
                 size="sm"
                 onClick={markAllAsRead}
               >
-                <MarkEmailRead className="w-4 h-4 mr-2" />
+                <Mail className="w-4 h-4 mr-2" />
                 Mark All Read
               </Button>
             )}
