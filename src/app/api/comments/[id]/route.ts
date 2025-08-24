@@ -103,6 +103,8 @@ export async function PUT(
       changeId: updatedComment.change_id
     }
 
+    // TODO: Re-enable WebSocket real-time updates after deployment
+    /*
     // Determine item type and ID for real-time updates
     let itemType: string
     let itemId: string
@@ -135,6 +137,7 @@ export async function PUT(
       // Also broadcast to specific item room
       (global as any).io.to(roomName).emit('realtime_update', updatePayload)
     }
+    */
 
     return NextResponse.json(transformedComment)
   } catch (error) {
@@ -195,6 +198,8 @@ export async function DELETE(
       )
     }
 
+    // TODO: Re-enable WebSocket real-time updates after deployment
+    /*
     // Determine item type and ID for real-time updates
     let itemType: string
     let itemId: string
@@ -227,6 +232,7 @@ export async function DELETE(
       // Also broadcast to specific item room
       (global as any).io.to(roomName).emit('realtime_update', deletePayload)
     }
+    */
 
     return NextResponse.json({ success: true })
   } catch (error) {
