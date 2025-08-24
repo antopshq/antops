@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send real-time update via WebSocket
-    if (global.io) {
+    if ((global as any).io) {
       const update = {
         type: 'comment_added' as const,
         data: transformedComment,
@@ -316,19 +316,19 @@ export async function POST(request: NextRequest) {
       }
 
       // Broadcast to organization
-      global.io.to(`org:${user.organizationId}`).emit('realtime_update', update)
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', update)
       
       // Also broadcast to specific item room
-      global.io.to(`${itemType}:${itemId}`).emit('realtime_update', update)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', update)
 
       // Send notifications to mentioned users
       if (mentions.length > 0) {
         for (const mentionedUserId of mentions) {
           // Find user's socket and send notification
-          if (global.userSessions) {
-            for (const [socketId, userData] of global.userSessions.entries()) {
+          if ((global as any).userSessions) {
+            for (const [socketId, userData] of (global as any).userSessions.entries()) {
               if (userData.id === mentionedUserId) {
-                global.io.to(socketId).emit('mention_notification', {
+                (global as any).io.to(socketId).emit('mention_notification', {
                   type: 'mention',
                   comment: transformedComment,
                   mentionedBy: transformedComment.author,
