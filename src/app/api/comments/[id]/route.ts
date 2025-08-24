@@ -123,11 +123,11 @@ export async function PUT(
     // Send real-time update via WebSocket
     if ((global as any).io) {
       const updatePayload = {
-        type: 'comment_updated',
-        data: transformedComment,
-        itemType,
-        itemId,
-        organizationId: user.organizationId
+        type: 'comment_updated' as const,
+        data: transformedComment as Comment,
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
       }
 
       // Broadcast to organization
@@ -216,11 +216,11 @@ export async function DELETE(
     // Send real-time update via WebSocket
     if ((global as any).io) {
       const deletePayload = {
-        type: 'comment_deleted',
-        data: { commentId: id },
-        itemType,
-        itemId,
-        organizationId: user.organizationId
+        type: 'comment_deleted' as const,
+        data: { commentId: id as string },
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
       }
 
       // Broadcast to organization
