@@ -3,6 +3,22 @@ import { getUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import { Comment } from '@/lib/types'
 
+type WsUpdatePayload = {
+  type: 'comment_updated';
+  data: Comment;
+  itemType: string;
+  itemId: string;
+  organizationId: string;
+}
+
+type WsDeletePayload = {
+  type: 'comment_deleted';
+  data: { commentId: string };
+  itemType: string;
+  itemId: string;
+  organizationId: string;
+}
+
 // Update a comment
 export async function PUT(
   request: NextRequest,
@@ -122,17 +138,11 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsUpdatePayload: {
-        type: 'comment_updated';
-        data: Comment;
-        itemType: string;
-        itemId: string;
-        organizationId: string;
-      } = {
+      const wsUpdatePayload: WsUpdatePayload = {
         type: 'comment_updated',
         data: transformedComment,
-        itemType: itemType,
-        itemId: itemId,
+        itemType,
+        itemId,
         organizationId: user.organizationId
       }
 
@@ -221,17 +231,11 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsDeletePayload: {
-        type: 'comment_deleted';
-        data: { commentId: string };
-        itemType: string;
-        itemId: string;
-        organizationId: string;
-      } = {
+      const wsDeletePayload: WsDeletePayload = {
         type: 'comment_deleted',
         data: { commentId: id },
-        itemType: itemType,
-        itemId: itemId,
+        itemType,
+        itemId,
         organizationId: user.organizationId
       }
 
