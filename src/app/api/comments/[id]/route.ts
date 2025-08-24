@@ -122,7 +122,7 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const updateData: any = {
+      const wsUpdatePayload = {
         type: 'comment_updated' as const,
         data: transformedComment,
         itemType,
@@ -131,10 +131,10 @@ export async function PUT(
       }
 
       // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', updateData)
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', wsUpdatePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', updateData)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', wsUpdatePayload)
     }
 
     return NextResponse.json(transformedComment)
@@ -215,7 +215,7 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const updateData: any = {
+      const wsDeletePayload = {
         type: 'comment_deleted' as const,
         data: { commentId: id },
         itemType,
@@ -224,10 +224,10 @@ export async function DELETE(
       }
 
       // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', updateData)
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', wsDeletePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', updateData)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', wsDeletePayload)
     }
 
     return NextResponse.json({ success: true })
