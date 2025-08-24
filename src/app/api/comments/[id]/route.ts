@@ -122,7 +122,7 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsUpdatePayload = {
+      const wsUpdatePayload: any = {
         type: 'comment_updated' as const,
         data: transformedComment,
         itemType,
@@ -215,7 +215,7 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsDeletePayload = {
+      const wsDeletePayload: any = {
         type: 'comment_deleted' as const,
         data: { commentId: id },
         itemType,
