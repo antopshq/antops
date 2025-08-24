@@ -81,7 +81,7 @@ class ResendEmailProvider implements NotificationProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: `ANTOPS Incident Management <${this.fromEmail}>`,
+          from: `ANTOPS <${this.fromEmail}>`,
           to: emailRecipients,
           subject: subject,
           text: body,
@@ -104,13 +104,13 @@ class ResendEmailProvider implements NotificationProvider {
             <body>
               <div class="container">
                 <div class="header">
-                  <h2 style="margin: 0; color: #495057;">ANTOPS Incident Management</h2>
+                  <h2 style="margin: 0; color: #495057;">ANTOPS</h2>
                 </div>
                 <div class="content">
                   ${htmlBody}
                 </div>
                 <div class="footer">
-                  <p>This email was sent from ANTOPS Incident Management System.</p>
+                  <p>This email was sent from ANTOPS.</p>
                   <p>If you believe you received this email in error, please contact your system administrator.</p>
                 </div>
               </div>

@@ -122,7 +122,7 @@ ANTOPS
     body: `
 Hi there,
 
-{{inviterName}} has invited you to join their team on ANTOPS Incident Management.
+{{inviterName}} has invited you to join their team on ANTOPS.
 
 🏢 Organization: {{organizationName}}
 👤 Role: {{role}}
