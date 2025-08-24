@@ -3,7 +3,7 @@ import { getUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import { Comment } from '@/lib/types'
 
-type WsUpdatePayload = {
+interface WsUpdatePayload {
   type: 'comment_updated';
   data: Comment;
   itemType: string;
@@ -11,7 +11,7 @@ type WsUpdatePayload = {
   organizationId: string;
 }
 
-type WsDeletePayload = {
+interface WsDeletePayload {
   type: 'comment_deleted';
   data: { commentId: string };
   itemType: string;
