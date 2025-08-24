@@ -172,7 +172,7 @@ function generateRecommendations(componentId: string, riskCategory: string, dept
     'Review access controls and permissions'
   ]
 
-  const riskSpecificRecs = {
+  const riskSpecificRecs: Record<string, string[]> = {
     critical: [
       'URGENT: Scale resources immediately to handle increased load',
       'Implement failover mechanisms',
