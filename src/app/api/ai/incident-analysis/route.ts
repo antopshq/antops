@@ -317,7 +317,7 @@ async function fetchTeamMembers(organizationId: string): Promise<any[]> {
 
     if (error || !data) return []
 
-    return data.map(member => ({
+    return data.map((member: any) => ({
       id: member.user_id,
       name: member.profiles?.full_name || 'Unknown',
       email: member.profiles?.email || '',
