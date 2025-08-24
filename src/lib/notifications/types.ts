@@ -1,4 +1,4 @@
-export type NotificationType = 'change_starting' | 'change_overdue' | 'change_completed' | 'incident_created' | 'problem_identified'
+export type NotificationType = 'change_starting' | 'change_overdue' | 'change_completed' | 'incident_created' | 'problem_identified' | 'team_invitation'
 
 export type NotificationChannel = 'email' | 'slack' | 'teams' | 'sms' | 'webhook'
 
@@ -22,7 +22,7 @@ export interface NotificationEvent {
   organizationId: string
   type: NotificationType
   entityId: string // Change ID, Incident ID, etc.
-  entityType: 'change' | 'incident' | 'problem'
+  entityType: 'change' | 'incident' | 'problem' | 'invitation'
   recipients: NotificationRecipient[]
   data: Record<string, unknown> // Data for template variables
   scheduledFor?: string // When to send (for future scheduling)
@@ -114,5 +114,30 @@ Best regards,
 ANTOPS
     `,
     variables: ['changeNumber', 'changeTitle', 'assignedToName', 'scheduledFor', 'priority', 'overdueBy', 'changeUrl']
+  },
+  {
+    type: 'team_invitation',
+    channel: 'email',
+    subject: 'You\'re invited to join {{organizationName}} on ANTOPS',
+    body: `
+Hi there,
+
+{{inviterName}} has invited you to join their team on ANTOPS Incident Management.
+
+🏢 Organization: {{organizationName}}
+👤 Role: {{role}}
+👋 Invited by: {{inviterName}}
+
+Click the link below to accept this invitation:
+{{inviteUrl}}
+
+This invitation expires on {{expiresAt}}.
+
+If you don't recognize this invitation or believe it was sent to you by mistake, you can safely ignore this email.
+
+Best regards,
+The ANTOPS Team
+    `,
+    variables: ['inviterName', 'organizationName', 'role', 'inviteUrl', 'expiresAt']
   }
 ]
