@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { createProblem, getProblems } from '@/lib/problem-store-multitenant'
-import { Priority } from '@/lib/types'
+import { Priority, Criticality, Urgency } from '@/lib/types'
 import { validateInfrastructureComponents } from '@/lib/infrastructure-validation'
 
 export async function GET() {
@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
       title, 
       description, 
       priority, 
+      criticality,
+      urgency,
       assignedTo, 
       rootCause,
       workaround,
@@ -71,6 +73,8 @@ export async function POST(request: NextRequest) {
       title,
       description,
       priority: priority as Priority,
+      criticality: (criticality || 'medium') as Criticality,
+      urgency: (urgency || 'medium') as Urgency,
       status: 'identified',
       createdBy: user.id,
       assignedTo: assignedTo || undefined,

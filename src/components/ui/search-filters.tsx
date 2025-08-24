@@ -202,7 +202,7 @@ export function PriorityFilter({ value, onChange, label = 'Priority' }: Priority
       <MultiSelect
         options={options}
         value={value}
-        onChange={onChange}
+        onChange={onChange as (value: string[]) => void}
         placeholder="All priorities"
       />
     </div>
@@ -293,7 +293,7 @@ export function StatusFilter({ value, onChange, label = 'Status' }: StatusFilter
       <MultiSelect
         options={options}
         value={value}
-        onChange={onChange}
+        onChange={onChange as (value: string[]) => void}
         placeholder="All statuses"
       />
     </div>

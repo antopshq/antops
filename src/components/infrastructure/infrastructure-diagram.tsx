@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 
 // Define node types
 const nodeTypes: NodeTypes = {
-  infrastructure: InfrastructureNode,
+  infrastructure: InfrastructureNode as any,
 }
 
 interface InfrastructureDiagramProps {

@@ -145,7 +145,7 @@ class OpenAIClient {
         throw new Error('OpenAI API Connection Error: Unable to connect to OpenAI services')
       } else if (error instanceof OpenAI.RateLimitError) {
         throw new Error('OpenAI Rate Limit Error: Too many requests, please try again later')
-      } else if (error instanceof OpenAI.APITimeoutError) {
+      } else if (error instanceof OpenAI.APIConnectionTimeoutError) {
         throw new Error('OpenAI API Timeout Error: Request timed out after 30 seconds')
       } else {
         throw new Error(`OpenAI Request Failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

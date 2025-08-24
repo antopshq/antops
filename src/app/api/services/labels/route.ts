@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       .from('infrastructure_zones')
       .select(`
         id,
-        name as label,
+        name,
         infrastructure_environments!inner(name)
       `)
       .eq('organization_id', organizationId)
@@ -73,16 +73,28 @@ export async function GET(request: NextRequest) {
 
     // Combine and format the results
     const services = [
-      ...(nodes || []).map(node => ({
-        id: node.id,
-        label: node.label,
-        environment: node.infrastructure_environments.name
-      })),
-      ...(zones || []).map(zone => ({
-        id: zone.id,
-        label: zone.label,
-        environment: zone.infrastructure_environments.name
-      }))
+      ...(nodes || []).map(node => {
+        const environment = Array.isArray(node.infrastructure_environments) 
+          ? node.infrastructure_environments[0] 
+          : node.infrastructure_environments
+        
+        return {
+          id: node.id,
+          label: node.label,
+          environment: environment?.name || 'Unknown Environment'
+        }
+      }),
+      ...(zones || []).map(zone => {
+        const environment = Array.isArray(zone.infrastructure_environments) 
+          ? zone.infrastructure_environments[0] 
+          : zone.infrastructure_environments
+        
+        return {
+          id: zone.id,
+          label: zone.name,
+          environment: environment?.name || 'Unknown Environment'
+        }
+      })
     ]
 
     return NextResponse.json({ services })

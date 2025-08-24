@@ -91,11 +91,11 @@ const statusColors = {
   }
 }
 
-export const InfrastructureNode = memo(({ data, selected }: NodeProps<NodeData>) => {
-  const IconComponent = nodeTypeIcons[data.nodeType] || Server
-  const statusConfig = statusColors[data.status]
+export const InfrastructureNode = memo(({ data, selected }: any) => {
+  const IconComponent = nodeTypeIcons[data.nodeType as keyof typeof nodeTypeIcons] || Server
+  const statusConfig = statusColors[data.status as keyof typeof statusColors]
   const StatusIcon = statusConfig.icon
-  const colorClass = nodeTypeColors[data.nodeType] || nodeTypeColors.server
+  const colorClass = nodeTypeColors[data.nodeType as keyof typeof nodeTypeColors] || nodeTypeColors.server
 
   const totalIssues = (data.incidents?.length || 0) + (data.problems?.length || 0) + (data.changes?.length || 0)
 

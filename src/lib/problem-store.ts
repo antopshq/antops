@@ -9,8 +9,11 @@ export async function getProblems(): Promise<Problem[]> {
     .from('problems')
     .select(`
       id,
+      organization_id,
       title,
       description,
+      criticality,
+      urgency,
       priority,
       status,
       assigned_to,
@@ -34,12 +37,18 @@ export async function getProblems(): Promise<Problem[]> {
 
   return problems?.map(problem => ({
     id: problem.id,
+    organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -59,8 +68,11 @@ export async function getProblem(id: string): Promise<Problem | null> {
     .from('problems')
     .select(`
       id,
+      organization_id,
       title,
       description,
+      criticality,
+      urgency,
       priority,
       status,
       assigned_to,
@@ -84,12 +96,18 @@ export async function getProblem(id: string): Promise<Problem | null> {
 
   return {
     id: problem.id,
+    organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -131,12 +149,15 @@ export async function createProblem(data: Omit<Problem, 'id' | 'createdAt' | 'up
 
   return {
     id: problem.id,
+    organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: null,
+    assignedToName: undefined,
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -171,8 +192,11 @@ export async function updateProblem(id: string, data: Partial<Problem>): Promise
     .eq('id', id)
     .select(`
       id,
+      organization_id,
       title,
       description,
+      criticality,
+      urgency,
       priority,
       status,
       assigned_to,
@@ -196,12 +220,18 @@ export async function updateProblem(id: string, data: Partial<Problem>): Promise
 
   return {
     id: problem.id,
+    organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,

@@ -66,13 +66,13 @@ export function WYSIWYGEditor({
       // Convert quotes
       .replace(/<blockquote(?:[^>]*)>(.*?)<\/blockquote>/gi, '> $1')
       // Convert unordered lists
-      .replace(/<ul(?:[^>]*)>(.*?)<\/ul>/gis, (match, content) => {
-        return content.replace(/<li(?:[^>]*)>(.*?)<\/li>/gis, '- $1\n').trim() + '\n'
+      .replace(/<ul(?:[^>]*)>(.*?)<\/ul>/gi, (match, content) => {
+        return content.replace(/<li(?:[^>]*)>(.*?)<\/li>/gi, '- $1\n').trim() + '\n'
       })
       // Convert ordered lists
-      .replace(/<ol(?:[^>]*)>(.*?)<\/ol>/gis, (match, content) => {
+      .replace(/<ol(?:[^>]*)>(.*?)<\/ol>/gi, (match, content) => {
         let counter = 1
-        return content.replace(/<li(?:[^>]*)>(.*?)<\/li>/gis, () => `${counter++}. $1\n`).trim() + '\n'
+        return content.replace(/<li(?:[^>]*)>(.*?)<\/li>/gi, () => `${counter++}. $1\n`).trim() + '\n'
       })
       // Convert links
       .replace(/<a(?:[^>]*)href="([^"]*)"(?:[^>]*)>(.*?)<\/a>/gi, '[$2]($1)')

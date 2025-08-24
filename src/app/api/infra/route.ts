@@ -478,12 +478,14 @@ export async function POST(request: NextRequest) {
     }
 
     // After successful save, clean up orphaned infrastructure references
-    try {
-      await cleanupOrphanedInfrastructureReferences(organizationId, targetEnvironmentId)
-      // Cleanup completed silently - only log if there are actual errors
-    } catch (cleanupError) {
-      console.error('Infrastructure cleanup failed (but save was successful):', cleanupError)
-      // Don't fail the entire request if cleanup fails, just log the error
+    if (targetEnvironmentId) {
+      try {
+        await cleanupOrphanedInfrastructureReferences(organizationId, targetEnvironmentId)
+        // Cleanup completed silently - only log if there are actual errors
+      } catch (cleanupError) {
+        console.error('Infrastructure cleanup failed (but save was successful):', cleanupError)
+        // Don't fail the entire request if cleanup fails, just log the error
+      }
     }
 
     return NextResponse.json({ 

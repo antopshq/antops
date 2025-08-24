@@ -204,7 +204,7 @@ export class AICache {
         return 0
       }
 
-      return Array.isArray(data) ? data.length : 0
+      return Array.isArray(data) ? (data as any[]).length : 0
     } catch (error) {
       console.error('AI Cache invalidate error:', error)
       return 0

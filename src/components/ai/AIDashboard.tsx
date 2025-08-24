@@ -74,7 +74,7 @@ export function AIDashboard({
       .flatMap(insight => 
         insight.predictedFailures.map(failure => ({
           componentId: insight.componentId,
-          componentTitle: insight.componentTitle || insight.componentId,
+          componentTitle: insight.componentId,
           ...failure
         }))
       )
@@ -91,7 +91,7 @@ export function AIDashboard({
       .flatMap(insight => 
         insight.recommendations.map(recommendation => ({
           componentId: insight.componentId,
-          componentTitle: insight.componentTitle || insight.componentId,
+          componentTitle: insight.componentId,
           recommendation,
           riskCategory: insight.riskCategory,
           riskScore: insight.riskScore
@@ -196,7 +196,7 @@ export function AIDashboard({
                               <div className="w-4 h-4 rounded bg-gray-300 flex items-center justify-center">
                                 <div className="w-2 h-2 bg-gray-600 rounded"></div>
                               </div>
-                              <span className="text-sm">{insight.componentTitle || insight.componentId}</span>
+                              <span className="text-sm">{insight.componentId}</span>
                             </div>
                             <Badge variant="outline" className={`text-xs ${getRiskColor(insight.riskCategory)}`}>
                               {insight.riskScore}/100

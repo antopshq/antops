@@ -164,7 +164,7 @@ export default function IncidentDetailPage() {
     criticality: 'medium' as Criticality,
     urgency: 'medium' as Urgency,
     autoPriority: true,
-    status: 'open' as const,
+    status: 'open' as 'open' | 'investigating' | 'resolved',
     assignedTo: '',
     problemId: '',
     affectedServices: [] as string[],
@@ -1181,8 +1181,8 @@ export default function IncidentDetailPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-1">
-                  {incident.links?.length > 0 ? (
-                    incident.links.map((link, index) => (
+                  {(incident.links?.length || 0) > 0 ? (
+                    (incident.links || []).map((link, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-orange-50 rounded border border-orange-200">
                         <div className="flex-1 min-w-0">
                           <a 

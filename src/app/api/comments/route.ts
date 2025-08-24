@@ -286,15 +286,16 @@ export async function POST(request: NextRequest) {
     // Error handling was moved above with file upload logic
 
     // Transform the response
+    const author = Array.isArray(newComment.author) ? newComment.author[0] : newComment.author
     const transformedComment: Comment = {
       id: newComment.id,
       organizationId: newComment.organization_id,
       content: newComment.content,
       authorId: newComment.author_id,
       author: {
-        id: newComment.author.id,
-        name: newComment.author.full_name,
-        email: newComment.author.email
+        id: author?.id || newComment.author_id,
+        name: author?.full_name || 'Unknown',
+        email: author?.email || ''
       },
       mentions: newComment.mentions || [],
       attachments: newComment.attachments || [],
@@ -306,20 +307,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Send real-time update via WebSocket
-    if ((global as any).io) {
-      const update = {
+    if ((global as any).io && itemType && itemId) {
+      // Broadcast to organization
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', {
         type: 'comment_added' as const,
         data: transformedComment,
-        itemType,
-        itemId,
-        organizationId: user.organizationId
-      }
-
-      // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', update)
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
+      })
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', update)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', {
+        type: 'comment_added' as const,
+        data: transformedComment,
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
+      })
 
       // Send notifications to mentioned users
       if (mentions.length > 0) {

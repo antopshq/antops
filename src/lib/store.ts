@@ -14,6 +14,8 @@ export async function getIncidents(): Promise<Incident[]> {
       organization_id,
       title,
       description,
+      criticality,
+      urgency,
       priority,
       status,
       assigned_to,
@@ -38,10 +40,15 @@ export async function getIncidents(): Promise<Incident[]> {
     organizationId: incident.organization_id,
     title: incident.title,
     description: incident.description,
+    criticality: incident.criticality,
+    urgency: incident.urgency,
     priority: incident.priority,
     status: incident.status,
     assignedTo: incident.assigned_to,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: incident.created_by,
     problemId: incident.problem_id,
     tags: incident.tags || [],
@@ -62,6 +69,8 @@ export async function getIncident(id: string): Promise<Incident | null> {
       organization_id,
       title,
       description,
+      criticality,
+      urgency,
       priority,
       status,
       assigned_to,
@@ -86,10 +95,15 @@ export async function getIncident(id: string): Promise<Incident | null> {
     organizationId: incident.organization_id,
     title: incident.title,
     description: incident.description,
+    criticality: incident.criticality,
+    urgency: incident.urgency,
     priority: incident.priority,
     status: incident.status,
     assignedTo: incident.assigned_to,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: incident.created_by,
     problemId: incident.problem_id,
     tags: incident.tags || [],
@@ -135,8 +149,11 @@ export async function createIncident(data: Omit<Incident, 'id' | 'createdAt' | '
 
   return {
     id: incident.id,
+    organizationId: incident.organization_id,
     title: incident.title,
     description: incident.description,
+    criticality: incident.criticality,
+    urgency: incident.urgency,
     priority: incident.priority,
     status: incident.status,
     assignedTo: incident.assigned_to,
@@ -178,8 +195,11 @@ export async function updateIncident(id: string, data: Partial<Incident>): Promi
 
   return {
     id: incident.id,
+    organizationId: incident.organization_id,
     title: incident.title,
     description: incident.description,
+    criticality: incident.criticality,
+    urgency: incident.urgency,
     priority: incident.priority,
     status: incident.status,
     assignedTo: incident.assigned_to,
@@ -201,6 +221,7 @@ export async function getChanges(): Promise<Change[]> {
     .from('changes')
     .select(`
       id,
+      organization_id,
       title,
       description,
       status,
@@ -226,13 +247,17 @@ export async function getChanges(): Promise<Change[]> {
 
   return changes?.map(change => ({
     id: change.id,
+    organizationId: change.organization_id,
     title: change.title,
     description: change.description,
     status: change.status,
     priority: change.priority,
     requestedBy: change.requested_by,
     assignedTo: change.assigned_to,
-    assignedToName: change.assigned_profile?.full_name || change.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(change.assigned_profile) ? change.assigned_profile[0] : change.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     scheduledFor: change.scheduled_for,
     rollbackPlan: change.rollback_plan,
     testPlan: change.test_plan,
@@ -251,6 +276,7 @@ export async function getChange(id: string): Promise<Change | null> {
     .from('changes')
     .select(`
       id,
+      organization_id,
       title,
       description,
       status,
@@ -276,13 +302,17 @@ export async function getChange(id: string): Promise<Change | null> {
 
   return {
     id: change.id,
+    organizationId: change.organization_id,
     title: change.title,
     description: change.description,
     status: change.status,
     priority: change.priority,
     requestedBy: change.requested_by,
     assignedTo: change.assigned_to,
-    assignedToName: change.assigned_profile?.full_name || change.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(change.assigned_profile) ? change.assigned_profile[0] : change.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     scheduledFor: change.scheduled_for,
     rollbackPlan: change.rollback_plan,
     testPlan: change.test_plan,
@@ -323,6 +353,7 @@ export async function createChange(data: Omit<Change, 'id' | 'createdAt' | 'upda
 
   return {
     id: change.id,
+    organizationId: change.organization_id,
     title: change.title,
     description: change.description,
     status: change.status,
@@ -370,6 +401,7 @@ export async function updateChange(id: string, data: Partial<Change>): Promise<C
 
   return {
     id: change.id,
+    organizationId: change.organization_id,
     title: change.title,
     description: change.description,
     status: change.status,

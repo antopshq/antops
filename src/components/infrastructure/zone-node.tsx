@@ -251,7 +251,7 @@ export const ZoneNode = memo(({ id, data, selected }: NodeProps<ZoneNodeData>) =
               {data.name}
             </div>
             <div className="text-xs opacity-75 capitalize flex items-center gap-2">
-              <span>{data.zoneType?.replace('_', ' ') || data.type?.replace('_', ' ') || 'Zone'}</span>
+              <span>{data.zoneType?.replace('_', ' ') || (data as any).type?.replace('_', ' ') || 'Zone'}</span>
               {data.parentZoneName && (
                 <span className="text-indigo-600 font-medium bg-indigo-50 px-1.5 py-0.5 rounded flex items-center gap-1">
                   <Layers className="w-3 h-3" />

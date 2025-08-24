@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { createIncident, getIncidents } from '@/lib/store-multitenant'
-import { Priority } from '@/lib/types'
+import { Priority, Criticality, Urgency } from '@/lib/types'
 import { validateInfrastructureComponents } from '@/lib/infrastructure-validation'
 import { validateFile, validateFileCount, saveUploadedFile } from '@/lib/file-upload-utils'
 
@@ -131,8 +131,8 @@ export async function POST(request: NextRequest) {
       description,
       priority: priority as Priority,
       status: 'open',
-      criticality: criticality || 'medium',
-      urgency: urgency || 'medium',
+      criticality: (criticality || 'medium') as Criticality,
+      urgency: (urgency || 'medium') as Urgency,
       assignedTo: assignedTo || undefined,
       problemId: problemId || undefined,
       createdBy: user.id,

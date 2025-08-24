@@ -224,26 +224,26 @@ export default function DashboardPage() {
         </div>
 
         {/* Priority Alerts Section */}
-        {(stats?.criticalIncidents > 0 || stats?.slaBreaches > 0) && (
+        {((stats?.criticalIncidents || 0) > 0 || (stats?.slaBreaches || 0) > 0) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
               <h2 className="text-lg font-semibold text-red-900">Attention Required</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {stats?.criticalIncidents > 0 && (
+              {(stats?.criticalIncidents || 0) > 0 && (
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600" />
                   <span className="text-red-800">
-                    <strong>{stats.criticalIncidents}</strong> critical incident{stats.criticalIncidents !== 1 ? 's' : ''} require immediate attention
+                    <strong>{stats?.criticalIncidents || 0}</strong> critical incident{(stats?.criticalIncidents || 0) !== 1 ? 's' : ''} require immediate attention
                   </span>
                 </div>
               )}
-              {stats?.slaBreaches > 0 && (
+              {(stats?.slaBreaches || 0) > 0 && (
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-red-600" />
                   <span className="text-red-800">
-                    <strong>{stats.slaBreaches}</strong> SLA breach{stats.slaBreaches !== 1 ? 'es' : ''} detected
+                    <strong>{stats?.slaBreaches || 0}</strong> SLA breach{(stats?.slaBreaches || 0) !== 1 ? 'es' : ''} detected
                   </span>
                 </div>
               )}

@@ -62,14 +62,20 @@ export async function getIncidents(): Promise<Incident[]> {
     nodes?.forEach(node => {
       serviceMap.set(node.id, {
         label: node.label,
-        environment: node.infrastructure_environments.name
+        environment: (() => {
+          const env = Array.isArray(node.infrastructure_environments) ? node.infrastructure_environments[0] : node.infrastructure_environments
+          return env?.name
+        })()
       })
     })
 
     zones?.forEach(zone => {
       serviceMap.set(zone.id, {
         label: zone.name,
-        environment: zone.infrastructure_environments.name
+        environment: (() => {
+          const env = Array.isArray(zone.infrastructure_environments) ? zone.infrastructure_environments[0] : zone.infrastructure_environments
+          return env?.name
+        })()
       })
     })
   }
@@ -85,10 +91,16 @@ export async function getIncidents(): Promise<Incident[]> {
     criticality: incident.criticality,
     urgency: incident.urgency,
     assignedTo: incident.assigned_to,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: incident.created_by,
     problemId: incident.problem_id,
-    problemTitle: incident.linked_problem?.title || null,
+    problemTitle: (() => {
+      const problem = Array.isArray(incident.linked_problem) ? incident.linked_problem[0] : incident.linked_problem
+      return problem?.title || undefined
+    })(),
     tags: incident.tags || [],
     affectedServices: incident.affected_services || [],
     links: incident.links || [],
@@ -134,7 +146,10 @@ export async function getIncident(id: string): Promise<Incident | null> {
     criticality: incident.criticality,
     urgency: incident.urgency,
     assignedTo: incident.assigned_to,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: incident.created_by,
     problemId: incident.problem_id,
     tags: incident.tags || [],
@@ -180,6 +195,8 @@ export async function createIncident(data: Omit<Incident, 'id' | 'organizationId
     organizationId: incident.organization_id,
     title: incident.title,
     description: incident.description,
+    criticality: incident.criticality,
+    urgency: incident.urgency,
     priority: incident.priority,
     status: incident.status,
     assignedTo: incident.assigned_to,
@@ -302,14 +319,20 @@ export async function getChanges(incidentId?: string): Promise<Change[]> {
     nodes?.forEach(node => {
       serviceMap.set(node.id, {
         label: node.label,
-        environment: node.infrastructure_environments.name
+        environment: (() => {
+          const env = Array.isArray(node.infrastructure_environments) ? node.infrastructure_environments[0] : node.infrastructure_environments
+          return env?.name
+        })()
       })
     })
 
     zones?.forEach(zone => {
       serviceMap.set(zone.id, {
         label: zone.name,
-        environment: zone.infrastructure_environments.name
+        environment: (() => {
+          const env = Array.isArray(zone.infrastructure_environments) ? zone.infrastructure_environments[0] : zone.infrastructure_environments
+          return env?.name
+        })()
       })
     })
   }
@@ -324,7 +347,10 @@ export async function getChanges(incidentId?: string): Promise<Change[]> {
     priority: change.priority,
     requestedBy: change.requested_by,
     assignedTo: change.assigned_to,
-    assignedToName: change.assigned_profile?.full_name || change.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(change.assigned_profile) ? change.assigned_profile[0] : change.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     scheduledFor: change.scheduled_for,
     estimatedEndTime: change.estimated_end_time,
     rollbackPlan: change.rollback_plan,
@@ -341,9 +367,15 @@ export async function getChanges(incidentId?: string): Promise<Change[]> {
       }
     }),
     problemId: change.problem_id,
-    problemTitle: change.linked_problem?.title || null,
+    problemTitle: (() => {
+      const problem = Array.isArray(change.linked_problem) ? change.linked_problem[0] : change.linked_problem
+      return problem?.title || undefined
+    })(),
     incidentId: change.incident_id,
-    incidentTitle: change.linked_incident?.title || null,
+    incidentTitle: (() => {
+      const incident = Array.isArray(change.linked_incident) ? change.linked_incident[0] : change.linked_incident
+      return incident?.title || undefined
+    })(),
     createdAt: change.created_at,
     updatedAt: change.updated_at,
     completedAt: change.completed_at
@@ -381,7 +413,10 @@ export async function getChange(id: string): Promise<Change | null> {
     priority: change.priority,
     requestedBy: change.requested_by,
     assignedTo: change.assigned_to,
-    assignedToName: change.assigned_profile?.full_name || change.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(change.assigned_profile) ? change.assigned_profile[0] : change.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     scheduledFor: change.scheduled_for,
     estimatedEndTime: change.estimated_end_time,
     rollbackPlan: change.rollback_plan,
@@ -389,9 +424,15 @@ export async function getChange(id: string): Promise<Change | null> {
     tags: change.tags || [],
     affectedServices: change.affected_services || [],
     problemId: change.problem_id,
-    problemTitle: change.linked_problem?.title || null,
+    problemTitle: (() => {
+      const problem = Array.isArray(change.linked_problem) ? change.linked_problem[0] : change.linked_problem
+      return problem?.title || undefined
+    })(),
     incidentId: change.incident_id,
-    incidentTitle: change.linked_incident?.title || null,
+    incidentTitle: (() => {
+      const incident = Array.isArray(change.linked_incident) ? change.linked_incident[0] : change.linked_incident
+      return incident?.title || undefined
+    })(),
     createdAt: change.created_at,
     updatedAt: change.updated_at,
     completedAt: change.completed_at

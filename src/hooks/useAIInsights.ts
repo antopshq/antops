@@ -142,7 +142,7 @@ export function useAIInsights(
         throw new Error(data.message || 'Failed to analyze component')
       }
     } catch (err) {
-      if (err.name === 'AbortError') {
+      if (err instanceof Error && err.name === 'AbortError') {
         return // Request was aborted, ignore
       }
       

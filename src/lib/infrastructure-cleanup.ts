@@ -38,7 +38,7 @@ export async function cleanupOrphanedInfrastructureReferences(organizationId: st
     
     for (const incident of incidents || []) {
       const affectedServices = incident.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => currentComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => currentComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         incidentUpdates.push({
@@ -77,7 +77,7 @@ export async function cleanupOrphanedInfrastructureReferences(organizationId: st
     
     for (const problem of problems || []) {
       const affectedServices = problem.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => currentComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => currentComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         problemUpdates.push({
@@ -116,7 +116,7 @@ export async function cleanupOrphanedInfrastructureReferences(organizationId: st
     
     for (const change of changes || []) {
       const affectedServices = change.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => currentComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => currentComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         changeUpdates.push({
@@ -197,7 +197,7 @@ export async function cleanupAllOrphanedInfrastructureReferences(organizationId:
     let totalIncidentUpdates = 0
     for (const incident of incidents || []) {
       const affectedServices = incident.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => validComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => validComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         const { error: updateError } = await supabase
@@ -230,7 +230,7 @@ export async function cleanupAllOrphanedInfrastructureReferences(organizationId:
     let totalProblemUpdates = 0
     for (const problem of problems || []) {
       const affectedServices = problem.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => validComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => validComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         const { error: updateError } = await supabase
@@ -263,7 +263,7 @@ export async function cleanupAllOrphanedInfrastructureReferences(organizationId:
     let totalChangeUpdates = 0
     for (const change of changes || []) {
       const affectedServices = change.affected_services || []
-      const cleanedServices = affectedServices.filter(serviceId => validComponentIds.has(serviceId))
+      const cleanedServices = affectedServices.filter((serviceId: string) => validComponentIds.has(serviceId))
       
       if (cleanedServices.length !== affectedServices.length) {
         const { error: updateError } = await supabase

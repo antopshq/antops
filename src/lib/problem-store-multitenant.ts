@@ -16,7 +16,7 @@ export async function getProblems(): Promise<Problem[]> {
   const { data: problems, error } = await supabase
     .from('problems')
     .select(`
-      id, organization_id, problem_number, title, description, priority, status,
+      id, organization_id, problem_number, title, description, criticality, urgency, priority, status,
       assigned_to, created_by, root_cause, workaround, solution,
       tags, affected_services, created_at, updated_at, resolved_at,
       assigned_profile:profiles!assigned_to(full_name, email)
@@ -34,10 +34,15 @@ export async function getProblems(): Promise<Problem[]> {
     problem_number: problem.problem_number,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -56,7 +61,7 @@ export async function getProblem(id: string): Promise<Problem | null> {
   const { data: problem, error } = await supabase
     .from('problems')
     .select(`
-      id, organization_id, problem_number, title, description, priority, status,
+      id, organization_id, problem_number, title, description, criticality, urgency, priority, status,
       assigned_to, created_by, root_cause, workaround, solution,
       tags, affected_services, created_at, updated_at, resolved_at,
       assigned_profile:profiles!assigned_to(full_name, email)
@@ -72,10 +77,15 @@ export async function getProblem(id: string): Promise<Problem | null> {
     problem_number: problem.problem_number,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -122,10 +132,12 @@ export async function createProblem(data: Omit<Problem, 'id' | 'organizationId' 
     organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: null,
+    assignedToName: undefined,
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -159,7 +171,7 @@ export async function updateProblem(id: string, data: Partial<Problem>): Promise
     .update(updateData)
     .eq('id', id)
     .select(`
-      id, organization_id, title, description, priority, status,
+      id, organization_id, title, description, criticality, urgency, priority, status,
       assigned_to, created_by, root_cause, workaround, solution,
       tags, affected_services, created_at, updated_at, resolved_at,
       assigned_profile:profiles!assigned_to(full_name, email)
@@ -176,10 +188,15 @@ export async function updateProblem(id: string, data: Partial<Problem>): Promise
     organizationId: problem.organization_id,
     title: problem.title,
     description: problem.description,
+    criticality: problem.criticality,
+    urgency: problem.urgency,
     priority: problem.priority,
     status: problem.status,
     assignedTo: problem.assigned_to,
-    assignedToName: problem.assigned_profile?.full_name || problem.assigned_profile?.email || null,
+    assignedToName: (() => {
+      const profile = Array.isArray(problem.assigned_profile) ? problem.assigned_profile[0] : problem.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })(),
     createdBy: problem.created_by,
     rootCause: problem.root_cause,
     workaround: problem.workaround,
@@ -215,6 +232,9 @@ export async function getRelatedIncidents(problemId: string) {
     priority: incident.priority,
     status: incident.status,
     createdAt: incident.created_at,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || undefined
+    })()
   })) || []
 }

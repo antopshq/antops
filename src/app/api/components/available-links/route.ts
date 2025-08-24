@@ -30,9 +30,9 @@ export async function GET(request: NextRequest) {
 
     const searchFilter = search ? `title.ilike.%${search}%` : undefined
 
-    let incidents = []
-    let problems = []
-    let changes = []
+    let incidents: any[] = []
+    let problems: any[] = []
+    let changes: any[] = []
 
     // Get incidents
     if (!type || type === 'incidents') {

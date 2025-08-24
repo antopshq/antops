@@ -105,7 +105,7 @@ export class ITILDataFetcher {
 
       return (data || []).map(item => ({
         ...item,
-        zone: item.zones
+        zone: Array.isArray(item.zones) ? item.zones[0] : item.zones
       }))
     } catch (error) {
       console.error('Failed to fetch infrastructure components:', error)
@@ -367,7 +367,7 @@ export class ITILDataFetcher {
 
       return (data || []).map(item => ({
         ...item,
-        zone: item.zones
+        zone: Array.isArray(item.zones) ? item.zones[0] : item.zones
       }))
     } catch (error) {
       console.error('Failed to fetch components by names:', error)

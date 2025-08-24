@@ -24,18 +24,24 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch related changes' }, { status: 500 })
     }
 
-    const formattedChanges = changes?.map(change => ({
-      id: change.id,
-      title: change.title,
-      priority: change.priority,
-      status: change.status,
-      scheduledFor: change.scheduled_for,
-      assignedTo: change.assigned_to,
-      assignedToName: change.assigned_profile?.full_name || change.assigned_profile?.email || null,
-      createdAt: change.created_at,
-      updatedAt: change.updated_at,
-      completedAt: change.completed_at
-    })) || []
+    const formattedChanges = changes?.map(change => {
+      const assignedProfile = Array.isArray(change.assigned_profile) 
+        ? change.assigned_profile[0] 
+        : change.assigned_profile
+      
+      return {
+        id: change.id,
+        title: change.title,
+        priority: change.priority,
+        status: change.status,
+        scheduledFor: change.scheduled_for,
+        assignedTo: change.assigned_to,
+        assignedToName: assignedProfile?.full_name || assignedProfile?.email || null,
+        createdAt: change.created_at,
+        updatedAt: change.updated_at,
+        completedAt: change.completed_at
+      }
+    }) || []
 
     return NextResponse.json(formattedChanges)
   } catch (error) {

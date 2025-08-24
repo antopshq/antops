@@ -27,6 +27,9 @@ export async function getRelatedIncidents(problemId: string) {
     priority: incident.priority,
     status: incident.status,
     createdAt: incident.created_at,
-    assignedToName: incident.assigned_profile?.full_name || incident.assigned_profile?.email || null
+    assignedToName: (() => {
+      const profile = Array.isArray(incident.assigned_profile) ? incident.assigned_profile[0] : incident.assigned_profile
+      return profile?.full_name || profile?.email || null
+    })()
   })) || []
 }

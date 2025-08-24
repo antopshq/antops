@@ -103,11 +103,9 @@ export async function PUT(
       changeId: updatedComment.change_id
     }
 
-    // TODO: Re-enable WebSocket real-time updates after deployment
-    /*
-    // Determine item type and ID for real-time updates
-    let itemType: string
-    let itemId: string
+    // Send real-time update via WebSocket
+    let itemType: string | undefined
+    let itemId: string | undefined
 
     if (existingComment.incident_id) {
       itemType = 'incident'
@@ -120,24 +118,25 @@ export async function PUT(
       itemId = existingComment.change_id
     }
 
-    // Send real-time update via WebSocket
-    if ((global as any).io) {
-      const roomName = `${itemType}:${itemId}`
-      const updatePayload = {
+    if ((global as any).io && itemType && itemId) {
+      // Broadcast to organization
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', {
         type: 'comment_updated' as const,
-        data: transformedComment as Comment,
+        data: transformedComment,
         itemType: itemType as string,
         itemId: itemId as string,
         organizationId: user.organizationId as string
-      }
-
-      // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', updatePayload)
+      })
       
       // Also broadcast to specific item room
-      (global as any).io.to(roomName).emit('realtime_update', updatePayload)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', {
+        type: 'comment_updated' as const,
+        data: transformedComment,
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
+      })
     }
-    */
 
     return NextResponse.json(transformedComment)
   } catch (error) {
@@ -198,11 +197,9 @@ export async function DELETE(
       )
     }
 
-    // TODO: Re-enable WebSocket real-time updates after deployment
-    /*
-    // Determine item type and ID for real-time updates
-    let itemType: string
-    let itemId: string
+    // Send real-time update via WebSocket
+    let itemType: string | undefined
+    let itemId: string | undefined
 
     if (existingComment.incident_id) {
       itemType = 'incident'
@@ -215,24 +212,25 @@ export async function DELETE(
       itemId = existingComment.change_id
     }
 
-    // Send real-time update via WebSocket
-    if ((global as any).io) {
-      const roomName = `${itemType}:${itemId}`
-      const deletePayload = {
+    if ((global as any).io && itemType && itemId) {
+      // Broadcast to organization
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', {
         type: 'comment_deleted' as const,
         data: { commentId: id as string },
         itemType: itemType as string,
         itemId: itemId as string,
         organizationId: user.organizationId as string
-      }
-
-      // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', deletePayload)
+      })
       
       // Also broadcast to specific item room
-      (global as any).io.to(roomName).emit('realtime_update', deletePayload)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', {
+        type: 'comment_deleted' as const,
+        data: { commentId: id as string },
+        itemType: itemType as string,
+        itemId: itemId as string,
+        organizationId: user.organizationId as string
+      })
     }
-    */
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -3,7 +3,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
-import { hasPermission, Permission, UserRole } from '@/lib/rbac'
+import { hasPermission, Permission } from '@/lib/rbac'
+import { UserRole } from '@/lib/types'
 
 export interface AuthenticatedUser {
   id: string

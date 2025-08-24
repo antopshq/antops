@@ -3,6 +3,17 @@
 import React, { useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
+// Declare trix-editor as a valid JSX element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'trix-editor': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        input?: string;
+      }
+    }
+  }
+}
+
 interface TrixEditorProps {
   value: string
   onChange: (value: string) => void
@@ -28,6 +39,7 @@ export function TrixEditor({
   useEffect(() => {
     const loadTrix = async () => {
       // Import Trix dynamically to avoid SSR issues
+      // @ts-ignore
       const Trix = await import('trix')
       
       // Import Trix CSS
@@ -123,23 +135,23 @@ export function TrixEditor({
         type="hidden"
         defaultValue={value}
       />
-      <trix-editor
-        ref={editorRef}
-        input="trix-editor"
-        className={cn(
+      {React.createElement('trix-editor', {
+        ref: editorRef,
+        input: "trix-editor",
+        className: cn(
           'trix-content',
           'border border-gray-200 rounded-2xl',
           'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
           disabled && 'opacity-50 pointer-events-none'
-        )}
-        style={{
+        ),
+        style: {
           minHeight,
           padding: '16px',
           backgroundColor: 'white'
-        }}
-        contentEditable={!disabled}
-        suppressContentEditableWarning={true}
-      />
+        },
+        contentEditable: !disabled,
+        suppressContentEditableWarning: true
+      })}
       
       {/* Character count */}
       <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500 border-t border-gray-100 rounded-b-2xl">

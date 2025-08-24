@@ -85,7 +85,10 @@ export function Sidebar({ user: propUser }: SidebarProps) {
           onError={(e) => {
             // Fallback if image doesn't exist
             e.currentTarget.style.display = 'none'
-            e.currentTarget.nextElementSibling.style.display = 'block'
+            const nextElement = e.currentTarget.nextElementSibling as HTMLElement
+            if (nextElement) {
+              nextElement.style.display = 'block'
+            }
           }}
         />
         <Button
@@ -136,7 +139,7 @@ export function Sidebar({ user: propUser }: SidebarProps) {
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-900 truncate">
-                    {currentUser.fullName || currentUser.name}
+                    {currentUser.name}
                   </div>
                   <div className="text-xs text-gray-500 truncate">
                     {currentUser.email}

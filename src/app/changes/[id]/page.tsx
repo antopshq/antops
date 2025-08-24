@@ -170,8 +170,8 @@ export default function ChangeDetailPage() {
   const [editData, setEditData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as const,
-    status: 'draft' as const,
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
+    status: 'draft' as 'draft' | 'pending' | 'approved' | 'in_progress' | 'completed' | 'failed' | 'cancelled',
     assignedTo: 'unassigned',
     scheduledFor: '',
     estimatedEndTime: '',

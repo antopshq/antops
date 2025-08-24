@@ -399,8 +399,8 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
     formatted = formatted.replace(/^\d+\. (.+)$/gm, '<li class="list-decimal ml-4 mb-1">$1</li>')
     
     // Wrap consecutive list items in proper list containers
-    formatted = formatted.replace(/(<li class="list-disc[^>]*>.*?<\/li>)+/gs, '<ul class="list-disc ml-4 mb-2">$&</ul>')
-    formatted = formatted.replace(/(<li class="list-decimal[^>]*>.*?<\/li>)+/gs, '<ol class="list-decimal ml-4 mb-2">$&</ol>')
+    formatted = formatted.replace(/(<li class="list-disc[^>]*>.*?<\/li>)+/g, '<ul class="list-disc ml-4 mb-2">$&</ul>')
+    formatted = formatted.replace(/(<li class="list-decimal[^>]*>.*?<\/li>)+/g, '<ol class="list-decimal ml-4 mb-2">$&</ol>')
 
     return formatted
   }
@@ -454,7 +454,7 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
                   }
                 }}
                 placeholder="💬 Share your thoughts... Use @ to mention teammates!"
-                onMentionTrigger={handleMentionTrigger}
+                onMentionTrigger={(query: string) => handleMentionTrigger(query, { x: 0, y: 0 })}
                 minHeight="120px"
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}

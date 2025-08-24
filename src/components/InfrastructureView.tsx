@@ -1312,7 +1312,7 @@ Choose:
   <li>Enhance monitoring and alerting capabilities</li>
 </ul>`,
       affectedServices: [componentId],
-      priority: priority as const,
+      priority: priority as 'low' | 'medium' | 'high' | 'critical',
       rollbackPlan: generateRollbackPlan(recommendation, componentTitle, riskCategory),
       testPlan: generateTestPlan(recommendation, componentTitle, riskCategory),
       tags: `ai-recommended, ${riskCategory}-priority, infrastructure, ${componentTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}, maintenance`
@@ -1622,9 +1622,9 @@ Choose:
       // Add some padding for easier drop targeting
       return (
         absoluteX >= n.position.x - 5 &&
-        absoluteX <= n.position.x + zoneWidth + 5 &&
+        absoluteX <= n.position.x + Number(zoneWidth) + 5 &&
         absoluteY >= n.position.y - 5 &&
-        absoluteY <= n.position.y + zoneHeight + 5
+        absoluteY <= n.position.y + Number(zoneHeight) + 5
       )
     })
 
@@ -1667,9 +1667,9 @@ Choose:
       
       return (
         absoluteX >= n.position.x &&
-        absoluteX <= n.position.x + zoneWidth &&
+        absoluteX <= n.position.x + Number(zoneWidth) &&
         absoluteY >= n.position.y &&
-        absoluteY <= n.position.y + zoneHeight
+        absoluteY <= n.position.y + Number(zoneHeight)
       )
     })
 
@@ -2405,11 +2405,11 @@ Choose:
               ? { strokeWidth: 4, stroke: '#ef4444', cursor: 'pointer', zIndex: 100 } // Red and thicker when selected
               : { strokeWidth: 3, stroke: '#6366f1', cursor: 'pointer', zIndex: 100 }, // Default blue, thicker for easier clicking
             markerEnd: {
-              type: 'arrowclosed',
+              type: 'arrowclosed' as any,
               color: edge.id === selectedEdgeId ? '#ef4444' : '#6366f1',
             },
             interactionWidth: 20, // Wider clickable area
-          }))}
+          })) as any}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -2421,7 +2421,7 @@ Choose:
           fitView
           attributionPosition="bottom-right"
           className="bg-gray-50"
-          connectionMode="loose"
+          connectionMode={"loose" as any}
           snapToGrid={true}
           snapGrid={[15, 15]}
           elementsSelectable={true}
@@ -2431,7 +2431,7 @@ Choose:
             type: 'smoothstep',
             style: { strokeWidth: 2, stroke: '#6366f1', zIndex: 100 },
             markerEnd: {
-              type: 'arrowclosed',
+              type: 'arrowclosed' as any,
               color: '#6366f1',
             },
             deletable: true,

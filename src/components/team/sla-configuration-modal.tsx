@@ -59,7 +59,7 @@ export function SLAConfigurationModal({ isOpen, onClose, onSave }: SLAConfigurat
         
         const fullConfigurations = allPriorities.map(priority => ({
           priority,
-          resolution_time_hours: configMap.get(priority) || DEFAULT_SLAS[priority]
+          resolution_time_hours: Number(configMap.get(priority) || DEFAULT_SLAS[priority] || 24)
         }))
         
         setConfigurations(fullConfigurations)

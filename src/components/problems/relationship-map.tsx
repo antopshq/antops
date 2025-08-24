@@ -108,8 +108,8 @@ const nodeTypes = {
 
 function RelationshipMapInner({ problems, incidents, changes = [] }: RelationshipMapProps) {
   const [selectedNode, setSelectedNode] = useState<any>(null)
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[])
 
   const handleNodeClick = useCallback((nodeData: any) => {
     setSelectedNode(nodeData)

@@ -42,7 +42,7 @@ export default function NewChangePage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as const,
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     assignedTo: 'unassigned',
     scheduledFor: '',
     estimatedEndTime: '',
@@ -307,7 +307,7 @@ export default function NewChangePage() {
                                 <span className="text-xs text-blue-600 font-medium mr-1">
                                   {(() => {
                                     const problem = problems.find(p => p.id === formData.problemId)
-                                    return problem?.problem_number || ''
+                                    return (problem as any)?.problem_number || ''
                                   })()}
                                 </span>
                                 <span className="text-sm">
@@ -328,7 +328,7 @@ export default function NewChangePage() {
                             <SelectItem key={problem.id} value={problem.id} className="max-w-[380px]">
                               <div className="truncate">
                                 <span className="text-xs text-blue-600 font-medium mr-2">
-                                  {problem.problem_number}
+                                  {(problem as any).problem_number}
                                 </span>
                                 <span className="font-medium">{problem.title}</span>
                                 <span className="text-xs text-gray-500 ml-2">

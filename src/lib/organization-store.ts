@@ -21,6 +21,8 @@ export async function getOrganization(id: string): Promise<Organization | null> 
     slug: organization.slug,
     description: organization.description,
     settings: organization.settings || {},
+    billingTier: organization.billing_tier || 'free',
+    billingExpiresAt: organization.billing_expires_at,
     createdAt: organization.created_at,
     updatedAt: organization.updated_at
   }
@@ -53,7 +55,11 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
     return null
   }
 
-  const org = profile.organizations
+  const org = Array.isArray(profile.organizations) ? profile.organizations[0] : profile.organizations
+  if (!org) {
+    return null
+  }
+  
   return {
     id: org.id,
     name: org.name,
@@ -93,6 +99,8 @@ export async function updateOrganization(id: string, data: Partial<Organization>
     slug: organization.slug,
     description: organization.description,
     settings: organization.settings || {},
+    billingTier: organization.billing_tier || 'free',
+    billingExpiresAt: organization.billing_expires_at,
     createdAt: organization.created_at,
     updatedAt: organization.updated_at
   }

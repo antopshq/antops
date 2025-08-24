@@ -377,7 +377,7 @@ export function SimpleRelationshipMap({ problems, incidents, changes }: SimpleMa
     }))
   ]
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.filter(Boolean) as any[])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   return (

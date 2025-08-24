@@ -107,28 +107,40 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform nodes to expected format for the selector
-    const nodeComponents = (nodes || []).map(node => ({
-      id: node.id,
-      name: node.metadata?.customTitle || node.label,
-      type: node.metadata?.type || node.type, // Use metadata.type (server, loadbalancer) instead of node.type (infrastructure)
-      description: `${node.metadata?.type || node.type} component in ${node.infrastructure_environments.name}`,
-      environment: {
-        id: node.environment_id,
-        name: node.infrastructure_environments.name
+    const nodeComponents = (nodes || []).map(node => {
+      const environment = Array.isArray(node.infrastructure_environments) 
+        ? node.infrastructure_environments[0] 
+        : node.infrastructure_environments
+      
+      return {
+        id: node.id,
+        name: node.metadata?.customTitle || node.label,
+        type: node.metadata?.type || node.type, // Use metadata.type (server, loadbalancer) instead of node.type (infrastructure)
+        description: `${node.metadata?.type || node.type} component in ${environment?.name || 'Unknown Environment'}`,
+        environment: {
+          id: node.environment_id,
+          name: environment?.name || 'Unknown Environment'
+        }
       }
-    }))
+    })
 
     // Transform zones to expected format for the selector
-    const zoneComponents = (zones || []).map(zone => ({
-      id: zone.id,
-      name: zone.name,
-      type: zone.zone_type,
-      description: `${zone.zone_type} zone in ${zone.infrastructure_environments.name}`,
-      environment: {
-        id: zone.environment_id,
-        name: zone.infrastructure_environments.name
+    const zoneComponents = (zones || []).map(zone => {
+      const environment = Array.isArray(zone.infrastructure_environments) 
+        ? zone.infrastructure_environments[0] 
+        : zone.infrastructure_environments
+      
+      return {
+        id: zone.id,
+        name: zone.name,
+        type: zone.zone_type,
+        description: `${zone.zone_type} zone in ${environment?.name || 'Unknown Environment'}`,
+        environment: {
+          id: zone.environment_id,
+          name: environment?.name || 'Unknown Environment'
+        }
       }
-    }))
+    })
 
     // Combine nodes and zones
     const components = [...nodeComponents, ...zoneComponents]

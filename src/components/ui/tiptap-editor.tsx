@@ -141,11 +141,13 @@ export function TiptapEditor({
                 
                 if (props.clientRect) {
                   const rect = props.clientRect()
-                  Object.assign(component.style, {
-                    position: 'absolute',
-                    top: `${rect.bottom + window.scrollY + 4}px`,
-                    left: `${rect.left + window.scrollX}px`,
-                  })
+                  if (rect) {
+                    Object.assign(component.style, {
+                      position: 'absolute',
+                      top: `${rect.bottom + window.scrollY + 4}px`,
+                      left: `${rect.left + window.scrollX}px`,
+                    })
+                  }
                 }
                 
                 document.body.appendChild(component)
@@ -154,7 +156,7 @@ export function TiptapEditor({
                   component.innerHTML = props.items
                     .map((item, index) => `
                       <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded ${
-                        index === props.selectedIndex ? 'bg-blue-50 text-blue-600' : ''
+                        index === (props as any).selectedIndex ? 'bg-blue-50 text-blue-600' : ''
                       }">
                         ${item}
                       </div>
@@ -169,7 +171,7 @@ export function TiptapEditor({
                   component.innerHTML = props.items
                     .map((item, index) => `
                       <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded ${
-                        index === props.selectedIndex ? 'bg-blue-50 text-blue-600' : ''
+                        index === (props as any).selectedIndex ? 'bg-blue-50 text-blue-600' : ''
                       }">
                         ${item}
                       </div>

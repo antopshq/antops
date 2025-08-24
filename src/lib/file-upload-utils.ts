@@ -53,7 +53,7 @@ export function validateFile(file: any): { valid: boolean; error?: string } {
 export async function saveUploadedFile(
   file: any, 
   organizationId: string, 
-  entityType: 'incidents' | 'problems' | 'changes',
+  entityType: 'incidents' | 'problems' | 'changes' | 'comments',
   entityId: string
 ): Promise<string> {
   console.log(`💾 Saving ${entityType} file:`, file.name, 'Size:', file.size)
@@ -97,7 +97,7 @@ export async function saveUploadedFile(
 export function createAttachmentObject(
   file: any, 
   organizationId: string, 
-  entityType: 'incidents' | 'problems' | 'changes',
+  entityType: 'incidents' | 'problems' | 'changes' | 'comments',
   entityId: string,
   fileName: string
 ): any {

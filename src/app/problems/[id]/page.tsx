@@ -142,8 +142,8 @@ export default function ProblemDetailPage() {
   const [editData, setEditData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as const,
-    status: 'identified' as const,
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
+    status: 'identified' as 'identified' | 'investigating' | 'known_error' | 'resolved' | 'closed',
     assignedTo: '',
     rootCause: '',
     workaround: '',
@@ -472,7 +472,7 @@ export default function ProblemDetailPage() {
                 ) : (
                   <div>
                     <div className="text-sm text-gray-400 mb-2">
-                      {problem.problem_number || ''}
+                      {(problem as any).problem_number || ''}
                     </div>
                     <CardTitle className="text-2xl">{problem.title}</CardTitle>
                   </div>
@@ -792,7 +792,7 @@ export default function ProblemDetailPage() {
                             <SelectItem key={incident.id} value={incident.id}>
                               <div className="flex items-center justify-between w-full">
                                 <span className="truncate">{incident.title}</span>
-                                <Badge variant="outline" className={`ml-2 ${getPriorityColor(incident.priority)}`} size="sm">
+                                <Badge variant="outline" className={`ml-2 ${getPriorityColor(incident.priority)}`}>
                                   {incident.priority}
                                 </Badge>
                               </div>
@@ -812,7 +812,7 @@ export default function ProblemDetailPage() {
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
                           <AlertTriangle className="w-3 h-3 text-orange-600 flex-shrink-0" />
                           <span className="font-medium truncate">{incident.title}</span>
-                          <Badge variant="outline" className={`${getPriorityColor(incident.priority)} text-xs`} size="sm">
+                          <Badge variant="outline" className={`${getPriorityColor(incident.priority)} text-xs`}>
                             {incident.priority}
                           </Badge>
                         </div>
@@ -851,7 +851,7 @@ export default function ProblemDetailPage() {
                             <SelectItem key={change.id} value={change.id}>
                               <div className="flex items-center justify-between w-full">
                                 <span className="truncate">{change.title}</span>
-                                <Badge variant="outline" className={`ml-2 ${getPriorityColor(change.priority)}`} size="sm">
+                                <Badge variant="outline" className={`ml-2 ${getPriorityColor(change.priority)}`}>
                                   {change.priority}
                                 </Badge>
                               </div>
@@ -871,7 +871,7 @@ export default function ProblemDetailPage() {
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
                           <Wrench className="w-3 h-3 text-purple-600 flex-shrink-0" />
                           <span className="font-medium truncate">{change.title}</span>
-                          <Badge variant="outline" className={`${getPriorityColor(change.priority)} text-xs`} size="sm">
+                          <Badge variant="outline" className={`${getPriorityColor(change.priority)} text-xs`}>
                             {change.priority}
                           </Badge>
                         </div>

@@ -623,7 +623,7 @@ export default function TeamPage() {
                     <Label>Role</Label>
                     <Select
                       value={inviteData.role}
-                      onValueChange={(value) => setInviteData(prev => ({ ...prev, role: value }))}
+                      onValueChange={(value) => setInviteData(prev => ({ ...prev, role: value as UserRole }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -697,7 +697,7 @@ export default function TeamPage() {
                               day: 'numeric'
                             })}</span>
                             <span>•</span>
-                            <Badge variant="outline" className={getRoleColor(invitation.role as UserRole)} size="sm">
+                            <Badge variant="outline" className={getRoleColor(invitation.role as UserRole)}>
                               {getRoleDisplayName(invitation.role as UserRole)}
                             </Badge>
                             <span>•</span>

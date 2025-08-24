@@ -197,19 +197,19 @@ export function WYSIWYGEditorSimple({
     
     // Handle lists separately to avoid the $1 issue
     // Convert unordered lists
-    markdown = markdown.replace(/<ul(?:[^>]*)>(.*?)<\/ul>/gis, (match, content) => {
-      const listItems = content.match(/<li(?:[^>]*)>(.*?)<\/li>/gis) || []
-      return listItems.map(item => {
-        const itemContent = item.replace(/<li(?:[^>]*)>(.*?)<\/li>/gis, '$1')
+    markdown = markdown.replace(/<ul(?:[^>]*)>(.*?)<\/ul>/gi, (match, content) => {
+      const listItems = content.match(/<li(?:[^>]*)>(.*?)<\/li>/gi) || []
+      return listItems.map((item: string) => {
+        const itemContent = item.replace(/<li(?:[^>]*)>(.*?)<\/li>/gi, '$1')
         return `- ${itemContent}`
       }).join('\n') + '\n'
     })
     
     // Convert ordered lists
-    markdown = markdown.replace(/<ol(?:[^>]*)>(.*?)<\/ol>/gis, (match, content) => {
-      const listItems = content.match(/<li(?:[^>]*)>(.*?)<\/li>/gis) || []
-      return listItems.map((item, index) => {
-        const itemContent = item.replace(/<li(?:[^>]*)>(.*?)<\/li>/gis, '$1')
+    markdown = markdown.replace(/<ol(?:[^>]*)>(.*?)<\/ol>/gi, (match, content) => {
+      const listItems = content.match(/<li(?:[^>]*)>(.*?)<\/li>/gi) || []
+      return listItems.map((item: string, index: number) => {
+        const itemContent = item.replace(/<li(?:[^>]*)>(.*?)<\/li>/gi, '$1')
         return `${index + 1}. ${itemContent}`
       }).join('\n') + '\n'
     })
@@ -332,8 +332,7 @@ export function WYSIWYGEditorSimple({
       const walker = document.createTreeWalker(
         editorRef.current,
         NodeFilter.SHOW_TEXT,
-        null,
-        false
+        null
       )
       
       let node
@@ -420,7 +419,7 @@ export function WYSIWYGEditorSimple({
             return false
           }
         }
-        element = element.parentNode
+        element = element.parentNode as Node
       }
     }
   }, [])
@@ -631,14 +630,14 @@ export function WYSIWYGEditorSimple({
     const range = selection.getRangeAt(0)
     
     // Check if we're already in a list
-    let listElement = range.commonAncestorContainer
+    let listElement = range.commonAncestorContainer as HTMLElement
     while (listElement && listElement.nodeType !== Node.ELEMENT_NODE) {
-      listElement = listElement.parentElement
+      listElement = listElement.parentElement as HTMLElement
     }
     
     // Find if we're inside a list item
     while (listElement && listElement.tagName !== 'LI' && listElement.tagName !== 'UL' && listElement.tagName !== 'OL') {
-      listElement = listElement.parentElement
+      listElement = listElement.parentElement as HTMLElement
     }
     
     if (listElement && (listElement.tagName === 'UL' || listElement.tagName === 'LI')) {
@@ -689,14 +688,14 @@ export function WYSIWYGEditorSimple({
     const range = selection.getRangeAt(0)
     
     // Check if we're already in a list
-    let listElement = range.commonAncestorContainer
+    let listElement = range.commonAncestorContainer as HTMLElement
     while (listElement && listElement.nodeType !== Node.ELEMENT_NODE) {
-      listElement = listElement.parentElement
+      listElement = listElement.parentElement as HTMLElement
     }
     
     // Find if we're inside a list item
     while (listElement && listElement.tagName !== 'LI' && listElement.tagName !== 'UL' && listElement.tagName !== 'OL') {
-      listElement = listElement.parentElement
+      listElement = listElement.parentElement as HTMLElement
     }
     
     if (listElement && (listElement.tagName === 'OL' || listElement.tagName === 'LI')) {
@@ -968,13 +967,13 @@ export function WYSIWYGEditorSimple({
     const range = selection.getRangeAt(0)
     
     // Check if we're inside a blockquote
-    let quoteElement = range.commonAncestorContainer
+    let quoteElement = range.commonAncestorContainer as HTMLElement
     while (quoteElement && quoteElement.nodeType !== Node.ELEMENT_NODE) {
-      quoteElement = quoteElement.parentElement
+      quoteElement = quoteElement.parentElement as HTMLElement as HTMLElement
     }
     
     while (quoteElement && quoteElement.tagName !== 'BLOCKQUOTE') {
-      quoteElement = quoteElement.parentElement
+      quoteElement = quoteElement.parentElement as HTMLElement
     }
     
     if (quoteElement && quoteElement.tagName === 'BLOCKQUOTE') {
@@ -1026,9 +1025,9 @@ export function WYSIWYGEditorSimple({
     const selectedText = range.toString()
     
     // Check if we're inside a code element
-    let codeElement = range.commonAncestorContainer
+    let codeElement = range.commonAncestorContainer as HTMLElement
     if (codeElement.nodeType === Node.TEXT_NODE) {
-      codeElement = codeElement.parentElement
+      codeElement = codeElement.parentElement as HTMLElement
     }
     
     // If we're inside a code element, remove the formatting

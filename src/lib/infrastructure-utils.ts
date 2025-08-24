@@ -1,4 +1,4 @@
-import { Node, Edge } from 'reactflow'
+import { Node, Edge, MarkerType } from 'reactflow'
 
 export interface InfrastructureDiagram {
   version: string
@@ -724,7 +724,7 @@ function generateImplicitEdges(resources: TerraformResource[]): Edge[] {
           animated: true,
           style: { stroke: '#f59e0b', strokeWidth: 2 },
           markerEnd: {
-            type: 'arrowclosed',
+            type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
             color: '#f59e0b',
@@ -750,7 +750,7 @@ function generateImplicitEdges(resources: TerraformResource[]): Edge[] {
             animated: true,
             style: { stroke: '#059669', strokeWidth: 1.5, strokeDasharray: '3,3' },
             markerEnd: {
-              type: 'arrowclosed',
+              type: MarkerType.ArrowClosed,
               width: 15,
               height: 15,
               color: '#059669',
