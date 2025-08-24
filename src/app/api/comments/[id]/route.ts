@@ -122,19 +122,11 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      interface WsUpdatePayload {
-        type: 'comment_updated';
-        data: Comment;
-        itemType: string;
-        itemId: string;
-        organizationId: string;
-      }
-
-      const wsUpdatePayload: WsUpdatePayload = {
-        type: 'comment_updated',
+      const wsUpdatePayload = {
+        type: 'comment_updated' as const,
         data: transformedComment,
-        itemType,
-        itemId,
+        itemType: itemType,
+        itemId: itemId,
         organizationId: user.organizationId
       }
 
@@ -223,19 +215,11 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      interface WsDeletePayload {
-        type: 'comment_deleted';
-        data: { commentId: string };
-        itemType: string;
-        itemId: string;
-        organizationId: string;
-      }
-
-      const wsDeletePayload: WsDeletePayload = {
-        type: 'comment_deleted',
+      const wsDeletePayload = {
+        type: 'comment_deleted' as const,
         data: { commentId: id },
-        itemType,
-        itemId,
+        itemType: itemType,
+        itemId: itemId,
         organizationId: user.organizationId
       }
 
