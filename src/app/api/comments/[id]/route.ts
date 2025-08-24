@@ -122,6 +122,7 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
+      const roomName = `${itemType}:${itemId}`
       const updatePayload = {
         type: 'comment_updated' as const,
         data: transformedComment as Comment,
@@ -134,7 +135,7 @@ export async function PUT(
       (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', updatePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', updatePayload)
+      (global as any).io.to(roomName).emit('realtime_update', updatePayload)
     }
 
     return NextResponse.json(transformedComment)
@@ -215,6 +216,7 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
+      const roomName = `${itemType}:${itemId}`
       const deletePayload = {
         type: 'comment_deleted' as const,
         data: { commentId: id as string },
@@ -227,7 +229,7 @@ export async function DELETE(
       (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', deletePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', deletePayload)
+      (global as any).io.to(roomName).emit('realtime_update', deletePayload)
     }
 
     return NextResponse.json({ success: true })
