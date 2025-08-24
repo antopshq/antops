@@ -3,22 +3,6 @@ import { getUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import { Comment } from '@/lib/types'
 
-interface WsUpdatePayload {
-  type: string;
-  data: Comment;
-  itemType: string;
-  itemId: string;
-  organizationId: string;
-}
-
-interface WsDeletePayload {
-  type: string;
-  data: { commentId: string };
-  itemType: string;
-  itemId: string;
-  organizationId: string;
-}
-
 // Update a comment
 export async function PUT(
   request: NextRequest,
@@ -138,7 +122,7 @@ export async function PUT(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsUpdatePayload: WsUpdatePayload = {
+      const updatePayload = {
         type: 'comment_updated',
         data: transformedComment,
         itemType,
@@ -147,10 +131,10 @@ export async function PUT(
       }
 
       // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', wsUpdatePayload)
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', updatePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', wsUpdatePayload)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', updatePayload)
     }
 
     return NextResponse.json(transformedComment)
@@ -231,7 +215,7 @@ export async function DELETE(
 
     // Send real-time update via WebSocket
     if ((global as any).io) {
-      const wsDeletePayload: WsDeletePayload = {
+      const deletePayload = {
         type: 'comment_deleted',
         data: { commentId: id },
         itemType,
@@ -240,10 +224,10 @@ export async function DELETE(
       }
 
       // Broadcast to organization
-      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', wsDeletePayload)
+      (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', deletePayload)
       
       // Also broadcast to specific item room
-      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', wsDeletePayload)
+      (global as any).io.to(`${itemType}:${itemId}`).emit('realtime_update', deletePayload)
     }
 
     return NextResponse.json({ success: true })
