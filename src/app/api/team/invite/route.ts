@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase'
-import { notificationService } from '@/lib/notifications/service'
+import { adaptedNotificationService as notificationService } from '@/lib/notifications/service-adapted'
 
 export async function GET() {
   try {
