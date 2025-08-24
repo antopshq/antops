@@ -84,15 +84,16 @@ export async function PUT(
     }
 
     // Transform the response
+    const author = Array.isArray(updatedComment.author) ? updatedComment.author[0] : updatedComment.author
     const transformedComment: Comment = {
       id: updatedComment.id,
       organizationId: updatedComment.organization_id,
       content: updatedComment.content,
       authorId: updatedComment.author_id,
       author: {
-        id: updatedComment.author.id,
-        name: updatedComment.author.full_name,
-        email: updatedComment.author.email
+        id: author?.id || updatedComment.author_id,
+        name: author?.full_name || 'Unknown',
+        email: author?.email || ''
       },
       mentions: updatedComment.mentions || [],
       createdAt: updatedComment.created_at,

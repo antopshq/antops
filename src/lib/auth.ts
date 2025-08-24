@@ -5,6 +5,7 @@ export interface User {
   id: string
   email: string
   name: string
+  fullName?: string
   organizationId: string
   role: UserRole
 }
@@ -102,6 +103,7 @@ export async function getUser(): Promise<User | null> {
     id: user.id,
     email: user.email!,
     name: profile?.full_name || user.user_metadata?.full_name || '',
+    fullName: profile?.full_name || user.user_metadata?.full_name || '',
     organizationId: profile?.organization_id || '',
     role: profile?.role || 'member'
   }

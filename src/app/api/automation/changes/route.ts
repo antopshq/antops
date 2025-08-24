@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const results = {
       autoStarted: 0,
       completionPrompts: 0,
-      errors: []
+      errors: [] as string[]
     }
 
     // 1. Auto-start approved changes that have reached their scheduled time
