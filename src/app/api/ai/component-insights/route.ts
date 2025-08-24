@@ -78,8 +78,10 @@ export async function POST(request: NextRequest) {
       'component_insights',
       cacheParams,
       insights,
-      0.95, // confidence
-      0.001 // estimated cost
+      {
+        confidenceScore: 0.95,
+        cost: 0.001
+      }
     )
 
     return NextResponse.json({
