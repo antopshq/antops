@@ -116,8 +116,6 @@ export async function PUT(
     } else if (existingComment.change_id) {
       itemType = 'change'
       itemId = existingComment.change_id
-    } else {
-      return NextResponse.json(transformedComment)
     }
 
     // Send real-time update via WebSocket
@@ -210,8 +208,6 @@ export async function DELETE(
     } else if (existingComment.change_id) {
       itemType = 'change'
       itemId = existingComment.change_id
-    } else {
-      return NextResponse.json({ success: true })
     }
 
     // Send real-time update via WebSocket
