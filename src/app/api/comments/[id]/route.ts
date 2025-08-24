@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 import { Comment } from '@/lib/types'
 
 interface WsUpdatePayload {
-  type: 'comment_updated';
+  type: string;
   data: Comment;
   itemType: string;
   itemId: string;
@@ -12,7 +12,7 @@ interface WsUpdatePayload {
 }
 
 interface WsDeletePayload {
-  type: 'comment_deleted';
+  type: string;
   data: { commentId: string };
   itemType: string;
   itemId: string;
