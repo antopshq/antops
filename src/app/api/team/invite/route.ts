@@ -90,6 +90,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
+    // Get organization name
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', user.organizationId)
+      .single()
+
     // Send invitation email
     try {
       const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/accept-invite?token=${inviteToken}`
@@ -102,7 +109,7 @@ export async function POST(request: NextRequest) {
         recipients: [{ id: crypto.randomUUID(), type: 'user', value: email }],
         data: {
           inviterName: user.fullName || user.email,
-          organizationName: 'ANTOPS', // TODO: Get actual org name
+          organizationName: organization?.name || 'Your Organization',
           role,
           inviteUrl,
           expiresAt: invitation.expires_at

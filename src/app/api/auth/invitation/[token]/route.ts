@@ -14,7 +14,7 @@ export async function GET(
 
     const supabase = await createSupabaseServerClient()
 
-    // Get invitation by token
+    // Get invitation by token with organization info
     const { data: invitation, error } = await supabase
       .from('team_invitations')
       .select(`
@@ -23,7 +23,9 @@ export async function GET(
         role,
         expires_at,
         invited_by,
-        profiles!invited_by(full_name, email)
+        organization_id,
+        profiles!invited_by(full_name, email),
+        organizations!organization_id(name)
       `)
       .eq('invite_token', token)
       .eq('status', 'pending')
@@ -42,6 +44,7 @@ export async function GET(
     const expired = now > expiresAt
 
     const inviter = Array.isArray(invitation.profiles) ? invitation.profiles[0] : invitation.profiles
+    const organization = Array.isArray(invitation.organizations) ? invitation.organizations[0] : invitation.organizations
 
     return NextResponse.json({
       invitation: {
@@ -49,7 +52,7 @@ export async function GET(
         email: invitation.email,
         role: invitation.role,
         inviterName: inviter?.full_name || inviter?.email || 'Someone',
-        organizationName: 'ANTOPS', // TODO: Get actual org name
+        organizationName: organization?.name || 'Your Organization',
         expiresAt: invitation.expires_at,
         expired
       }

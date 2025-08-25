@@ -28,6 +28,7 @@ function AcceptInviteContent() {
   const [accepting, setAccepting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -96,10 +97,16 @@ function AcceptInviteContent() {
       if (data.error) {
         setError(data.error)
       } else {
+        const message = data.needsEmailConfirmation 
+          ? 'Account created! Please check your email to verify before signing in.'
+          : 'Account created successfully. Please sign in.'
+        
+        setSuccessMessage(message)
         setSuccess(true)
+        
         setTimeout(() => {
-          router.push('/auth/signin?message=Account created successfully. Please sign in.')
-        }, 2000)
+          router.push(`/auth/signin?message=${encodeURIComponent(message)}`)
+        }, 3000)
       }
     } catch (error) {
       setError('Failed to accept invitation. Please try again.')
@@ -155,7 +162,7 @@ function AcceptInviteContent() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Your account has been created successfully. You'll be redirected to sign in shortly.
+              {successMessage || "Your account has been created successfully. You'll be redirected to sign in shortly."}
             </p>
           </CardContent>
         </Card>
