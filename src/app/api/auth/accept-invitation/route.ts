@@ -103,19 +103,19 @@ export async function POST(request: NextRequest) {
     // Note: Profile will be created automatically by database trigger or RPC
     // if you have set up the auth.users trigger, otherwise create manually:
     
-    // Create user profile (only if not created by trigger)
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', newUser.user.id)
-      .single()
-
     // Create a service client to bypass RLS for profile and membership creation
     const { createClient } = await import('@supabase/supabase-js')
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    // Check for existing profile with service client (bypasses RLS)
+    const { data: existingProfile } = await serviceSupabase
+      .from('profiles')
+      .select('id')
+      .eq('id', newUser.user.id)
+      .single()
 
     if (!existingProfile) {
       const { error: profileError } = await serviceSupabase
