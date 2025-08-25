@@ -357,6 +357,31 @@ export async function getOrganizationStats() {
     p.status === 'identified' || p.status === 'investigating'
   ).length || 0
 
+  // Get organization name directly if not available in stats
+  let organizationName = stats.organization_name || 'Unknown'
+  if (organizationName === 'Unknown') {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single()
+      
+      if (profile?.organization_id) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('name')
+          .eq('id', profile.organization_id)
+          .single()
+        
+        if (org?.name) {
+          organizationName = org.name
+        }
+      }
+    }
+  }
+
   return {
     totalMembers: stats.total_members || 0,
     openIncidents: stats.open_incidents || 0,
@@ -364,7 +389,7 @@ export async function getOrganizationStats() {
     activeChanges: stats.active_changes || 0,
     slaComplianceRate,
     changeSuccessRate,
-    organizationName: stats.organization_name || 'Unknown',
+    organizationName,
     criticalIncidents,
     highPriorityIncidents,
     incidentsResolvedToday,
