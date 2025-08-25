@@ -32,6 +32,7 @@ function AcceptInviteContent() {
   
   const [formData, setFormData] = useState({
     fullName: '',
+    jobTitle: '',
     password: '',
     confirmPassword: ''
   })
@@ -88,6 +89,7 @@ function AcceptInviteContent() {
         body: JSON.stringify({
           token,
           fullName: formData.fullName,
+          jobTitle: formData.jobTitle,
           password: formData.password,
         }),
       })
@@ -229,6 +231,17 @@ function AcceptInviteContent() {
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                 required
                 placeholder="Enter your full name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="jobTitle">Job Title</Label>
+              <Input
+                id="jobTitle"
+                type="text"
+                value={formData.jobTitle}
+                onChange={(e) => setFormData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                placeholder="Enter your job title (optional)"
               />
             </div>
 

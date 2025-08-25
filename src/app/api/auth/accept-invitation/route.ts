@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { token, fullName, password } = body
+    const { token, fullName, jobTitle, password } = body
 
     if (!token || !fullName || !password) {
       return NextResponse.json(
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       options: {
         data: {
           full_name: fullName,
+          job_title: jobTitle || null,
           invited: true,
           organization_id: invitation.organization_id
         }
@@ -108,13 +109,23 @@ export async function POST(request: NextRequest) {
       .eq('id', newUser.user.id)
       .single()
 
+    // Create a service client to bypass RLS for profile and membership creation
+    const { createClient } = await import('@supabase/supabase-js')
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     if (!existingProfile) {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await serviceSupabase
         .from('profiles')
         .insert({
           id: newUser.user.id,
           email: invitation.email,
-          full_name: fullName
+          full_name: fullName,
+          job_title: jobTitle || null,
+          organization_id: invitation.organization_id,
+          role: invitation.role.toLowerCase() as any
         })
 
       if (profileError) {
@@ -126,8 +137,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create organization membership
-    const { error: membershipError } = await supabase
+    const { error: membershipError } = await serviceSupabase
       .from('organization_memberships')
       .insert({
         user_id: newUser.user.id,
