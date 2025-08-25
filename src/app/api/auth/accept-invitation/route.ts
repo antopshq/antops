@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the user account using regular signup with email confirmation disabled for invitations
+    // Don't pass organization_id in metadata to prevent trigger from creating unwanted org
     const { data: newUser, error: signUpError } = await supabase.auth.signUp({
       email: invitation.email,
       password: password,
@@ -76,8 +77,7 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: fullName,
           job_title: jobTitle || null,
-          invited: true,
-          organization_id: invitation.organization_id
+          invited: true
         },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/signin`
       }
@@ -174,6 +174,36 @@ export async function POST(request: NextRequest) {
         { error: 'Account created but organization membership failed. Please contact support.' },
         { status: 500 }
       )
+    }
+
+    // Clean up any unwanted organizations that might have been auto-created
+    try {
+      // Check if an organization was created with email domain name (like "gmail.com")
+      const emailDomain = invitation.email.split('@')[1]
+      const { data: unwantedOrg } = await serviceSupabase
+        .from('organizations')
+        .select('id')
+        .eq('name', emailDomain)
+        .single()
+      
+      if (unwantedOrg && unwantedOrg.id !== invitation.organization_id) {
+        // Delete the unwanted organization if it's not the target org and has no other members
+        const { data: members } = await serviceSupabase
+          .from('organization_memberships')
+          .select('id')
+          .eq('organization_id', unwantedOrg.id)
+          .limit(2)
+        
+        if (!members || members.length <= 1) {
+          await serviceSupabase
+            .from('organizations')
+            .delete()
+            .eq('id', unwantedOrg.id)
+          console.log(`Cleaned up unwanted organization: ${emailDomain}`)
+        }
+      }
+    } catch (cleanupError) {
+      console.warn('Could not clean up unwanted organization:', cleanupError)
     }
 
     // Mark invitation as accepted
