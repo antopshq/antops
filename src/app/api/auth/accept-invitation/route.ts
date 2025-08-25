@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!existingProfile) {
+      // Profile doesn't exist, create it
       const { error: profileError } = await serviceSupabase
         .from('profiles')
         .insert({
@@ -131,6 +132,25 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         console.error('Error creating profile:', profileError)
+        return NextResponse.json(
+          { error: 'Account created but profile setup failed. Please contact support.' },
+          { status: 500 }
+        )
+      }
+    } else {
+      // Profile exists (created by trigger), update it with correct data
+      const { error: updateError } = await serviceSupabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          job_title: jobTitle || null,
+          organization_id: invitation.organization_id,
+          role: invitation.role.toLowerCase() as any
+        })
+        .eq('id', newUser.user.id)
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
         return NextResponse.json(
           { error: 'Account created but profile setup failed. Please contact support.' },
           { status: 500 }
