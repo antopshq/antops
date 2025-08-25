@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the user account using regular signup
+    // Create the user account using regular signup with email confirmation disabled for invitations
     const { data: newUser, error: signUpError } = await supabase.auth.signUp({
       email: invitation.email,
       password: password,
@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
           job_title: jobTitle || null,
           invited: true,
           organization_id: invitation.organization_id
-        }
+        },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/signin`
       }
     })
 
@@ -164,8 +165,22 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', invitation.id)
 
-    // Check if email confirmation is required
-    const needsEmailConfirmation = !newUser.user.email_confirmed_at && newUser.user.confirmation_sent_at
+    // Since user was invited, mark them as email confirmed using service client
+    if (!newUser.user.email_confirmed_at) {
+      try {
+        await serviceSupabase.auth.admin.updateUserById(newUser.user.id, {
+          email_confirm: true
+        })
+      } catch (confirmError) {
+        console.warn('Could not auto-confirm user email:', confirmError)
+      }
+    }
+
+    // Sign out the new user to prevent auto-login (they should manually sign in)
+    await supabase.auth.signOut()
+
+    // For invited users, email confirmation is not required since they were invited
+    const needsEmailConfirmation = false
 
     return NextResponse.json({
       message: needsEmailConfirmation 
@@ -176,7 +191,8 @@ export async function POST(request: NextRequest) {
         id: newUser.user.id,
         email: newUser.user.email,
         fullName: fullName
-      }
+      },
+      requiresSignIn: true
     })
 
   } catch (error) {
