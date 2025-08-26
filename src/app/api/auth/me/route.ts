@@ -1,16 +1,21 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createSupabaseServerClient } from '@/lib/supabase'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
+    // Try enhanced auth first (supports API tokens)
+    const authContext = await getAuthenticatedUser(request)
     
-    if (!user) {
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    return NextResponse.json({ user })
+    return NextResponse.json({ 
+      user: authContext.user,
+      authMethod: authContext.authMethod
+    })
   } catch (error) {
     console.error('Auth me API error:', error)
     return NextResponse.json(
@@ -20,13 +25,15 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const user = await getUser()
+    const authContext = await getAuthenticatedUser(request)
     
-    if (!user) {
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
+    
+    const user = authContext.user
 
     const body = await request.json()
     const { fullName, jobTitle, avatarUrl } = body

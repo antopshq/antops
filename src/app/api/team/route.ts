@@ -1,13 +1,14 @@
-import { NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { getOrganizationMembers } from '@/lib/organization-store'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     // Get organization members using multi-tenant function
     const members = await getOrganizationMembers()

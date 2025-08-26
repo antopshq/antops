@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import { CommentNotification, Notification } from '@/lib/types'
 
 // Get notifications for the current user
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
@@ -145,10 +146,11 @@ export async function GET(request: NextRequest) {
 // Mark notifications as read
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const body = await request.json()
     const { notificationIds, markAll = false, type = 'all' } = body // type: 'comment' | 'system' | 'all'

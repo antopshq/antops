@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { getIncident, updateIncident } from '@/lib/store-multitenant'
 import { Priority, Status } from '@/lib/types'
 import { validateInfrastructureComponents } from '@/lib/infrastructure-validation'
@@ -10,10 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const { id } = await params
     const incident = await getIncident(id)
@@ -39,10 +40,11 @@ export async function PUT(
   try {
     console.log('🔧 PUT /api/incidents/[id] - Starting request')
     
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const { id } = await params
 

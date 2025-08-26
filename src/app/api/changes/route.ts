@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createChange, getChanges } from '@/lib/store-multitenant'
 import { Priority } from '@/lib/types'
 import { validateInfrastructureComponents } from '@/lib/infrastructure-validation'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const { searchParams } = new URL(request.url)
     const incidentId = searchParams.get('incidentId')
@@ -26,7 +28,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser()
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const user = authContext.user
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

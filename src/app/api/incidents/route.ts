@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createIncident, getIncidents } from '@/lib/store-multitenant'
 import { Priority, Criticality, Urgency } from '@/lib/types'
 import { validateInfrastructureComponents } from '@/lib/infrastructure-validation'
 import { validateFile, validateFileCount, saveUploadedFile } from '@/lib/file-upload-utils'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     const incidents = await getIncidents()
     return NextResponse.json(incidents)
@@ -24,11 +26,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     // Handle both FormData (with files) and JSON (without files)
     const contentType = request.headers.get('content-type')

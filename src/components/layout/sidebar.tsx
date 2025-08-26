@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { AlertTriangle, Settings, BarChart3, Users, User, LogOut, AlertCircle, ChevronLeft, ChevronRight, Network } from 'lucide-react'
+import { AlertTriangle, Settings, BarChart3, Users, User, LogOut, AlertCircle, ChevronLeft, ChevronRight, Network, Cog, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -37,7 +37,7 @@ const navigation = [
   {
     name: 'Changes',
     href: '/changes',
-    icon: Settings,
+    icon: Wrench,
     permission: PERMISSIONS.VIEW_CHANGES
   },
   {
@@ -45,6 +45,12 @@ const navigation = [
     href: '/team',
     icon: Users,
     permission: PERMISSIONS.VIEW_USERS
+  },
+  {
+    name: 'Settings',
+    href: '/settings',
+    icon: Settings,
+    permission: null // All users can access settings
   },
 ]
 

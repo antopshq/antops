@@ -1,18 +1,19 @@
-import { NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { hasPermission, canManageUser, PERMISSIONS } from '@/lib/rbac'
 import { UserRole } from '@/lib/types'
 import { createSupabaseServerClient } from '@/lib/supabase'
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     // Check if user has permission to remove users
     if (!hasPermission(user.role, PERMISSIONS.REMOVE_USERS)) {

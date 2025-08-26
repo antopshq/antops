@@ -1,14 +1,15 @@
-import { NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { getCurrentUserOrganization } from '@/lib/organization-store'
 import { hasPermission, PERMISSIONS } from '@/lib/rbac'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     // Get current user's organization
     const organization = await getCurrentUserOrganization()
@@ -26,12 +27,13 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = authContext.user
 
     // Check if user has permission to manage organization
     if (!hasPermission(user.role, PERMISSIONS.MANAGE_ORGANIZATION)) {
