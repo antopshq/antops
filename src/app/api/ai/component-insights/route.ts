@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { AICache } from '@/lib/ai-cache'
 import { createSupabaseServerClient } from '@/lib/supabase'
+import { withAIRateLimit } from '@/lib/ai-rate-limiting'
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
@@ -13,22 +15,45 @@ interface ComponentInsightsRequest {
   analysisDepth: 'basic' | 'detailed' | 'comprehensive'
   includeFailurePaths: boolean
   includeDependencyAnalysis: boolean
+  consumeToken?: boolean // Optional flag to control token consumption
 }
 
 export async function POST(request: NextRequest) {
   console.log('🚀 AI Component Insights API called')
   
   try {
-    const user = await getUser()
-    if (!user) {
+    // Enhanced authentication
+    const authContext = await getAuthenticatedUser(request)
+    if (!authContext.isAuthenticated || !authContext.user) {
       console.log('❌ No user found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+    const user = authContext.user
+    
     const body: ComponentInsightsRequest = await request.json()
-    const { componentId, analysisDepth, includeFailurePaths, includeDependencyAnalysis } = body
+    const { componentId, analysisDepth, includeFailurePaths, includeDependencyAnalysis, consumeToken = true } = body
 
     console.log('📋 Request body:', body)
+
+    // Only check rate limiting if we need to consume a token
+    if (consumeToken) {
+      console.log('🔒 Checking AI rate limits for user:', user.id)
+      const rateLimitResult = await withAIRateLimit(user.id, 1)
+      
+      if (!rateLimitResult.allowed) {
+        console.log('❌ Rate limit exceeded:', rateLimitResult.error)
+        return NextResponse.json({
+          error: rateLimitResult.error,
+          tokensRemaining: rateLimitResult.tokensRemaining,
+          tokensLimit: rateLimitResult.tokensLimit,
+          resetTime: rateLimitResult.resetTime
+        }, { status: 429 })
+      }
+      
+      console.log('✅ Rate limit passed. Tokens remaining:', rateLimitResult.tokensRemaining)
+    } else {
+      console.log('⏭️ Skipping rate limit check (consumeToken=false)')
+    }
 
     if (!componentId) {
       console.log('❌ No component ID provided')

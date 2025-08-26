@@ -824,8 +824,41 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
   const [lastAiScanTime, setLastAiScanTime] = useState<Date | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
+  // AI Token Management State
+  const [aiTokens, setAiTokens] = useState({
+    tokensUsed: 0,
+    tokensRemaining: 5,
+    tokensLimit: 5,
+    canScan: true,
+    resetTime: '',
+    resetTimeFormatted: ''
+  })
+  
+  // Fetch AI token status
+  const fetchAITokenStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ai/token-status')
+      if (response.ok) {
+        const data = await response.json()
+        setAiTokens({
+          tokensUsed: data.tokensUsed,
+          tokensRemaining: data.tokensRemaining,
+          tokensLimit: data.tokensLimit,
+          canScan: data.canScan,
+          resetTime: data.resetTime,
+          resetTimeFormatted: data.resetTimeFormatted
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch AI token status:', error)
+    }
+  }, [])
+
   // Load AI results from localStorage on component mount
   useEffect(() => {
+    // Load token status
+    fetchAITokenStatus()
+    
     try {
       const storedResults = localStorage.getItem('infrastructure-ai-results')
       const storedScanTime = localStorage.getItem('infrastructure-ai-scan-time')
@@ -857,14 +890,36 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
       toast.error('Add some components first to scan')
       return
     }
+
+    // Check if user can scan
+    if (!aiTokens.canScan) {
+      toast.error(`Daily AI scan limit reached (${aiTokens.tokensLimit} scans/day). Resets in ${aiTokens.resetTimeFormatted}.`)
+      return
+    }
     
     setIsAiScanning(true)
     const newInsights = new Map()
+    let rateLimitHit = false
     
     try {
-      // Scan each component with AI
+      // First, consume 1 token for the entire scan (regardless of number of components)
+      const tokenCheckResponse = await fetch('/api/ai/token-status')
+      if (tokenCheckResponse.ok) {
+        const tokenData = await tokenCheckResponse.json()
+        if (!tokenData.canScan) {
+          toast.error(`Daily AI scan limit reached. Resets in ${tokenData.resetTimeFormatted}.`)
+          return
+        }
+      }
+      
+      let tokenConsumed = false
+      
+      // Scan each component with AI (1 token consumed for entire scan)
       for (const node of nodes) {
         if (node.type === 'infrastructure') {
+          const shouldConsumeToken = !tokenConsumed
+          console.log(`Scanning ${node.id}, consumeToken: ${shouldConsumeToken}`)
+          
           const response = await fetch('/api/ai/component-insights', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -872,15 +927,26 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
               componentId: node.id,
               analysisDepth: 'basic',
               includeFailurePaths: true,
-              includeDependencyAnalysis: true
+              includeDependencyAnalysis: true,
+              // Only consume token on first component in scan
+              consumeToken: shouldConsumeToken
             })
           })
           
-          if (response.ok) {
+          if (response.status === 429) {
+            // Rate limit hit
+            const errorData = await response.json()
+            toast.error(errorData.error || 'Rate limit exceeded')
+            rateLimitHit = true
+            break
+          } else if (response.ok) {
             const data = await response.json()
             if (data.status === 'success') {
               newInsights.set(node.id, data.insights)
+              tokenConsumed = true // Mark token as consumed after first successful request
             }
+          } else {
+            console.warn(`Failed to scan component ${node.id}:`, response.status)
           }
         }
       }
@@ -901,14 +967,21 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
         console.error('Failed to save AI results to localStorage:', error)
       }
       
-      toast.success(`Scanned ${newInsights.size} components with AI`)
+      if (rateLimitHit) {
+        toast.error(`Partial scan completed. ${newInsights.size} components analyzed before hitting rate limit.`)
+      } else {
+        toast.success(`Scanned ${newInsights.size} components with AI`)
+      }
+      
+      // Refresh token status after scan
+      await fetchAITokenStatus()
     } catch (error) {
       console.error('AI scanning error:', error)
       toast.error('Failed to scan infrastructure with AI')
     } finally {
       setIsAiScanning(false)
     }
-  }, [nodes])
+  }, [nodes, aiTokens.canScan, aiTokens.tokensLimit, aiTokens.resetTimeFormatted, fetchAITokenStatus])
   
   // Get overall risk score
   const getOverallRiskScore = useCallback(() => {
@@ -2032,21 +2105,35 @@ Choose:
                 <div className="flex items-center gap-4">
                   {/* Import/Export Actions */}
                   <div className="flex items-center gap-2">
-                    {/* AI Scan Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={scanInfrastructureWithAI}
-                      disabled={isAiScanning || nodes.length === 0}
-                      className="gap-2"
-                    >
-                      {isAiScanning ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Brain className="w-4 h-4" />
-                      )}
-                      {isAiScanning ? 'Scanning...' : 'AI Scan'}
-                    </Button>
+                    {/* AI Scan Button with Token Info */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-center text-xs text-gray-500">
+                        <div className="font-medium">
+                          {aiTokens.tokensRemaining}/{aiTokens.tokensLimit}
+                        </div>
+                        <div>left</div>
+                        {!aiTokens.canScan && (
+                          <div className="text-red-500 text-center">
+                            Resets in {aiTokens.resetTimeFormatted}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={scanInfrastructureWithAI}
+                        disabled={isAiScanning || nodes.length === 0 || !aiTokens.canScan}
+                        className="gap-2"
+                        title={!aiTokens.canScan ? `Rate limit reached. Resets in ${aiTokens.resetTimeFormatted}` : `${aiTokens.tokensRemaining} scans remaining today`}
+                      >
+                        {isAiScanning ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Brain className={`w-4 h-4 ${!aiTokens.canScan ? 'text-red-500' : ''}`} />
+                        )}
+                        {isAiScanning ? 'Scanning...' : 'AI Scan'}
+                      </Button>
+                    </div>
                     
                     {/* Show AI Results if available */}
                     {aiInsights.size > 0 && (

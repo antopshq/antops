@@ -146,14 +146,6 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchStats()
     fetchRecentActivity()
-    
-    // Refresh data every 30 seconds
-    const interval = setInterval(() => {
-      fetchStats()
-      fetchRecentActivity()
-    }, 30000)
-    
-    return () => clearInterval(interval)
   }, [])
 
   if (loading && !stats) {
