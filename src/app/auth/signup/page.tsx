@@ -1,15 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { AlertCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function SignUp() {
+function SignUpContent() {
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const [hasAccess, setHasAccess] = useState(false)
+  const [checkingAccess, setCheckingAccess] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,6 +24,71 @@ export default function SignUp() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    // Check if the provided token matches the pilot token
+    const checkAccess = async () => {
+      try {
+        const response = await fetch('/api/auth/check-pilot-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        })
+        
+        const data = await response.json()
+        setHasAccess(data.hasAccess || false)
+      } catch (error) {
+        console.error('Access check failed:', error)
+        setHasAccess(false)
+      } finally {
+        setCheckingAccess(false)
+      }
+    }
+
+    checkAccess()
+  }, [token])
+
+  if (checkingAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <Card className="w-full max-w-md border-0 shadow-sm">
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-600" />
+              <p className="text-gray-600">Checking access...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <Card className="w-full max-w-md border-0 shadow-sm">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="w-16 h-16 text-orange-600" />
+            </div>
+            <CardTitle className="text-2xl font-semibold">Access Restricted</CardTitle>
+            <CardDescription className="text-gray-600">
+              ANTOPS signup is currently in pilot phase. Please contact your administrator for access.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <Link href="/auth/signin">
+                <Button variant="outline" className="w-full">
+                  Go to Sign In
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -178,5 +248,24 @@ export default function SignUp() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SignUp() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <Card className="w-full max-w-md border-0 shadow-sm">
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-600" />
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <SignUpContent />
+    </Suspense>
   )
 }
