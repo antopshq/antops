@@ -79,7 +79,7 @@ function SignUpContent() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-center">
-              <a href="https://forms.gle/79sUQdihsZpoKPdW7" target="_blank" rel="noopener noreferrer">
+              <a href="https://forms.gle/Dp1oJE89rYWQVkC57" target="_blank" rel="noopener noreferrer">
                 <Button className="w-full bg-orange-600 hover:bg-orange-700">
                   Apply for Pilot Access
                 </Button>
