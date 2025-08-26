@@ -416,10 +416,10 @@ export async function POST(request: NextRequest) {
         return validatedZone
       })
 
-      console.log('About to insert validated zones:', JSON.stringify(validatedZones, null, 2))
+      console.log('About to upsert validated zones:', JSON.stringify(validatedZones, null, 2))
       const { error: insertZonesError } = await supabase
         .from('infrastructure_zones')
-        .insert(validatedZones)
+        .upsert(validatedZones, { onConflict: 'id' })
 
       if (insertZonesError) {
         console.error('Error inserting zones:', insertZonesError)
@@ -443,10 +443,10 @@ export async function POST(request: NextRequest) {
         environment_id: targetEnvironmentId
       }))
 
-      console.log('About to insert nodes:', JSON.stringify(nodesWithEnvId, null, 2))
+      console.log('About to upsert nodes:', JSON.stringify(nodesWithEnvId, null, 2))
       const { error: insertNodesError } = await supabase
         .from('infrastructure_nodes')
-        .insert(nodesWithEnvId)
+        .upsert(nodesWithEnvId, { onConflict: 'id' })
 
       if (insertNodesError) {
         console.error('Error inserting nodes:', insertNodesError)
@@ -469,7 +469,7 @@ export async function POST(request: NextRequest) {
 
       const { error: insertEdgesError } = await supabase
         .from('infrastructure_edges')
-        .insert(edgesWithEnvId)
+        .upsert(edgesWithEnvId, { onConflict: 'id' })
 
       if (insertEdgesError) {
         console.error('Error inserting edges:', insertEdgesError)
