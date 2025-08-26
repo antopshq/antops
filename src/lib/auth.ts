@@ -10,7 +10,7 @@ export interface User {
   role: UserRole
 }
 
-export async function signUp(email: string, password: string, name: string, organizationName: string, role: UserRole = 'owner'): Promise<{ user: User; needsConfirmation: boolean } | null> {
+export async function signUp(email: string, password: string, name: string, organizationName: string, role: UserRole = 'owner', jobRole?: string): Promise<{ user: User; needsConfirmation: boolean } | null> {
   const supabase = await createSupabaseServerClient()
   
   const { data, error } = await supabase.auth.signUp({
@@ -19,6 +19,7 @@ export async function signUp(email: string, password: string, name: string, orga
     options: {
       data: {
         full_name: name,
+        job_title: jobRole,
         organization_name: organizationName,
         role: role
       }

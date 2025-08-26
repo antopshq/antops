@@ -19,6 +19,7 @@ function SignUpContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [organizationName, setOrganizationName] = useState('')
+  const [jobRole, setJobRole] = useState('')
   const [role, setRole] = useState<'owner' | 'admin' | 'manager' | 'member'>('owner')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -65,7 +66,7 @@ function SignUpContent() {
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600" style={{background: 'linear-gradient(135deg, #fa8c16 0%, #ff7875 50%, #ffa940 100%)'}}>
         <Card className="w-full max-w-md border-0 shadow-sm">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -73,11 +74,16 @@ function SignUpContent() {
             </div>
             <CardTitle className="text-2xl font-semibold">Access Restricted</CardTitle>
             <CardDescription className="text-gray-600">
-              ANTOPS signup is currently in pilot phase. Please contact your administrator for access.
+              ANTOPS signup is currently in pilot phase. Apply for early access to join our pilot program.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center">
+            <div className="space-y-3 text-center">
+              <a href="https://forms.gle/79sUQdihsZpoKPdW7" target="_blank" rel="noopener noreferrer">
+                <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                  Apply for Pilot Access
+                </Button>
+              </a>
               <Link href="/auth/signin">
                 <Button variant="outline" className="w-full">
                   Go to Sign In
@@ -104,7 +110,8 @@ function SignUpContent() {
           name, 
           email, 
           password, 
-          organizationName, 
+          organizationName,
+          jobRole,
           role 
         })
       })
@@ -179,6 +186,17 @@ function SignUpContent() {
                 className="h-10 border-gray-200 focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
                 placeholder="Create a password"
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jobRole" className="text-sm font-medium text-gray-700">Job Title</Label>
+              <Input
+                id="jobRole"
+                type="text"
+                value={jobRole}
+                onChange={(e) => setJobRole(e.target.value)}
+                className="h-10 border-gray-200 focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+                placeholder="Your job title (optional)"
               />
             </div>
 

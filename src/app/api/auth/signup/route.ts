@@ -3,7 +3,7 @@ import { signUp } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, organizationName, role } = await request.json()
+    const { name, email, password, organizationName, jobRole, role } = await request.json()
 
     if (!name || !email || !password || !organizationName) {
       return NextResponse.json(
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await signUp(email, password, name, organizationName, role || 'owner')
+    const result = await signUp(email, password, name, organizationName, role || 'owner', jobRole)
 
     if (!result) {
       return NextResponse.json(
