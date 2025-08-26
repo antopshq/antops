@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { TermsOfServiceModal } from '@/components/modals/TermsOfServiceModal'
+import { PrivacyPolicyModal } from '@/components/modals/PrivacyPolicyModal'
 
 interface InvitationData {
   id: string
@@ -29,6 +31,8 @@ function AcceptInviteContent() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -276,6 +280,27 @@ function AcceptInviteContent() {
               </div>
             )}
 
+            <div className="text-center mb-4">
+              <p className="text-xs text-gray-500">
+                By accepting this invitation, you agree to our{' '}
+                <button 
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-gray-600 hover:text-gray-800 underline"
+                >
+                  Terms of Service
+                </button>{' '}
+                and{' '}
+                <button 
+                  type="button"
+                  onClick={() => setShowPrivacyModal(true)}
+                  className="text-gray-600 hover:text-gray-800 underline"
+                >
+                  Privacy Policy
+                </button>
+              </p>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
@@ -306,6 +331,15 @@ function AcceptInviteContent() {
           </div>
         </CardContent>
       </Card>
+
+      <TermsOfServiceModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
+      />
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </div>
   )
 }

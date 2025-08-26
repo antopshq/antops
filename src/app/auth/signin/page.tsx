@@ -7,12 +7,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { TermsOfServiceModal } from '@/components/modals/TermsOfServiceModal'
+import { PrivacyPolicyModal } from '@/components/modals/PrivacyPolicyModal'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,9 +106,36 @@ export default function SignIn() {
                 Sign up
               </Link>
             </p>
+            <p className="text-xs text-gray-500 mt-4">
+              Review our{' '}
+              <button 
+                type="button"
+                onClick={() => setShowTermsModal(true)}
+                className="text-gray-600 hover:text-gray-800 underline"
+              >
+                Terms of Service
+              </button>{' '}
+              and{' '}
+              <button 
+                type="button"
+                onClick={() => setShowPrivacyModal(true)}
+                className="text-gray-600 hover:text-gray-800 underline"
+              >
+                Privacy Policy
+              </button>
+            </p>
           </div>
         </CardContent>
       </Card>
+
+      <TermsOfServiceModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
+      />
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </div>
   )
 }

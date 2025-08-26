@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { TermsOfServiceModal } from '@/components/modals/TermsOfServiceModal'
+import { PrivacyPolicyModal } from '@/components/modals/PrivacyPolicyModal'
 
 function SignUpContent() {
   const searchParams = useSearchParams()
@@ -24,6 +26,8 @@ function SignUpContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -247,6 +251,26 @@ function SignUpContent() {
                 {success}
               </div>
             )}
+            <div className="text-center mb-4">
+              <p className="text-xs text-gray-500">
+                By creating an account, you agree to our{' '}
+                <button 
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-gray-600 hover:text-gray-800 underline"
+                >
+                  Terms of Service
+                </button>{' '}
+                and{' '}
+                <button 
+                  type="button"
+                  onClick={() => setShowPrivacyModal(true)}
+                  className="text-gray-600 hover:text-gray-800 underline"
+                >
+                  Privacy Policy
+                </button>
+              </p>
+            </div>
             <Button 
               type="submit" 
               className="w-full h-10 bg-gray-900 hover:bg-gray-800"
@@ -265,6 +289,15 @@ function SignUpContent() {
           </div>
         </CardContent>
       </Card>
+
+      <TermsOfServiceModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
+      />
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </div>
   )
 }
