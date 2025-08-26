@@ -7,13 +7,18 @@ export async function POST(request: NextRequest) {
     // Get the pilot access token from environment variable
     const pilotToken = process.env.PILOT_ACCESS_TOKEN
     
+    console.log('Pilot access check - Token exists:', !!pilotToken, 'Provided token:', token)
+    
     if (!pilotToken) {
-      // If no pilot token is set in environment, allow access (development mode)
-      return NextResponse.json({ hasAccess: true })
+      // No pilot token set - deny access in production, allow in development
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      console.log('No pilot token found, development mode:', isDevelopment)
+      return NextResponse.json({ hasAccess: isDevelopment })
     }
     
     // Check if the provided token matches the pilot token
     const hasAccess = token === pilotToken
+    console.log('Token match result:', hasAccess)
     
     return NextResponse.json({ hasAccess })
     
