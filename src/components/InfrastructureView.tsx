@@ -1051,11 +1051,19 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
         const defaultEnv = data.environments.find((env: any) => env.is_default) || data.environments[0]
         console.log('Setting default environment:', defaultEnv)
         setCurrentEnvironment(defaultEnv)
+      } else if (data.environments && data.environments.length === 0) {
+        // If no environments exist, clear loading state and initialize empty state
+        console.log('No environments found, initializing empty state')
+        setIsLoading(false)
+        setNodes([])
+        setEdges([])
+        setIsInitialLoad(false)
       }
       
     } catch (error) {
       console.error('Error loading environments:', error)
       toast.error('Failed to load environments')
+      setIsLoading(false) // Also clear loading state on error
     }
   }, [])
 
@@ -2096,7 +2104,50 @@ Choose:
                         </Dialog>
                       </>
                     ) : (
-                      <div className="text-sm text-gray-500 italic">No environments</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-gray-500 italic">No environments</div>
+                        <Dialog open={isNewEnvDialogOpen} onOpenChange={setIsNewEnvDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline" title="Create your first environment">
+                              <FolderPlus className="w-4 h-4 mr-1" />
+                              Create Environment
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Create Your First Environment</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="env-name">Name</Label>
+                                <Input
+                                  id="env-name"
+                                  value={newEnvName}
+                                  onChange={(e) => setNewEnvName(e.target.value)}
+                                  placeholder="e.g., Development, Staging"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="env-description">Description (optional)</Label>
+                                <Input
+                                  id="env-description"
+                                  value={newEnvDescription}
+                                  onChange={(e) => setNewEnvDescription(e.target.value)}
+                                  placeholder="Brief description of this environment"
+                                />
+                              </div>
+                              <div className="flex justify-end space-x-2">
+                                <Button variant="outline" onClick={() => setIsNewEnvDialogOpen(false)}>
+                                  Cancel
+                                </Button>
+                                <Button onClick={createEnvironment}>
+                                  Create
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     )}
                   </div>
                 </div>
