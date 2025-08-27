@@ -3,6 +3,7 @@ import { useDebounce } from './useDebounce'
 
 export interface AIInsight {
   componentId: string
+  componentTitle?: string
   riskScore: number // 0-100
   confidenceLevel: number // 0-1
   riskCategory: 'low' | 'medium' | 'high' | 'critical'
