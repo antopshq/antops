@@ -451,8 +451,25 @@ export async function POST(request: NextRequest) {
       if (insertNodesError) {
         console.error('Error inserting nodes:', insertNodesError)
         console.error('Node data that failed:', JSON.stringify(nodesWithEnvId, null, 2))
+        
+        // Check for duplicate key errors (likely duplicate names)
+        if (insertNodesError.code === '23505' || insertNodesError.message.includes('duplicate')) {
+          // Find which nodes have duplicate labels
+          const nodeLabels = nodesWithEnvId.map(n => n.label)
+          const duplicateLabels = nodeLabels.filter((label, index) => nodeLabels.indexOf(label) !== index)
+          
+          return NextResponse.json({ 
+            error: 'Component names must be unique', 
+            details: duplicateLabels.length > 0 
+              ? `Duplicate component names found: ${[...new Set(duplicateLabels)].join(', ')}`
+              : 'Two or more components have the same name. Please use unique names for each component.',
+            code: 'DUPLICATE_NAMES',
+            duplicates: [...new Set(duplicateLabels)]
+          }, { status: 409 })
+        }
+        
         return NextResponse.json({ 
-          error: 'Failed to insert nodes', 
+          error: 'Failed to save infrastructure components', 
           details: insertNodesError.message,
           data: nodesWithEnvId 
         }, { status: 500 })

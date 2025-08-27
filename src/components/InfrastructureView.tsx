@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Save, RefreshCw, Plus, Database, Server, Network, Settings, FolderPlus, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Link, ExternalLink, AlertTriangle, Wrench, Layers, Building, Lock, Unlock, Upload, Download, Trash2, Brain } from 'lucide-react'
+import { Save, RefreshCw, Plus, Database, Server, Network, Settings, FolderPlus, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Link, ExternalLink, AlertTriangle, Wrench, Layers, Building, Lock, Unlock, Upload, Download, Trash2, Brain, Activity, BarChart3, Router, Zap, Clock, FileKey, Radio, Cable, Printer, Monitor, Laptop, Tablet, Smartphone, Battery, Cpu, Video, Timer, Power, Refrigerator } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { getITILBadgeClasses, getITILIcon, getITILTextClass } from '@/lib/itil-colors'
 
@@ -59,6 +59,54 @@ function InfrastructureNode({ data, selected, id }: { data: any, selected?: bool
         return <Container className="w-3 h-3" />
       case 'api':
         return <Globe className="w-3 h-3" />
+      case 'monitoring':
+        return <Activity className="w-3 h-3" />
+      case 'cache':
+        return <Zap className="w-3 h-3" />
+      case 'queue':
+        return <BarChart3 className="w-3 h-3" />
+      case 'cdn':
+        return <Globe className="w-3 h-3" />
+      case 'gateway':
+        return <Router className="w-3 h-3" />
+      case 'backup':
+        return <HardDrive className="w-3 h-3" />
+      case 'scheduler':
+        return <Clock className="w-3 h-3" />
+      case 'certificate':
+        return <FileKey className="w-3 h-3" />
+      case 'dns':
+        return <Network className="w-3 h-3" />
+      case 'router':
+        return <Router className="w-3 h-3" />
+      case 'switch':
+        return <Cable className="w-3 h-3" />
+      case 'firewall':
+        return <Shield className="w-3 h-3" />
+      case 'printer':
+        return <Printer className="w-3 h-3" />
+      case 'workstation':
+        return <Monitor className="w-3 h-3" />
+      case 'laptop':
+        return <Laptop className="w-3 h-3" />
+      case 'tablet':
+        return <Tablet className="w-3 h-3" />
+      case 'phone':
+        return <Smartphone className="w-3 h-3" />
+      case 'ups':
+        return <Battery className="w-3 h-3" />
+      case 'nas':
+        return <HardDrive className="w-3 h-3" />
+      case 'camera':
+        return <Video className="w-3 h-3" />
+      case 'accesspoint':
+        return <Radio className="w-3 h-3" />
+      case 'rack':
+        return <Server className="w-3 h-3" />
+      case 'kvm':
+        return <Monitor className="w-3 h-3" />
+      case 'modem':
+        return <Router className="w-3 h-3" />
       default:
         return <div className="w-3 h-3 bg-gray-400 rounded" />
     }
@@ -75,17 +123,52 @@ function InfrastructureNode({ data, selected, id }: { data: any, selected?: bool
       case 'cloud':
         return 'from-sky-500 to-sky-600'
       case 'security':
+      case 'firewall':
+      case 'certificate':
         return 'from-red-500 to-red-600'
       case 'storage':
+      case 'backup':
+      case 'nas':
         return 'from-orange-500 to-orange-600'
       case 'wifi':
+      case 'accesspoint':
         return 'from-indigo-500 to-indigo-600'
       case 'loadbalancer':
         return 'from-yellow-500 to-yellow-600'
       case 'container':
         return 'from-teal-500 to-teal-600'
       case 'api':
+      case 'cdn':
         return 'from-pink-500 to-pink-600'
+      case 'monitoring':
+        return 'from-violet-500 to-violet-600'
+      case 'cache':
+        return 'from-amber-500 to-amber-600'
+      case 'queue':
+        return 'from-cyan-500 to-cyan-600'
+      case 'gateway':
+      case 'router':
+      case 'switch':
+      case 'dns':
+      case 'modem':
+        return 'from-purple-500 to-purple-600'
+      case 'scheduler':
+        return 'from-rose-500 to-rose-600'
+      case 'printer':
+        return 'from-slate-500 to-slate-600'
+      case 'workstation':
+      case 'laptop':
+      case 'kvm':
+        return 'from-blue-500 to-blue-600'
+      case 'tablet':
+      case 'phone':
+        return 'from-emerald-500 to-emerald-600'
+      case 'ups':
+        return 'from-yellow-500 to-yellow-600'
+      case 'camera':
+        return 'from-fuchsia-500 to-fuchsia-600'
+      case 'rack':
+        return 'from-stone-500 to-stone-600'
       default:
         return 'from-gray-500 to-gray-600'
     }
@@ -349,6 +432,30 @@ function ComponentDetailsForm({
       case 'loadbalancer': return <MonitorSpeaker className="w-5 h-5" />
       case 'container': return <Container className="w-5 h-5" />
       case 'api': return <Globe className="w-5 h-5" />
+      case 'monitoring': return <Activity className="w-5 h-5" />
+      case 'cache': return <Zap className="w-5 h-5" />
+      case 'queue': return <BarChart3 className="w-5 h-5" />
+      case 'cdn': return <Globe className="w-5 h-5" />
+      case 'gateway': return <Router className="w-5 h-5" />
+      case 'backup': return <HardDrive className="w-5 h-5" />
+      case 'scheduler': return <Clock className="w-5 h-5" />
+      case 'certificate': return <FileKey className="w-5 h-5" />
+      case 'dns': return <Network className="w-5 h-5" />
+      case 'router': return <Router className="w-5 h-5" />
+      case 'switch': return <Cable className="w-5 h-5" />
+      case 'firewall': return <Shield className="w-5 h-5" />
+      case 'printer': return <Printer className="w-5 h-5" />
+      case 'workstation': return <Monitor className="w-5 h-5" />
+      case 'laptop': return <Laptop className="w-5 h-5" />
+      case 'tablet': return <Tablet className="w-5 h-5" />
+      case 'phone': return <Smartphone className="w-5 h-5" />
+      case 'ups': return <Battery className="w-5 h-5" />
+      case 'nas': return <HardDrive className="w-5 h-5" />
+      case 'camera': return <Video className="w-5 h-5" />
+      case 'accesspoint': return <Radio className="w-5 h-5" />
+      case 'rack': return <Server className="w-5 h-5" />
+      case 'kvm': return <Monitor className="w-5 h-5" />
+      case 'modem': return <Router className="w-5 h-5" />
       default: return <div className="w-5 h-5 bg-gray-400 rounded" />
     }
   }
@@ -359,12 +466,36 @@ function ComponentDetailsForm({
       case 'server': return 'from-blue-500 to-blue-600'
       case 'network': return 'from-purple-500 to-purple-600'
       case 'cloud': return 'from-sky-500 to-sky-600'
-      case 'security': return 'from-red-500 to-red-600'
-      case 'storage': return 'from-orange-500 to-orange-600'
-      case 'wifi': return 'from-indigo-500 to-indigo-600'
+      case 'security':
+      case 'firewall':
+      case 'certificate': return 'from-red-500 to-red-600'
+      case 'storage':
+      case 'backup':
+      case 'nas': return 'from-orange-500 to-orange-600'
+      case 'wifi':
+      case 'accesspoint': return 'from-indigo-500 to-indigo-600'
       case 'loadbalancer': return 'from-yellow-500 to-yellow-600'
       case 'container': return 'from-teal-500 to-teal-600'
-      case 'api': return 'from-pink-500 to-pink-600'
+      case 'api':
+      case 'cdn': return 'from-pink-500 to-pink-600'
+      case 'monitoring': return 'from-violet-500 to-violet-600'
+      case 'cache': return 'from-amber-500 to-amber-600'
+      case 'queue': return 'from-cyan-500 to-cyan-600'
+      case 'gateway':
+      case 'router':
+      case 'switch':
+      case 'dns':
+      case 'modem': return 'from-purple-500 to-purple-600'
+      case 'scheduler': return 'from-rose-500 to-rose-600'
+      case 'printer': return 'from-slate-500 to-slate-600'
+      case 'workstation':
+      case 'laptop':
+      case 'kvm': return 'from-blue-500 to-blue-600'
+      case 'tablet':
+      case 'phone': return 'from-emerald-500 to-emerald-600'
+      case 'ups': return 'from-yellow-500 to-yellow-600'
+      case 'camera': return 'from-fuchsia-500 to-fuchsia-600'
+      case 'rack': return 'from-stone-500 to-stone-600'
       default: return 'from-gray-500 to-gray-600'
     }
   }
@@ -1187,6 +1318,27 @@ Choose:
   const saveTitleEdit = useCallback((nodeId: string, newTitle: string) => {
     if (newTitle.trim() === '') return
     
+    const trimmedTitle = newTitle.trim()
+    
+    // Check for duplicate names (case-insensitive)
+    const duplicateNode = nodes.find(n => {
+      if (n.id === nodeId) return false // Don't compare with self
+      
+      const existingName = n.type === 'zone' 
+        ? n.data.name 
+        : (n.data.customTitle || n.data.label)
+      
+      return existingName?.toLowerCase() === trimmedTitle.toLowerCase()
+    })
+    
+    if (duplicateNode) {
+      toast.error(
+        `A component named "${trimmedTitle}" already exists. Please choose a unique name.`,
+        { duration: 4000 }
+      )
+      return
+    }
+    
     setNodes((nds) => nds.map(node => {
       if (node.id === nodeId) {
         return {
@@ -1195,8 +1347,8 @@ Choose:
             ...node.data,
             // Update name for zones, customTitle for regular nodes
             ...(node.type === 'zone' 
-              ? { name: newTitle.trim() }
-              : { customTitle: newTitle.trim() }
+              ? { name: trimmedTitle }
+              : { customTitle: trimmedTitle }
             )
           }
         }
@@ -1206,7 +1358,7 @@ Choose:
     
     setEditingNodeId(null)
     setEditingTitle('')
-  }, [setNodes])
+  }, [setNodes, nodes])
 
   // Cancel title edit
   const cancelTitleEdit = useCallback(() => {
@@ -1577,6 +1729,19 @@ Choose:
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
         console.error('Save error details:', errorData)
+        
+        // Handle specific error types with better user messaging
+        if (errorData?.code === 'DUPLICATE_NAMES') {
+          toast.error(
+            `Component names must be unique! ${errorData.details}`,
+            { duration: 6000 } // Show longer for more detail
+          )
+        } else if (errorData?.error) {
+          toast.error(`Save failed: ${errorData.error}`)
+        } else {
+          toast.error(`Failed to save: Server error (${response.status})`)
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}${errorData ? ` - ${errorData.error || errorData.details}` : ''}`)
       }
 
@@ -1585,7 +1750,10 @@ Choose:
       
     } catch (error) {
       console.error('Error saving infrastructure data:', error)
-      toast.error('Failed to save infrastructure data')
+      // Don't show generic error if we already showed specific error above
+      if (!(error instanceof Error && error.message?.includes('Component names must be unique'))) {
+        toast.error('Failed to save infrastructure data')
+      }
     } finally {
       setIsSaving(false)
     }
