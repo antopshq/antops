@@ -74,7 +74,7 @@ export function AIDashboard({
       .flatMap(insight => 
         insight.predictedFailures.map(failure => ({
           componentId: insight.componentId,
-          componentTitle: insight.componentId,
+          componentTitle: insight.componentTitle || insight.componentId,
           ...failure
         }))
       )
@@ -91,7 +91,7 @@ export function AIDashboard({
       .flatMap(insight => 
         insight.recommendations.map(recommendation => ({
           componentId: insight.componentId,
-          componentTitle: insight.componentId,
+          componentTitle: insight.componentTitle || insight.componentId,
           recommendation,
           riskCategory: insight.riskCategory,
           riskScore: insight.riskScore
