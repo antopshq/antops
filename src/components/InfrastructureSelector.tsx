@@ -216,8 +216,9 @@ export function InfrastructureSelector({
   const selectedComponentsDetails = getSelectedComponentsDetails()
   const filteredComponents = components.filter(component => 
     !searchTerm.trim() || 
-    component.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    component.type.toLowerCase().includes(searchTerm.toLowerCase())
+    (component.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (component.label || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (component.type || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
