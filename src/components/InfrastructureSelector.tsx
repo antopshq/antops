@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Database, Server, Network, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Search, RefreshCw, Plus } from 'lucide-react'
+import { Database, Server, Network, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Search, RefreshCw, Plus, Activity, BarChart3, Router, Zap, Clock, FileKey, Radio, Cable, Printer, Monitor, Laptop, Tablet, Smartphone, Battery, Cpu, Video, Timer, Power, Refrigerator, Settings, Link, Building, Layers } from 'lucide-react'
 
 interface InfrastructureComponent {
   id: string
@@ -60,6 +60,37 @@ export function InfrastructureSelector({
       case 'loadbalancer': return <MonitorSpeaker className="w-4 h-4" />
       case 'container': return <Container className="w-4 h-4" />
       case 'api': return <Globe className="w-4 h-4" />
+      case 'monitoring': return <Activity className="w-4 h-4" />
+      case 'cache': return <Zap className="w-4 h-4" />
+      case 'queue': return <BarChart3 className="w-4 h-4" />
+      case 'router': return <Router className="w-4 h-4" />
+      case 'firewall': return <Shield className="w-4 h-4" />
+      case 'switch': return <Settings className="w-4 h-4" />
+      case 'gateway': return <Link className="w-4 h-4" />
+      case 'proxy': return <Globe className="w-4 h-4" />
+      case 'cdn': return <Zap className="w-4 h-4" />
+      case 'dns': return <Globe className="w-4 h-4" />
+      case 'scheduler': return <Clock className="w-4 h-4" />
+      case 'secrets': return <FileKey className="w-4 h-4" />
+      case 'messaging': return <Radio className="w-4 h-4" />
+      case 'backup': return <HardDrive className="w-4 h-4" />
+      case 'analytics': return <BarChart3 className="w-4 h-4" />
+      case 'ml': return <Activity className="w-4 h-4" />
+      case 'blockchain': return <Link className="w-4 h-4" />
+      case 'iot': return <Cable className="w-4 h-4" />
+      case 'printer': return <Printer className="w-4 h-4" />
+      case 'desktop': return <Monitor className="w-4 h-4" />
+      case 'laptop': return <Laptop className="w-4 h-4" />
+      case 'tablet': return <Tablet className="w-4 h-4" />
+      case 'mobile': return <Smartphone className="w-4 h-4" />
+      case 'ups': return <Battery className="w-4 h-4" />
+      case 'mainframe': return <Cpu className="w-4 h-4" />
+      case 'camera': return <Video className="w-4 h-4" />
+      case 'sensor': return <Timer className="w-4 h-4" />
+      case 'power': return <Power className="w-4 h-4" />
+      case 'hvac': return <Refrigerator className="w-4 h-4" />
+      case 'datacenter': return <Building className="w-4 h-4" />
+      case 'zone': return <Layers className="w-4 h-4" />
       default: return <div className="w-4 h-4 bg-gray-400 rounded" />
     }
   }
@@ -77,6 +108,37 @@ export function InfrastructureSelector({
       case 'loadbalancer': return 'bg-yellow-100 text-yellow-700 border-yellow-300'
       case 'container': return 'bg-teal-100 text-teal-700 border-teal-300'
       case 'api': return 'bg-pink-100 text-pink-700 border-pink-300'
+      case 'monitoring': return 'bg-emerald-100 text-emerald-700 border-emerald-300'
+      case 'cache': return 'bg-amber-100 text-amber-700 border-amber-300'
+      case 'queue': return 'bg-violet-100 text-violet-700 border-violet-300'
+      case 'router': return 'bg-cyan-100 text-cyan-700 border-cyan-300'
+      case 'firewall': return 'bg-red-100 text-red-700 border-red-300'
+      case 'switch': return 'bg-slate-100 text-slate-700 border-slate-300'
+      case 'gateway': return 'bg-lime-100 text-lime-700 border-lime-300'
+      case 'proxy': return 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-300'
+      case 'cdn': return 'bg-rose-100 text-rose-700 border-rose-300'
+      case 'dns': return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'scheduler': return 'bg-indigo-100 text-indigo-700 border-indigo-300'
+      case 'secrets': return 'bg-gray-100 text-gray-700 border-gray-300'
+      case 'messaging': return 'bg-green-100 text-green-700 border-green-300'
+      case 'backup': return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+      case 'analytics': return 'bg-purple-100 text-purple-700 border-purple-300'
+      case 'ml': return 'bg-pink-100 text-pink-700 border-pink-300'
+      case 'blockchain': return 'bg-orange-100 text-orange-700 border-orange-300'
+      case 'iot': return 'bg-teal-100 text-teal-700 border-teal-300'
+      case 'printer': return 'bg-gray-100 text-gray-700 border-gray-300'
+      case 'desktop': return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'laptop': return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'tablet': return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'mobile': return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'ups': return 'bg-green-100 text-green-700 border-green-300'
+      case 'mainframe': return 'bg-red-100 text-red-700 border-red-300'
+      case 'camera': return 'bg-purple-100 text-purple-700 border-purple-300'
+      case 'sensor': return 'bg-orange-100 text-orange-700 border-orange-300'
+      case 'power': return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+      case 'hvac': return 'bg-cyan-100 text-cyan-700 border-cyan-300'
+      case 'datacenter': return 'bg-slate-100 text-slate-700 border-slate-300'
+      case 'zone': return 'bg-indigo-100 text-indigo-700 border-indigo-300'
       default: return 'bg-gray-100 text-gray-700 border-gray-300'
     }
   }
@@ -173,7 +235,12 @@ export function InfrastructureSelector({
                 className={`${getComponentColor(component.type)} flex items-center gap-1 pr-1`}
               >
                 {getComponentIcon(component.type)}
-                <span className="max-w-32 truncate">{component.label}</span>
+                <span className="max-w-32 truncate">
+                  <span className="capitalize">{component.type}</span>
+                  {component.label && component.label !== component.type && (
+                    <span> - {component.label}</span>
+                  )}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -266,15 +333,14 @@ export function InfrastructureSelector({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">
-                            {component.label}
+                            <span className="capitalize">{component.type}</span>
+                            {component.label && component.label !== component.type && (
+                              <span className="font-normal text-gray-600"> - {component.label}</span>
+                            )}
                           </div>
                           <div className="text-sm text-gray-500 flex items-center gap-2">
-                            <span className="capitalize">{component.type}</span>
                             {component.environment && (
-                              <>
-                                <span>•</span>
-                                <span>{component.environment.name}</span>
-                              </>
+                              <span>{component.environment.name}</span>
                             )}
                           </div>
                         </div>
