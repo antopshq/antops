@@ -138,11 +138,13 @@ function formatRelativeTime(dateString: string) {
 function KanbanColumn({ 
   column, 
   changes,
-  componentDetails
+  componentDetails,
+  componentDetailsLoaded
 }: { 
   column: { status: ChangeStatus; title: string; color: string; icon: React.ComponentType<{ className?: string }>; description: string }
   changes: Change[]
   componentDetails: Record<string, {name: string, type: string, environment: string}>
+  componentDetailsLoaded: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.status,
@@ -210,7 +212,7 @@ function KanbanColumn({
               </div>
             ) : (
               changes.map((change) => (
-                <SortableChangeCard key={change.id} change={change} componentDetails={componentDetails} />
+                <SortableChangeCard key={change.id} change={change} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
               ))
             )}
           </SortableContext>
@@ -220,7 +222,7 @@ function KanbanColumn({
   )
 }
 
-function SortableChangeCard({ change, componentDetails }: { change: Change, componentDetails: Record<string, {name: string, type: string, environment: string}> }) {
+function SortableChangeCard({ change, componentDetails, componentDetailsLoaded }: { change: Change, componentDetails: Record<string, {name: string, type: string, environment: string}>, componentDetailsLoaded: boolean }) {
   const {
     attributes,
     listeners,
@@ -248,15 +250,16 @@ function SortableChangeCard({ change, componentDetails }: { change: Change, comp
       {...attributes}
       className={`mb-3 ${isDragging ? 'opacity-50' : ''}`}
     >
-      <ChangeCard change={change} dragHandleProps={listeners} componentDetails={componentDetails} />
+      <ChangeCard change={change} dragHandleProps={listeners} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
     </div>
   )
 }
 
-function ChangeCard({ change, dragHandleProps, componentDetails }: { 
+function ChangeCard({ change, dragHandleProps, componentDetails, componentDetailsLoaded }: { 
   change: Change, 
   dragHandleProps?: Record<string, unknown>,
-  componentDetails: Record<string, {name: string, type: string, environment: string}>
+  componentDetails: Record<string, {name: string, type: string, environment: string}>,
+  componentDetailsLoaded: boolean
 }) {
   const scheduledUrgency = getScheduledUrgency(change.scheduledFor)
   
@@ -334,22 +337,28 @@ function ChangeCard({ change, dragHandleProps, componentDetails }: {
             {/* Affected services - key for quick insight */}
             {change.affectedServices.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
-                {change.affectedServices.slice(0, 2).map((service) => (
-                  <div key={service} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1">
-                    <div className="font-medium">
-                      {componentDetails[service]?.name || service}
-                    </div>
-                    {componentDetails[service] && (
-                      <div className="text-blue-600 opacity-75">
-                        {componentDetails[service].type} • {componentDetails[service].environment}
+                {componentDetailsLoaded ? (
+                  <>
+                    {change.affectedServices.slice(0, 2).map((service) => (
+                      <div key={service} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1">
+                        <div className="font-medium">
+                          {componentDetails[service]?.name || service}
+                        </div>
+                        {componentDetails[service] && (
+                          <div className="text-blue-600 opacity-75">
+                            {componentDetails[service].type} • {componentDetails[service].environment}
+                          </div>
+                        )}
                       </div>
+                    ))}
+                    {change.affectedServices.length > 2 && (
+                      <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                        +{change.affectedServices.length - 2}
+                      </Badge>
                     )}
-                  </div>
-                ))}
-                {change.affectedServices.length > 2 && (
-                  <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                    +{change.affectedServices.length - 2}
-                  </Badge>
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-400 italic">Loading components...</div>
                 )}
               </div>
             )}
@@ -470,6 +479,7 @@ function TimelineSummary({ changes }: { changes: Change[] }) {
 export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [componentDetails, setComponentDetails] = useState<Record<string, {name: string, type: string, environment: string}>>({})
+  const [componentDetailsLoaded, setComponentDetailsLoaded] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor))
 
   // Fetch all component details once for the entire kanban board
@@ -490,9 +500,11 @@ export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKan
           })
           
           setComponentDetails(detailsMap)
+          setComponentDetailsLoaded(true)
         }
       } catch (error) {
         console.error('Error fetching component details:', error)
+        setComponentDetailsLoaded(true) // Show UI even if fetch fails
       }
     }
 
@@ -540,6 +552,7 @@ export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKan
                 column={column}
                 changes={columnChanges}
                 componentDetails={componentDetails}
+                componentDetailsLoaded={componentDetailsLoaded}
               />
             )
           })}
@@ -547,7 +560,7 @@ export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKan
         <DragOverlay>
           {activeChange ? (
             <div className="rotate-3 opacity-90">
-              <ChangeCard change={activeChange} componentDetails={componentDetails} />
+              <ChangeCard change={activeChange} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
             </div>
           ) : null}
         </DragOverlay>
