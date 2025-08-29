@@ -31,20 +31,47 @@ export async function POST(request: NextRequest) {
     }
     const user = authContext.user
 
-    const body = await request.json()
-    const { 
-      title, 
-      description, 
-      priority, 
-      criticality,
-      urgency,
-      assignedTo, 
-      rootCause,
-      workaround,
-      solution,
-      affectedServices, 
-      tags 
-    } = body
+    // Handle both FormData (with files) and JSON (without files)
+    const contentType = request.headers.get('content-type')
+    let title: string, description: string, priority: string, criticality: string, urgency: string
+    let assignedTo: string, rootCause: string, workaround: string, solution: string
+    let affectedServices: string[], tags: string[]
+    
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData for file uploads
+      const formData = await request.formData()
+      title = formData.get('title') as string
+      description = formData.get('description') as string
+      priority = formData.get('priority') as string
+      criticality = formData.get('criticality') as string || 'medium'
+      urgency = formData.get('urgency') as string || 'medium'
+      assignedTo = formData.get('assignedTo') as string
+      rootCause = formData.get('rootCause') as string || ''
+      workaround = formData.get('workaround') as string || ''
+      solution = formData.get('solution') as string || ''
+      
+      try {
+        affectedServices = JSON.parse(formData.get('affectedServices') as string || '[]')
+        tags = JSON.parse(formData.get('tags') as string || '[]')
+      } catch {
+        affectedServices = []
+        tags = []
+      }
+    } else {
+      // Handle JSON for direct API calls
+      const body = await request.json()
+      title = body.title
+      description = body.description
+      priority = body.priority
+      criticality = body.criticality || 'medium'
+      urgency = body.urgency || 'medium'
+      assignedTo = body.assignedTo
+      rootCause = body.rootCause || ''
+      workaround = body.workaround || ''
+      solution = body.solution || ''
+      affectedServices = body.affectedServices || []
+      tags = body.tags || []
+    }
 
     if (!title || !description) {
       return NextResponse.json(

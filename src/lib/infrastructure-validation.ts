@@ -15,20 +15,29 @@ export async function validateInfrastructureComponents(
   const supabase = await createSupabaseServerClient()
   
   try {
-    // Get all valid infrastructure component IDs for this organization
-    const { data: validComponents, error } = await supabase
-      .from('infrastructure_nodes')
-      .select('id')
-      .eq('organization_id', organizationId)
-      .in('id', componentIds)
+    // Get all valid infrastructure component IDs from both nodes and zones
+    const [nodesResult, zonesResult] = await Promise.all([
+      supabase
+        .from('infrastructure_nodes')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .in('id', componentIds),
+      supabase
+        .from('infrastructure_zones')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .in('id', componentIds)
+    ])
 
-    if (error) {
-      console.error('Error validating infrastructure components:', error)
+    if (nodesResult.error && zonesResult.error) {
+      console.error('Error validating infrastructure components:', nodesResult.error, zonesResult.error)
       // In case of error, return empty array to be safe
       return []
     }
 
-    const validIds = validComponents?.map(c => c.id) || []
+    const validNodeIds = nodesResult.data?.map(c => c.id) || []
+    const validZoneIds = zonesResult.data?.map(c => c.id) || []
+    const validIds = [...validNodeIds, ...validZoneIds]
     
     // Log if any components were filtered out
     const removedIds = componentIds.filter(id => !validIds.includes(id))
@@ -53,19 +62,23 @@ export async function hasInfrastructureComponents(organizationId: string): Promi
   const supabase = await createSupabaseServerClient()
   
   try {
-    const { data, error } = await supabase
-      .from('infrastructure_nodes')
-      .select('id')
-      .eq('organization_id', organizationId)
-      .limit(1)
-      .single()
+    // Check both nodes and zones
+    const [nodesResult, zonesResult] = await Promise.all([
+      supabase
+        .from('infrastructure_nodes')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('infrastructure_zones')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .limit(1)
+        .maybeSingle()
+    ])
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-      console.error('Error checking infrastructure components:', error)
-      return false
-    }
-
-    return !!data
+    return !!(nodesResult.data || zonesResult.data)
     
   } catch (error) {
     console.error('Error during infrastructure existence check:', error)
@@ -81,17 +94,22 @@ export async function getAllInfrastructureComponentIds(organizationId: string): 
   const supabase = await createSupabaseServerClient()
   
   try {
-    const { data: components, error } = await supabase
-      .from('infrastructure_nodes')
-      .select('id')
-      .eq('organization_id', organizationId)
+    // Get IDs from both nodes and zones
+    const [nodesResult, zonesResult] = await Promise.all([
+      supabase
+        .from('infrastructure_nodes')
+        .select('id')
+        .eq('organization_id', organizationId),
+      supabase
+        .from('infrastructure_zones')
+        .select('id')
+        .eq('organization_id', organizationId)
+    ])
 
-    if (error) {
-      console.error('Error fetching infrastructure component IDs:', error)
-      return []
-    }
+    const nodeIds = nodesResult.data?.map(c => c.id) || []
+    const zoneIds = zonesResult.data?.map(c => c.id) || []
 
-    return components?.map(c => c.id) || []
+    return [...nodeIds, ...zoneIds]
     
   } catch (error) {
     console.error('Error during infrastructure component ID fetch:', error)

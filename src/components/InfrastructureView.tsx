@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Save, RefreshCw, Plus, Database, Server, Network, Settings, FolderPlus, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Link, ExternalLink, AlertTriangle, Wrench, Layers, Building, Lock, Unlock, Upload, Download, Trash2, Brain, Activity, BarChart3, Router, Zap, Clock, FileKey, Radio, Cable, Printer, Monitor, Laptop, Tablet, Smartphone, Battery, Cpu, Video, Timer, Power, Refrigerator } from 'lucide-react'
+import { Save, RefreshCw, Plus, Database, Server, Network, Settings, FolderPlus, Cloud, Shield, HardDrive, Wifi, MonitorSpeaker, Container, Globe, X, Link, ExternalLink, AlertTriangle, Wrench, Layers, Building, Lock, Unlock, Upload, Download, Trash2, Brain, Activity, BarChart3, Router, Zap, Clock, FileKey, Radio, Cable, Printer, Monitor, Laptop, Tablet, Smartphone, Battery, Cpu, Video, Timer, Power, Refrigerator, Edit } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { getITILBadgeClasses, getITILIcon, getITILTextClass } from '@/lib/itil-colors'
 
@@ -1157,6 +1157,9 @@ function InfrastructureViewInner({ className, highlightComponentId }: Infrastruc
   const [isNewEnvDialogOpen, setIsNewEnvDialogOpen] = useState(false)
   const [newEnvName, setNewEnvName] = useState('')
   const [newEnvDescription, setNewEnvDescription] = useState('')
+  const [isEditEnvDialogOpen, setIsEditEnvDialogOpen] = useState(false)
+  const [editEnvName, setEditEnvName] = useState('')
+  const [editEnvDescription, setEditEnvDescription] = useState('')
   const [zoneDropdownValue, setZoneDropdownValue] = useState('')
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null)
   const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null)
@@ -1801,6 +1804,62 @@ Choose:
     }
   }, [newEnvName, newEnvDescription, environments.length, loadEnvironments])
 
+  // Edit environment
+  const editEnvironment = useCallback(async () => {
+    try {
+      if (!currentEnvironment?.id) {
+        toast.error('No environment selected')
+        return
+      }
+
+      if (!editEnvName.trim()) {
+        toast.error('Environment name is required')
+        return
+      }
+
+      const response = await fetch('/api/infra/environments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentEnvironment.id,
+          name: editEnvName.trim(),
+          description: editEnvDescription.trim() || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      toast.success('Environment updated successfully')
+      
+      // Reset form and close dialog
+      setEditEnvName('')
+      setEditEnvDescription('')
+      setIsEditEnvDialogOpen(false)
+      
+      // Reload environments
+      await loadEnvironments()
+      
+    } catch (error) {
+      console.error('Error updating environment:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update environment')
+    }
+  }, [currentEnvironment?.id, editEnvName, editEnvDescription, loadEnvironments])
+
+  // Open edit environment dialog
+  const openEditEnvironmentDialog = useCallback(() => {
+    if (currentEnvironment) {
+      setEditEnvName(currentEnvironment.name || '')
+      setEditEnvDescription(currentEnvironment.description || '')
+      setIsEditEnvDialogOpen(true)
+    }
+  }, [currentEnvironment])
+
   // Switch to different environment
   const switchEnvironment = useCallback(async (environmentId: string) => {
     const newEnv = environments.find(env => env.id === environmentId)
@@ -2270,6 +2329,16 @@ Choose:
                             </div>
                           </DialogContent>
                         </Dialog>
+                        {/* Edit Environment Button */}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          title="Edit environment name"
+                          onClick={openEditEnvironmentDialog}
+                          disabled={!currentEnvironment}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                       </>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -2919,6 +2988,43 @@ Choose:
               <Trash2 className="w-4 h-4" />
               Clear All
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Environment Dialog */}
+      <Dialog open={isEditEnvDialogOpen} onOpenChange={setIsEditEnvDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Environment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-env-name">Name</Label>
+              <Input
+                id="edit-env-name"
+                value={editEnvName}
+                onChange={(e) => setEditEnvName(e.target.value)}
+                placeholder="e.g., Development, Staging"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-env-description">Description (optional)</Label>
+              <Input
+                id="edit-env-description"
+                value={editEnvDescription}
+                onChange={(e) => setEditEnvDescription(e.target.value)}
+                placeholder="Brief description of this environment"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditEnvDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={editEnvironment}>
+                Save Changes
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

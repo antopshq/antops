@@ -248,7 +248,7 @@ export default function ProblemDetailPage() {
           
           data.components.forEach((component: any) => {
             detailsMap[component.id] = {
-              name: component.name,
+              name: component.label || component.displayName || component.id,
               type: component.type,
               environment: component.environment?.name || 'Unknown'
             }
