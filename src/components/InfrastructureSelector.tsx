@@ -237,9 +237,13 @@ export function InfrastructureSelector({
               >
                 {getComponentIcon(component.type)}
                 <span className="max-w-32 truncate">
-                  <span className="capitalize">{component.type}</span>
-                  {component.label && component.label !== component.type && (
-                    <span> - {component.label}</span>
+                  {component.label && component.label !== component.type ? (
+                    <>
+                      <span>{component.label}</span>
+                      <span className="capitalize"> - {component.type}</span>
+                    </>
+                  ) : (
+                    <span className="capitalize">{component.type}</span>
                   )}
                 </span>
                 <Button
@@ -334,9 +338,13 @@ export function InfrastructureSelector({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">
-                            <span className="capitalize">{component.type}</span>
-                            {component.label && component.label !== component.type && (
-                              <span className="font-normal text-gray-600"> - {component.label}</span>
+                            {component.label && component.label !== component.type ? (
+                              <>
+                                <span>{component.label}</span>
+                                <span className="font-normal text-gray-600 capitalize"> - {component.type}</span>
+                              </>
+                            ) : (
+                              <span className="capitalize">{component.type}</span>
                             )}
                           </div>
                           <div className="text-sm text-gray-500 flex items-center gap-2">
