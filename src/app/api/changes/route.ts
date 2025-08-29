@@ -37,21 +37,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { 
-      title, 
-      description, 
-      priority, 
-      assignedTo, 
-      scheduledFor, 
-      estimatedEndTime,
-      rollbackPlan, 
-      testPlan, 
-      affectedServices, 
-      tags,
-      problemId,
-      incidentId
-    } = body
+    // Handle both FormData (with files) and JSON (without files)
+    const contentType = request.headers.get('content-type')
+    let title: string, description: string, priority: string, assignedTo: string
+    let scheduledFor: string, estimatedEndTime: string, rollbackPlan: string, testPlan: string
+    let affectedServices: string[], tags: string[], problemId: string, incidentId: string
+    
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData for file uploads
+      const formData = await request.formData()
+      title = formData.get('title') as string
+      description = formData.get('description') as string
+      priority = formData.get('priority') as string
+      assignedTo = formData.get('assignedTo') as string
+      scheduledFor = formData.get('scheduledFor') as string || ''
+      estimatedEndTime = formData.get('estimatedEndTime') as string || ''
+      rollbackPlan = formData.get('rollbackPlan') as string
+      testPlan = formData.get('testPlan') as string
+      problemId = formData.get('problemId') as string || ''
+      incidentId = formData.get('incidentId') as string || ''
+      
+      try {
+        affectedServices = JSON.parse(formData.get('affectedServices') as string || '[]')
+        tags = JSON.parse(formData.get('tags') as string || '[]')
+      } catch {
+        affectedServices = []
+        tags = []
+      }
+    } else {
+      // Handle JSON for direct API calls
+      const body = await request.json()
+      title = body.title
+      description = body.description
+      priority = body.priority
+      assignedTo = body.assignedTo
+      scheduledFor = body.scheduledFor || ''
+      estimatedEndTime = body.estimatedEndTime || ''
+      rollbackPlan = body.rollbackPlan
+      testPlan = body.testPlan
+      affectedServices = body.affectedServices || []
+      tags = body.tags || []
+      problemId = body.problemId || ''
+      incidentId = body.incidentId || ''
+    }
 
     if (!title || !description || !rollbackPlan || !testPlan) {
       return NextResponse.json(

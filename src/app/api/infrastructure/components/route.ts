@@ -114,7 +114,9 @@ export async function GET(request: NextRequest) {
       
       return {
         id: node.id,
-        name: node.metadata?.customTitle || node.label,
+        label: node.label, // Use the label from infrastructure_nodes table
+        displayName: node.metadata?.customTitle || node.label,
+        originalLabel: node.label,
         type: node.metadata?.type || node.type, // Use metadata.type (server, loadbalancer) instead of node.type (infrastructure)
         description: `${node.metadata?.type || node.type} component in ${environment?.name || 'Unknown Environment'}`,
         environment: {
@@ -132,7 +134,9 @@ export async function GET(request: NextRequest) {
       
       return {
         id: zone.id,
-        name: zone.name,
+        label: zone.name, // Use the name from infrastructure_zones table
+        displayName: zone.name,
+        originalLabel: zone.name,
         type: zone.zone_type,
         description: `${zone.zone_type} zone in ${environment?.name || 'Unknown Environment'}`,
         environment: {

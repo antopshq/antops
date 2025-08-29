@@ -486,7 +486,7 @@ export async function POST(request: NextRequest) {
 
       const { error: insertEdgesError } = await supabase
         .from('infrastructure_edges')
-        .upsert(edgesWithEnvId, { onConflict: 'id' })
+        .insert(edgesWithEnvId)
 
       if (insertEdgesError) {
         console.error('Error inserting edges:', insertEdgesError)

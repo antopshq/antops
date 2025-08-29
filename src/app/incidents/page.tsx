@@ -160,7 +160,27 @@ export default function IncidentsPage() {
   // Separate function to handle the actual status update
   const updateIncidentStatus = async (incidentId: string, newStatus: Status, closureComment?: string) => {
     try {
-      const requestBody: any = { status: newStatus }
+      // Find the current incident to preserve all existing data
+      const currentIncident = incidents.find(inc => inc.id === incidentId)
+      if (!currentIncident) {
+        console.error('Current incident not found for update:', incidentId)
+        return
+      }
+
+      // Preserve all existing data, only change the status
+      const requestBody: any = {
+        title: currentIncident.title,
+        description: currentIncident.description,
+        priority: currentIncident.priority,
+        criticality: currentIncident.criticality,
+        urgency: currentIncident.urgency,
+        status: newStatus,
+        assignedTo: currentIncident.assignedTo || '',
+        problemId: currentIncident.problemId || '',
+        affectedServices: currentIncident.affectedServices || [],
+        tags: currentIncident.tags || [],
+        links: []
+      }
       
       // If there's a closure comment, include it
       if (closureComment) {
