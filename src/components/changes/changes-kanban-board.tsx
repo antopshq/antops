@@ -269,7 +269,7 @@ function ChangeCard({ change, dragHandleProps }: { change: Change, dragHandlePro
           
           data.components.forEach((component: any) => {
             detailsMap[component.id] = {
-              name: component.name,
+              name: component.label || component.displayName || component.id,
               type: component.type,
               environment: component.environment?.name || 'Unknown'
             }
@@ -318,9 +318,6 @@ function ChangeCard({ change, dragHandleProps }: { change: Change, dragHandlePro
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-              {change.description}
-            </p>
             
             {/* Scheduled time - prominent for calendar-like view */}
             {change.scheduledFor && (
