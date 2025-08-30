@@ -71,7 +71,7 @@ export default function TeamPage() {
   const canInviteUsers = hasPermission(currentUserRole, PERMISSIONS.INVITE_USERS)
   const canManageUsers = hasPermission(currentUserRole, PERMISSIONS.MANAGE_USERS)
   const canViewOrgStats = hasPermission(currentUserRole, PERMISSIONS.VIEW_ORGANIZATION_STATS)
-  const canConfigureSLA = hasPermission(currentUserRole, PERMISSIONS.MANAGE_ORGANIZATION)
+  const canConfigureSLO = hasPermission(currentUserRole, PERMISSIONS.MANAGE_ORGANIZATION)
   
   // Get available roles for inviting, with fallback for basic roles
   const getInvitableRoles = (): UserRole[] => {
@@ -264,7 +264,7 @@ export default function TeamPage() {
     window.location.reload()
   }
 
-  const handleSLASave = async (configurations: Array<{ priority: string; resolution_time_hours: number }>) => {
+  const handleSLOSave = async (configurations: Array<{ priority: string; resolution_time_hours: number }>) => {
     try {
       const response = await fetch('/api/sla-configurations', {
         method: 'PUT',
@@ -275,16 +275,16 @@ export default function TeamPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save SLA configurations')
+        throw new Error('Failed to save SLO configurations')
       }
 
-      setSuccess('SLA configurations updated successfully!')
+      setSuccess('SLO configurations updated successfully!')
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
-      console.error('Error saving SLA configurations:', error)
-      setError('Failed to save SLA configurations')
+      console.error('Error saving SLO configurations:', error)
+      setError('Failed to save SLO configurations')
       
       // Clear error message after 5 seconds
       setTimeout(() => setError(''), 5000)
@@ -325,13 +325,13 @@ export default function TeamPage() {
             <p className="text-gray-600 mt-1">Manage team members and permissions</p>
           </div>
           <div className="flex items-center space-x-3">
-            {canConfigureSLA && (
+            {canConfigureSLO && (
               <Button 
                 variant="outline"
                 onClick={() => setSlaModalOpen(true)} 
               >
                 <Clock className="w-4 h-4 mr-2" />
-                Configure SLA
+                Configure SLO
               </Button>
             )}
             {canInviteUsers && (
@@ -736,11 +736,11 @@ export default function TeamPage() {
           />
         )}
 
-        {/* SLA Configuration Modal */}
+        {/* SLO Configuration Modal */}
         <SLAConfigurationModal
           isOpen={slaModalOpen}
           onClose={() => setSlaModalOpen(false)}
-          onSave={handleSLASave}
+          onSave={handleSLOSave}
         />
       </div>
     </ClientLayout>

@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-red-600" />
                   <span className="text-red-800">
-                    <strong>{stats?.slaBreaches || 0}</strong> SLA breach{(stats?.slaBreaches || 0) !== 1 ? 'es' : ''} detected
+                    <strong>{stats?.slaBreaches || 0}</strong> SLO breach{(stats?.slaBreaches || 0) !== 1 ? 'es' : ''} detected
                   </span>
                 </div>
               )}
@@ -275,10 +275,10 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* SLA Compliance */}
+            {/* SLO Compliance */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">SLA Compliance</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">SLO Compliance</CardTitle>
                 <Target className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 }`}>
                   {stats?.slaComplianceRate || 0}%
                 </div>
-                <p className="text-xs text-gray-600 mt-1">Within SLA targets</p>
+                <p className="text-xs text-gray-600 mt-1">Within SLO targets</p>
               </CardContent>
             </Card>
 
@@ -377,10 +377,10 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* SLA Breaches */}
+            {/* SLO Breaches */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">SLA Breaches</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">SLO Breaches</CardTitle>
                 <Shield className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -528,7 +528,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 flex items-center gap-2">
                   <Target className="w-4 h-4" />
-                  SLA Compliance
+                  SLO Compliance
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className={`text-xs ${

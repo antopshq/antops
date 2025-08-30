@@ -137,10 +137,14 @@ function formatRelativeTime(dateString: string) {
 
 function KanbanColumn({ 
   column, 
-  changes 
+  changes,
+  componentDetails,
+  componentDetailsLoaded
 }: { 
   column: { status: ChangeStatus; title: string; color: string; icon: React.ComponentType<{ className?: string }>; description: string }
-  changes: Change[] 
+  changes: Change[]
+  componentDetails: Record<string, {name: string, type: string, environment: string}>
+  componentDetailsLoaded: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.status,
@@ -208,7 +212,7 @@ function KanbanColumn({
               </div>
             ) : (
               changes.map((change) => (
-                <SortableChangeCard key={change.id} change={change} />
+                <SortableChangeCard key={change.id} change={change} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
               ))
             )}
           </SortableContext>
@@ -218,7 +222,7 @@ function KanbanColumn({
   )
 }
 
-function SortableChangeCard({ change }: { change: Change }) {
+function SortableChangeCard({ change, componentDetails, componentDetailsLoaded }: { change: Change, componentDetails: Record<string, {name: string, type: string, environment: string}>, componentDetailsLoaded: boolean }) {
   const {
     attributes,
     listeners,
@@ -246,44 +250,18 @@ function SortableChangeCard({ change }: { change: Change }) {
       {...attributes}
       className={`mb-3 ${isDragging ? 'opacity-50' : ''}`}
     >
-      <ChangeCard change={change} dragHandleProps={listeners} />
+      <ChangeCard change={change} dragHandleProps={listeners} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
     </div>
   )
 }
 
-function ChangeCard({ change, dragHandleProps }: { change: Change, dragHandleProps?: Record<string, unknown> }) {
+function ChangeCard({ change, dragHandleProps, componentDetails, componentDetailsLoaded }: { 
+  change: Change, 
+  dragHandleProps?: Record<string, unknown>,
+  componentDetails: Record<string, {name: string, type: string, environment: string}>,
+  componentDetailsLoaded: boolean
+}) {
   const scheduledUrgency = getScheduledUrgency(change.scheduledFor)
-  const [componentDetails, setComponentDetails] = useState<Record<string, {name: string, type: string, environment: string}>>({})
-
-  // Fetch component details when change is loaded
-  useEffect(() => {
-    if (!change?.affectedServices?.length) return
-
-    const fetchComponentDetails = async () => {
-      try {
-        // Get all infrastructure components to resolve details
-        const response = await fetch('/api/infrastructure/components')
-        if (response.ok) {
-          const data = await response.json()
-          const detailsMap: Record<string, {name: string, type: string, environment: string}> = {}
-          
-          data.components.forEach((component: any) => {
-            detailsMap[component.id] = {
-              name: component.label || component.displayName || component.id,
-              type: component.type,
-              environment: component.environment?.name || 'Unknown'
-            }
-          })
-          
-          setComponentDetails(detailsMap)
-        }
-      } catch (error) {
-        console.error('Error fetching component details:', error)
-      }
-    }
-
-    fetchComponentDetails()
-  }, [change?.affectedServices])
   
   return (
     <Card className="mb-3 shadow-sm hover:shadow-md transition-shadow relative group">
@@ -359,22 +337,28 @@ function ChangeCard({ change, dragHandleProps }: { change: Change, dragHandlePro
             {/* Affected services - key for quick insight */}
             {change.affectedServices.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
-                {change.affectedServices.slice(0, 2).map((service) => (
-                  <div key={service} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1">
-                    <div className="font-medium">
-                      {componentDetails[service]?.name || service}
-                    </div>
-                    {componentDetails[service] && (
-                      <div className="text-blue-600 opacity-75">
-                        {componentDetails[service].type} • {componentDetails[service].environment}
+                {componentDetailsLoaded ? (
+                  <>
+                    {change.affectedServices.slice(0, 2).map((service) => (
+                      <div key={service} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1">
+                        <div className="font-medium">
+                          {componentDetails[service]?.name || service}
+                        </div>
+                        {componentDetails[service] && (
+                          <div className="text-blue-600 opacity-75">
+                            {componentDetails[service].type} • {componentDetails[service].environment}
+                          </div>
+                        )}
                       </div>
+                    ))}
+                    {change.affectedServices.length > 2 && (
+                      <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                        +{change.affectedServices.length - 2}
+                      </Badge>
                     )}
-                  </div>
-                ))}
-                {change.affectedServices.length > 2 && (
-                  <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                    +{change.affectedServices.length - 2}
-                  </Badge>
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-400 italic">Loading components...</div>
                 )}
               </div>
             )}
@@ -494,7 +478,38 @@ function TimelineSummary({ changes }: { changes: Change[] }) {
 
 export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [componentDetails, setComponentDetails] = useState<Record<string, {name: string, type: string, environment: string}>>({})
+  const [componentDetailsLoaded, setComponentDetailsLoaded] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor))
+
+  // Fetch all component details once for the entire kanban board
+  useEffect(() => {
+    const fetchComponentDetails = async () => {
+      try {
+        const response = await fetch('/api/infrastructure/components')
+        if (response.ok) {
+          const data = await response.json()
+          const detailsMap: Record<string, {name: string, type: string, environment: string}> = {}
+          
+          data.components.forEach((component: any) => {
+            detailsMap[component.id] = {
+              name: component.label || component.displayName || component.id,
+              type: component.type,
+              environment: component.environment?.name || 'Unknown'
+            }
+          })
+          
+          setComponentDetails(detailsMap)
+          setComponentDetailsLoaded(true)
+        }
+      } catch (error) {
+        console.error('Error fetching component details:', error)
+        setComponentDetailsLoaded(true) // Show UI even if fetch fails
+      }
+    }
+
+    fetchComponentDetails()
+  }, [])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
@@ -536,6 +551,8 @@ export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKan
                 key={column.status}
                 column={column}
                 changes={columnChanges}
+                componentDetails={componentDetails}
+                componentDetailsLoaded={componentDetailsLoaded}
               />
             )
           })}
@@ -543,7 +560,7 @@ export function ChangesKanbanBoard({ changes, onChangeStatusChange }: ChangesKan
         <DragOverlay>
           {activeChange ? (
             <div className="rotate-3 opacity-90">
-              <ChangeCard change={activeChange} />
+              <ChangeCard change={activeChange} componentDetails={componentDetails} componentDetailsLoaded={componentDetailsLoaded} />
             </div>
           ) : null}
         </DragOverlay>
