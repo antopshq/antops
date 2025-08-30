@@ -196,7 +196,7 @@ export function AIDashboard({
                               <div className="w-4 h-4 rounded bg-gray-300 flex items-center justify-center">
                                 <div className="w-2 h-2 bg-gray-600 rounded"></div>
                               </div>
-                              <span className="text-sm">{insight.componentId}</span>
+                              <span className="text-sm">{insight.componentTitle || insight.componentId}</span>
                             </div>
                             <Badge variant="outline" className={`text-xs ${getRiskColor(insight.riskCategory)}`}>
                               {insight.riskScore}/100
@@ -204,20 +204,6 @@ export function AIDashboard({
                           </div>
                         ))}
                         
-                        {/* Show recommendations for this category if available */}
-                        {componentsInCategory.length > 0 && componentsInCategory[0].recommendations.length > 0 && (
-                          <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
-                            <h5 className="text-xs font-medium mb-1">Common Recommendations:</h5>
-                            <ul className="text-xs text-muted-foreground space-y-1">
-                              {componentsInCategory[0].recommendations.slice(0, 2).map((rec, i) => (
-                                <li key={i} className="flex items-start gap-1">
-                                  <span className="text-blue-500 mt-0.5">•</span>
-                                  <span>{rec}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -297,11 +283,11 @@ export function AIDashboard({
         </CardContent>
       </Card>
 
-      {/* Changes to be Made */}
+      {/* Recommended Actions/Changes */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center justify-between">
-            Changes to be Made
+            Recommended Actions/Changes
             <Button
               variant="ghost"
               size="sm"
