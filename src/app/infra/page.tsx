@@ -17,19 +17,7 @@ export default async function InfraPage({ searchParams }: { searchParams: Promis
                   <div className="relative group">
                     <HelpCircle className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-8 w-80 bg-gray-900 text-white text-sm rounded-lg p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 shadow-xl">
-                      <div className="font-semibold mb-2">🏗️ How to Build Infrastructure Diagrams</div>
-                      <ul className="space-y-1.5 text-xs">
-                        <li>• <strong>Add Components:</strong> Click component buttons above to add servers, databases, etc.</li>
-                        <li>• <strong>Create Zones:</strong> Use zone dropdown to add VPCs, subnets, security groups</li>
-                        <li>• <strong>Drag into Zones:</strong> Drag components into zones to organize them</li>
-                        <li>• <strong>Connect Components:</strong> Drag from green dots (source) to blue dots (target)</li>
-                        <li>• <strong>Lock Components:</strong> Use lock button to prevent accidental moves</li>
-                        <li>• <strong>Edit Names:</strong> Click any component to open details panel</li>
-                        <li>• <strong>Link to ITSM:</strong> Connect components to incidents, problems, changes</li>
-                      </ul>
-                      <div className="mt-2 pt-2 border-t border-gray-700 text-xs opacity-75">
-                        💡 Tip: Start with zones, then add components, finally create connections
-                      </div>
+                      🔒 Use the lock button to lock your components and nodes within the space required - it is very handy!
                     </div>
                   </div>
                 </div>
