@@ -2390,9 +2390,9 @@ Choose:
                 </div>
 
                 {/* Actions Section */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-w-fit flex-shrink-0">
                   {/* Import/Export Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {/* AI Scan Button with Token Info */}
                     <div className="flex items-center gap-2">
                       <div className="flex flex-col items-center text-xs text-gray-500">
