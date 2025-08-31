@@ -9,8 +9,7 @@ import {
   Bot, 
   Send, 
   X, 
-  Minimize2, 
-  Maximize2, 
+ 
   AlertTriangle, 
   Loader2,
   CheckCircle,
@@ -69,7 +68,7 @@ interface StructuredIncidentAnalysis {
 
 export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  // Removed minimize functionality
   const [messages, setMessages] = useState<AIAssistantMessage[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -543,11 +542,12 @@ export function AIAssistant() {
     )
   }
 
-  if (!isOpen) {
-    return (
+  return (
+    <>
+      {/* Always visible floating button */}
       <div className="fixed bottom-6 right-20 z-50">
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsOpen(!isOpen)}
           className="relative h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
           style={{ backgroundColor: '#FF7A1A' }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E6661A'}
@@ -559,145 +559,95 @@ export function AIAssistant() {
           AI Assistant
         </div>
       </div>
-    )
-  }
 
-  return (
-    <div className="fixed bottom-20 right-20 z-50">
-      <Card className={`w-96 shadow-xl border-2 transition-all duration-300 ${
-        isMinimized ? 'h-16' : 'h-[500px]'
-      }`}>
-        <CardHeader className={`flex flex-row items-center justify-between ${isMinimized ? 'p-3' : 'p-4 border-b'}`}>
-          {isMinimized ? (
-            <>
-              <CardTitle className="flex items-center text-sm">
-                <Bot className="w-4 h-4 mr-2 text-blue-500" />
-                AI Chat
-                <Badge variant="outline" className="ml-2 text-xs">
-                  {useAI ? '🤖' : '📝'}
-                </Badge>
-              </CardTitle>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMinimized(false)}
-                  className="w-7 h-7 p-0"
-                >
-                  <Maximize2 className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="w-7 h-7 p-0"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <CardTitle className="flex items-center text-lg">
-                <Bot className="w-5 h-5 mr-2 text-blue-500" />
-                AI Assistant
-                {useAI ? (
-                  <Badge variant="outline" className="ml-2 text-xs">
-                    <Zap className="w-3 h-3 mr-1" />
-                    GPT-4o Mini
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="ml-2 text-xs bg-blue-50">
-                    Pattern Recognition
-                  </Badge>
-                )}
-              </CardTitle>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setUseAI(!useAI)}
-                  className="text-xs px-2 py-1 h-7"
-                >
-                  {useAI ? '🤖 AI' : '📝 Manual'}
-                </Button>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsMinimized(true)}
-                    className="w-8 h-8 p-0"
-                  >
-                    <Minimize2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsOpen(false)}
-                    className="w-8 h-8 p-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
+      {/* Chatbot widget */}
+      {isOpen && (
+        <div className="fixed bottom-20 right-20 z-40">
+          <Card className="w-[450px] shadow-xl border-2 h-[500px]">
+        <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
+          <div className="flex items-center text-lg">
+            <Bot className="w-5 h-5 mr-2 text-orange-500" />
+            <span className="font-semibold">AI Assistant</span>
+            {useAI ? (
+              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-300">
+                <Zap className="w-3 h-3 mr-1" />
+                AI Mode
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-300">
+                📝 Manual Mode
+              </Badge>
+            )}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setUseAI(!useAI)}
+            className={`text-xs px-3 py-1 h-8 border transition-colors ${
+              useAI 
+                ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' 
+                : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+            }`}
+            title={useAI ? 'Switch to Manual Pattern Recognition' : 'Switch to AI Analysis'}
+          >
+            {useAI ? '📝 Switch to Manual' : '🤖 Switch to AI'}
+          </Button>
         </CardHeader>
 
-        {!isMinimized && (
-          <CardContent className="p-0 flex flex-col h-[calc(500px-73px)]">
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map(renderMessage)}
-              {isLoading && (
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing your incident...
+        <CardContent className="p-0 flex flex-col h-[calc(500px-73px)]">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map(renderMessage)}
+            {isLoading && (
+              <div className="flex items-center text-gray-500 text-sm">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Analyzing your incident...
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="flex items-center text-red-700 text-sm">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  {error}
                 </div>
-              )}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <div className="flex items-center text-red-700 text-sm">
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                    {error}
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
-            {/* Input Area */}
-            <div className="border-t p-4">
-              <div className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Describe the incident..."
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!input.trim() || isLoading}
-                  size="sm"
-                  className="bg-orange-500 hover:bg-orange-600"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                💡 Tip: Describe symptoms, affected users, and any error messages
-              </div>
+          {/* Input Area */}
+          <div className="border-t p-4 bg-white">
+            <div className="flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Describe the incident..."
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isLoading}
+                size="sm"
+                className="bg-orange-500 hover:bg-orange-600 flex-shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
             </div>
-          </CardContent>
-        )}
+            <div className="text-xs text-gray-500 mt-2">
+              💡 Tip: Describe symptoms, affected users, and any error messages
+            </div>
+          </div>
+        </CardContent>
       </Card>
-    </div>
+        </div>
+      )}
+    </>
   )
 }
