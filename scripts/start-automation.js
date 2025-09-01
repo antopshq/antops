@@ -7,7 +7,7 @@
 
 const fetch = require('node-fetch').default || require('node-fetch')
 
-const API_URL = 'http://localhost:3001/api/cron/change-lifecycle'
+const API_URL = 'http://localhost:3001/api/automation/changes'
 const INTERVAL_MS = 60 * 1000 // Run every minute
 
 console.log('🚀 Starting Change Lifecycle Automation')
@@ -18,11 +18,19 @@ async function runAutomation() {
   try {
     console.log(`⏰ ${new Date().toISOString()} - Running automation...`)
     
-    const response = await fetch(API_URL, { method: 'POST' })
+    const response = await fetch(API_URL, { 
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.CRON_SECRET || 'dev-secret'}`
+      }
+    })
     const result = await response.json()
     
     if (response.ok) {
-      console.log('✅ Success:', result.message)
+      console.log('✅ Success:', `${result.results.autoStarted} changes started, ${result.results.completionPrompts} prompts sent`)
+      if (result.results.errors.length > 0) {
+        console.log('⚠️ Errors:', result.results.errors)
+      }
     } else {
       console.error('❌ Error:', result.error)
     }

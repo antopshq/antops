@@ -25,7 +25,7 @@ app.prepare().then(() => {
   let wsServer
   try {
     // Use dynamic import for ES modules
-    import('./src/lib/websocket-server.js').then(({ wsServer: webSocketServer }) => {
+    import('./src/lib/websocket-server.ts').then(({ wsServer: webSocketServer }) => {
       wsServer = webSocketServer
       const io = wsServer.init(server)
       
