@@ -458,6 +458,7 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
                 minHeight="120px"
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}
+                teamMembers={teamMembers}
                 maxFiles={2}
                 maxFileSize={2 * 1024 * 1024}
               />
@@ -633,6 +634,7 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
                           placeholder="Edit your comment..."
                           minHeight="100px"
                           className="text-sm"
+                          teamMembers={teamMembers}
                         />
                         <div className="flex items-center justify-end space-x-2">
                           <Button

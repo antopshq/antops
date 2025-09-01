@@ -5,12 +5,13 @@ export async function POST(request: NextRequest) {
   try {
     // Basic security
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET || 'dev-secret'}`
+    if (!authHeader || authHeader !== expectedAuth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Forward to the actual automation endpoint
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/automation/changes`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/automation/changes`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

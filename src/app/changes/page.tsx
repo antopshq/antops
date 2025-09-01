@@ -98,6 +98,17 @@ export default function ChangesPage() {
       return
     }
     
+    // Block approval transitions via kanban - must use proper approval flow
+    if (currentChange?.status === 'pending' && newStatus === 'approved') {
+      alert('This change should be approved by a manager. Please click on the card for more details.')
+      return
+    }
+    
+    if (currentChange?.status === 'pending' && newStatus === 'cancelled') {
+      alert('This change should be rejected by a manager. Please click on the card for more details.')
+      return
+    }
+    
     try {
       const response = await fetch(`/api/changes/${changeId}`, {
         method: 'PUT',
@@ -114,7 +125,8 @@ export default function ChangesPage() {
           )
         )
       } else {
-        console.error('Failed to update change status')
+        const errorData = await response.json()
+        console.error('Failed to update change status:', errorData.error || 'Unknown error')
       }
     } catch (error) {
       console.error('Error updating change status:', error)

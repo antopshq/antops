@@ -7,7 +7,7 @@
 
 const fetch = require('node-fetch').default || require('node-fetch')
 
-const API_URL = 'http://localhost:3001/api/automation/changes'
+const API_URL = 'http://localhost:3000/api/automation/changes'
 const INTERVAL_MS = 60 * 1000 // Run every minute
 
 console.log('🚀 Starting Change Lifecycle Automation')
