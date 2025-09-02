@@ -265,7 +265,7 @@ export async function getOrganizationStats() {
 
   // Get SLA configurations
   const { data: slaConfigs } = await supabase
-    .from('sla_configurations')
+    .from('slo_configurations')
     .select('priority, resolution_time_hours')
 
   // Create a map of priority to SLA hours, with fallback defaults

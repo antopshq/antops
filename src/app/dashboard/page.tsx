@@ -429,7 +429,7 @@ export default function DashboardPage() {
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">Active Problems</CardTitle>
-                <Settings className="h-4 w-4 text-orange-600" />
+                <AlertCircle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">
@@ -585,7 +585,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
+                  <AlertCircle className="w-4 h-4" />
                   Problem Management
                 </span>
                 <div className="flex items-center gap-2">
@@ -651,7 +651,7 @@ export default function DashboardPage() {
                     const getTypeIcon = (type: string) => {
                       switch (type) {
                         case 'incident': return <AlertTriangle className="h-4 w-4 text-red-600" />
-                        case 'problem': return <Settings className="h-4 w-4 text-orange-600" />
+                        case 'problem': return <AlertCircle className="h-4 w-4 text-red-600" />
                         case 'change': return <Wrench className="h-4 w-4 text-purple-600" />
                         default: return <Activity className="h-4 w-4 text-gray-600" />
                       }
@@ -722,7 +722,7 @@ export default function DashboardPage() {
                       </a>
                       <a href="/problems/new" className="text-center">
                         <div className="p-2 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
-                          <Settings className="h-4 w-4 text-orange-600 mx-auto mb-1" />
+                          <AlertCircle className="h-4 w-4 text-red-600 mx-auto mb-1" />
                           <span className="text-xs font-medium">New Problem</span>
                         </div>
                       </a>

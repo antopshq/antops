@@ -266,7 +266,7 @@ export default function TeamPage() {
 
   const handleSLOSave = async (configurations: Array<{ priority: string; resolution_time_hours: number }>) => {
     try {
-      const response = await fetch('/api/sla-configurations', {
+      const response = await fetch('/api/slo-configurations', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
