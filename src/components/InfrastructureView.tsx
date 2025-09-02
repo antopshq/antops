@@ -2393,20 +2393,8 @@ Choose:
                 <div className="flex items-center gap-4">
                   {/* Import/Export Actions */}
                   <div className="flex items-center gap-2">
-                    {/* AI Scan Button with Token Info */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col items-center text-xs text-gray-500">
-                        <div className="font-medium">
-                          {aiTokens.tokensRemaining}/{aiTokens.tokensLimit}
-                        </div>
-                        <div>left</div>
-                        {!aiTokens.canScan && (
-                          <div className="text-red-500 text-center">
-                            Resets in {aiTokens.resetTimeFormatted}
-                          </div>
-                        )}
-                      </div>
-                      <Button
+                    {/* AI Scan Button */}
+                    <Button
                         variant="outline"
                         size="sm"
                         onClick={scanInfrastructureWithAI}
@@ -2421,7 +2409,6 @@ Choose:
                         )}
                         {isAiScanning ? 'Scanning...' : 'AI Scan'}
                       </Button>
-                    </div>
                     
                     {/* Show AI Results if available */}
                     {aiInsights.size > 0 && (
@@ -2895,7 +2882,12 @@ Choose:
                 {lastAiScanTime && (
                   <div className="mb-4 p-2 bg-gray-50 rounded border border-gray-200">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Last AI Scan</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Last AI Scan</span>
+                        <span className="text-gray-400 font-medium">
+                          {aiTokens.tokensRemaining}/{aiTokens.tokensLimit} scans left
+                        </span>
+                      </div>
                       <span className="text-gray-400">{formatScanTime(lastAiScanTime)}</span>
                     </div>
                   </div>

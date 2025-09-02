@@ -22,6 +22,7 @@ export function ChangeApproval({ changeId, status, userRole, onStatusChange }: C
 
   const canRequestApproval = status === 'draft'
   const canApproveReject = status === 'pending' && ['owner', 'admin', 'manager'].includes(userRole)
+  const requestSent = status === 'pending'
 
   const handleRequestApproval = async () => {
     setLoading(true)
@@ -103,7 +104,9 @@ export function ChangeApproval({ changeId, status, userRole, onStatusChange }: C
         <CardDescription className="text-blue-800">
           {canRequestApproval 
             ? 'Submit this change for manager approval before implementation.'
-            : 'This change is waiting for your approval as a manager.'
+            : requestSent 
+              ? 'Request has been sent to managers. Waiting for approval...'
+              : 'This change is waiting for your approval as a manager.'
           }
         </CardDescription>
       </CardHeader>
@@ -134,6 +137,14 @@ export function ChangeApproval({ changeId, status, userRole, onStatusChange }: C
               <Send className="w-4 h-4 mr-2" />
               {loading ? 'Requesting...' : 'Request Approval'}
             </Button>
+          ) : requestSent ? (
+            <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 text-blue-800">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span className="font-medium">Request sent to managers</span>
+              </div>
+              <p className="text-sm mt-1">Waiting for manager approval...</p>
+            </div>
           ) : (
             <>
               <Button

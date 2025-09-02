@@ -6,7 +6,8 @@ export async function POST(request: NextRequest) {
   try {
     // Basic security - you might want to add API key authentication
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET || 'dev-secret'}`
+    if (!authHeader || authHeader !== expectedAuth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -33,7 +34,24 @@ export async function POST(request: NextRequest) {
       .eq('executed', false)
       .lte('scheduled_for', now.toISOString())
     
-    console.log('Debug: Found', autoStartChanges?.length || 0, 'auto-start automations')
+    // Also check all automation records for debugging
+    const { data: allAutomations } = await supabase
+      .from('change_automations')
+      .select(`
+        *,
+        change:changes!change_id(id, title, status, scheduled_for)
+      `)
+      .eq('automation_type', 'auto_start')
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    console.log('🔍 AUTOMATION DEBUG:')
+    console.log('Current time:', now.toISOString())
+    console.log('Found', autoStartChanges?.length || 0, 'ready auto-start automations')
+    console.log('All recent auto-start automations (last 10):')
+    console.log(JSON.stringify(allAutomations, null, 2))
+    console.log('Ready automation records:')
+    console.log(JSON.stringify(autoStartChanges, null, 2))
 
     if (autoStartError) {
       console.error('Error fetching auto-start changes:', autoStartError)
@@ -106,15 +124,25 @@ export async function POST(request: NextRequest) {
                 .insert(notifications)
             }
 
-            // Add comment about auto-start
-            await supabase
-              .from('comments')
-              .insert({
-                organization_id: change.organization_id,
-                content: '🚀 **AUTO-STARTED** | Change automatically started as scheduled',
-                author_id: null, // System comment
-                change_id: change.id
-              })
+            // Add comment about auto-start (need a system user ID)
+            const { data: systemUser } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('organization_id', change.organization_id)
+              .eq('role', 'admin')
+              .limit(1)
+              .single()
+
+            if (systemUser) {
+              await supabase
+                .from('comments')
+                .insert({
+                  organization_id: change.organization_id,
+                  content: '🚀 **AUTO-STARTED** | Change automatically started as scheduled',
+                  author_id: systemUser.id,
+                  change_id: change.id
+                })
+            }
 
             results.autoStarted++
           }

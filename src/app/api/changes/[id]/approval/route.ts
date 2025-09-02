@@ -27,9 +27,9 @@ export async function POST(
       return NextResponse.json({ error: 'Change not found' }, { status: 404 })
     }
 
-    // Check if user can request approval (must be the requester or assigned)
-    if (change.requested_by !== user.id && change.assigned_to !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to request approval for this change' }, { status: 403 })
+    // Check if user can request approval (must be assigned to the change)
+    if (change.assigned_to !== user.id) {
+      return NextResponse.json({ error: 'Only the assigned person can request approval for this change' }, { status: 403 })
     }
 
     // Check if change is in draft status
@@ -152,17 +152,18 @@ export async function PUT(
       return NextResponse.json({ error: 'Change not found' }, { status: 404 })
     }
 
-    // Check if change is in pending status
-    if (change.status !== 'pending') {
-      return NextResponse.json({ error: 'Can only approve/reject pending changes' }, { status: 400 })
+    // Check if change is in pending or in_progress status (automation might have started it)
+    if (!['pending', 'in_progress'].includes(change.status)) {
+      return NextResponse.json({ error: 'Can only approve/reject pending or in-progress changes' }, { status: 400 })
     }
 
-    // Update approval record
-    const newStatus = action === 'approve' ? 'approved' : 'rejected'
-    const { error: approvalError } = await supabase
+    // Update approval record - try to update first, then create if none exists
+    const newApprovalStatus = action === 'approve' ? 'approved' : 'rejected'
+    
+    const { error: approvalUpdateError } = await supabase
       .from('change_approvals')
       .update({
-        status: newStatus,
+        status: newApprovalStatus,
         approved_by: user.id,
         comments: comments || null,
         responded_at: new Date().toISOString()
@@ -170,24 +171,40 @@ export async function PUT(
       .eq('change_id', changeId)
       .eq('status', 'pending')
 
-    if (approvalError) {
+    if (approvalUpdateError) {
+      console.error('❌ Failed to update approval record:', approvalUpdateError)
       return NextResponse.json({ error: 'Failed to update approval' }, { status: 500 })
     }
 
     // Update change status
-    const changeStatus = action === 'approve' ? 'approved' : 'cancelled'
+    let changeStatus = change.status
+    if (action === 'approve') {
+      // Always move to approved when manager approves
+      changeStatus = 'approved'
+    } else {
+      // Reject: always move to cancelled
+      changeStatus = 'cancelled'
+    }
+    
+    console.log('📝 Updating change status from', change.status, 'to', changeStatus)
+    
     const { error: updateError } = await supabase
       .from('changes')
       .update({ status: changeStatus })
       .eq('id', changeId)
 
     if (updateError) {
+      console.error('❌ Failed to update change status:', updateError)
       return NextResponse.json({ error: 'Failed to update change status' }, { status: 500 })
     }
+    
+    console.log('✅ Change status updated successfully to', changeStatus)
 
     // If approved and has scheduled time, create automation for auto-start
     if (action === 'approve' && change.scheduled_for) {
-      const { error: autoStartError } = await supabase
+      console.log('🔧 Creating auto-start automation for change:', changeId, 'scheduled for:', change.scheduled_for)
+      
+      const { data: automation, error: autoStartError } = await supabase
         .from('change_automations')
         .insert({
           organization_id: user.organizationId,
@@ -195,10 +212,15 @@ export async function PUT(
           automation_type: 'auto_start',
           scheduled_for: change.scheduled_for
         })
+        .select()
       
       if (autoStartError) {
-        console.error('Error creating auto-start automation:', autoStartError)
+        console.error('❌ Error creating auto-start automation:', autoStartError)
+      } else {
+        console.log('✅ Created auto-start automation:', automation)
       }
+    } else if (action === 'approve') {
+      console.log('⚠️ Change approved but no scheduled_for time set:', { changeId, scheduled_for: change.scheduled_for })
     }
 
     // If approved and has estimated end time, create automation for completion prompt
@@ -220,9 +242,14 @@ export async function PUT(
     // Add comment about approval decision
     const approvalIcon = action === 'approve' ? '✅' : '❌'
     const approvalStatus = action === 'approve' ? 'APPROVED' : 'REJECTED'
+    const alreadyInProgress = change.status === 'in_progress' && action === 'approve'
+    const defaultMessage = action === 'approve' 
+      ? (alreadyInProgress ? 'Approved by manager (change already in progress)' : 'Approved via kanban board')
+      : 'Rejected via kanban board'
+    
     const commentContent = comments 
       ? `${approvalIcon} **${approvalStatus}** | ${comments}`
-      : `${approvalIcon} **${approvalStatus}** | ${action === 'approve' ? 'Approved by manager' : 'Rejected by manager'}`
+      : `${approvalIcon} **${approvalStatus}** | ${defaultMessage}`
 
     await supabase
       .from('comments')
