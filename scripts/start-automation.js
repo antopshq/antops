@@ -5,10 +5,10 @@
  * This simulates what would normally be done by a cron job in production
  */
 
-const fetch = require('node-fetch').default || require('node-fetch')
+// Use built-in fetch (Node.js 18+)
 
 const API_URL = 'http://localhost:3000/api/automation/changes'
-const INTERVAL_MS = 60 * 1000 // Run every minute
+const INTERVAL_MS = 30 * 1000 // Run every 30 seconds
 
 console.log('🚀 Starting Change Lifecycle Automation')
 console.log(`📡 Calling ${API_URL} every ${INTERVAL_MS / 1000} seconds`)

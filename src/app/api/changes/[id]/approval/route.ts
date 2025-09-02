@@ -27,9 +27,9 @@ export async function POST(
       return NextResponse.json({ error: 'Change not found' }, { status: 404 })
     }
 
-    // Check if user can request approval (must be the requester or assigned)
-    if (change.requested_by !== user.id && change.assigned_to !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to request approval for this change' }, { status: 403 })
+    // Check if user can request approval (must be assigned to the change)
+    if (change.assigned_to !== user.id) {
+      return NextResponse.json({ error: 'Only the assigned person can request approval for this change' }, { status: 403 })
     }
 
     // Check if change is in draft status
@@ -157,57 +157,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Can only approve/reject pending or in-progress changes' }, { status: 400 })
     }
 
-    // Check if approval record exists first
-    const { data: existingApproval, error: approvalFetchError } = await supabase
-      .from('change_approvals')
-      .select('*')
-      .eq('change_id', changeId)
-      .single()
-
-    console.log('🔍 APPROVAL DEBUG:')
-    console.log('Change ID:', changeId, 'Action:', action)
-    console.log('Change status:', change.status)
-    console.log('Existing approval record:', existingApproval)
-    console.log('Approval fetch error:', approvalFetchError)
-
-    // Update approval record
+    // Update approval record - try to update first, then create if none exists
     const newApprovalStatus = action === 'approve' ? 'approved' : 'rejected'
-    let approvalError
     
-    if (existingApproval) {
-      // Update existing approval record
-      const { error } = await supabase
-        .from('change_approvals')
-        .update({
-          status: newApprovalStatus,
-          approved_by: user.id,
-          comments: comments || null,
-          responded_at: new Date().toISOString()
-        })
-        .eq('change_id', changeId)
-      approvalError = error
-    } else {
-      // Create new approval record if none exists
-      const { error } = await supabase
-        .from('change_approvals')
-        .insert({
-          organization_id: user.organizationId,
-          change_id: changeId,
-          requested_by: change.requested_by,
-          status: newApprovalStatus,
-          approved_by: user.id,
-          comments: comments || null,
-          responded_at: new Date().toISOString()
-        })
-      approvalError = error
-    }
+    const { error: approvalUpdateError } = await supabase
+      .from('change_approvals')
+      .update({
+        status: newApprovalStatus,
+        approved_by: user.id,
+        comments: comments || null,
+        responded_at: new Date().toISOString()
+      })
+      .eq('change_id', changeId)
+      .eq('status', 'pending')
 
-    if (approvalError) {
-      console.error('❌ Failed to update/create approval record:', approvalError)
+    if (approvalUpdateError) {
+      console.error('❌ Failed to update approval record:', approvalUpdateError)
       return NextResponse.json({ error: 'Failed to update approval' }, { status: 500 })
     }
-
-    console.log('✅ Approval record updated successfully')
 
     // Update change status
     let changeStatus = change.status
