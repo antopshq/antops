@@ -23,20 +23,20 @@ export async function GET() {
       return NextResponse.json({ error: 'User not associated with an organization' }, { status: 400 })
     }
     
-    const { data: slaConfigs, error } = await supabase
-      .from('sla_configurations')
+    const { data: sloConfigs, error } = await supabase
+      .from('slo_configurations')
       .select('priority, resolution_time_hours')
       .eq('organization_id', profile.organization_id)
       .order('priority')
 
     if (error) {
-      console.error('Error fetching SLA configurations:', error)
-      return NextResponse.json({ error: 'Failed to fetch SLA configurations' }, { status: 500 })
+      console.error('Error fetching SLO configurations:', error)
+      return NextResponse.json({ error: 'Failed to fetch SLO configurations' }, { status: 500 })
     }
 
-    return NextResponse.json(slaConfigs || [])
+    return NextResponse.json(sloConfigs || [])
   } catch (error) {
-    console.error('SLA configurations API error:', error)
+    console.error('SLO configurations API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -68,10 +68,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'User not associated with an organization' }, { status: 400 })
     }
     
-    // Update each SLA configuration for the user's organization
+    // Update each SLO configuration for the user's organization
     const updatePromises = configurations.map(async (config: { priority: Priority; resolution_time_hours: number }) => {
       const { error } = await supabase
-        .from('sla_configurations')
+        .from('slo_configurations')
         .update({ 
           resolution_time_hours: config.resolution_time_hours,
           updated_at: new Date().toISOString()
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
         .eq('organization_id', profile.organization_id)
 
       if (error) {
-        console.error(`Error updating SLA for ${config.priority}:`, error)
+        console.error(`Error updating SLO for ${config.priority}:`, error)
         throw error
       }
     })
@@ -89,19 +89,19 @@ export async function PUT(request: NextRequest) {
 
     // Return updated configurations
     const { data: updatedConfigs, error: fetchError } = await supabase
-      .from('sla_configurations')
+      .from('slo_configurations')
       .select('priority, resolution_time_hours')
       .eq('organization_id', profile.organization_id)
       .order('priority')
 
     if (fetchError) {
-      console.error('Error fetching updated SLA configurations:', fetchError)
+      console.error('Error fetching updated SLO configurations:', fetchError)
       return NextResponse.json({ error: 'Failed to fetch updated configurations' }, { status: 500 })
     }
 
     return NextResponse.json(updatedConfigs || [])
   } catch (error) {
-    console.error('SLA configurations update error:', error)
+    console.error('SLO configurations update error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

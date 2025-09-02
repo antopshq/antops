@@ -35,6 +35,12 @@ interface AttachedFile {
   file?: File
 }
 
+interface TeamMember {
+  id: string
+  name: string
+  email: string
+}
+
 interface TiptapEditorProps {
   value?: string
   onChange?: (value: string) => void
@@ -46,6 +52,7 @@ interface TiptapEditorProps {
   maxFiles?: number
   maxFileSize?: number
   onMentionTrigger?: (query: string) => void
+  teamMembers?: TeamMember[]
 }
 
 // Create lowlight instance and register languages
@@ -74,7 +81,8 @@ export function TiptapEditor({
   onFilesChange,
   maxFiles = 2,
   maxFileSize = 2 * 1024 * 1024, // 2MB
-  onMentionTrigger
+  onMentionTrigger,
+  teamMembers = []
 }: TiptapEditorProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
@@ -123,11 +131,10 @@ export function TiptapEditor({
         },
         suggestion: {
           items: ({ query }) => {
-            // This would typically come from your team members API
-            const teamMembers = ['Alice Johnson', 'Bob Smith', 'Charlie Brown', 'David Wilson']
             return teamMembers
-              .filter(name => name.toLowerCase().includes(query.toLowerCase()))
+              .filter(member => member.name.toLowerCase().includes(query.toLowerCase()))
               .slice(0, 5)
+              .map(member => ({ id: member.id, label: member.name }))
           },
           render: () => {
             let component: HTMLDivElement

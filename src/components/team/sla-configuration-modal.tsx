@@ -49,7 +49,7 @@ export function SLAConfigurationModal({ isOpen, onClose, onSave }: SLAConfigurat
   const fetchSLAConfigurations = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/sla-configurations')
+      const response = await fetch('/api/slo-configurations')
       if (response.ok) {
         const data = await response.json()
         

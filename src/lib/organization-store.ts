@@ -110,9 +110,23 @@ export async function updateOrganization(id: string, data: Partial<Organization>
 export async function getOrganizationMembers(): Promise<Profile[]> {
   const supabase = await createSupabaseServerClient()
   
+  // Get current user's organization first
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single()
+  
+  if (!profile?.organization_id) return []
+  
+  // Now get all members from the same organization
   const { data: members, error } = await supabase
     .from('profiles')
     .select('*')
+    .eq('organization_id', profile.organization_id)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -251,7 +265,7 @@ export async function getOrganizationStats() {
 
   // Get SLA configurations
   const { data: slaConfigs } = await supabase
-    .from('sla_configurations')
+    .from('slo_configurations')
     .select('priority, resolution_time_hours')
 
   // Create a map of priority to SLA hours, with fallback defaults

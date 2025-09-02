@@ -186,12 +186,12 @@ export default function IncidentDetailPage() {
     ? calculatePriority(editData.criticality, editData.urgency)
     : 'medium'
 
-  // SLA calculation functions
-  const calculateSLAStatus = () => {
+  // SLO calculation functions
+  const calculateSLOStatus = () => {
     if (!incident) return null
     
     const createdAt = new Date(incident.createdAt)
-    const slaHours = slaConfigurations[incident.priority] || slaConfigurations['medium']
+    const sloHours = slaConfigurations[incident.priority] || slaConfigurations['medium']
     
     // For resolved/closed incidents, use the resolution time
     const isResolved = incident.status === 'resolved' || incident.status === 'closed'
@@ -200,7 +200,7 @@ export default function IncidentDetailPage() {
       : currentTime
     
     const hoursElapsed = (endTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
-    const hoursRemaining = slaHours - hoursElapsed
+    const hoursRemaining = sloHours - hoursElapsed
     
     return {
       hoursElapsed: Math.floor(hoursElapsed),
@@ -208,12 +208,12 @@ export default function IncidentDetailPage() {
       isBreached: hoursRemaining <= 0,
       isNearBreach: hoursRemaining > 0 && hoursRemaining <= 2, // Within 2 hours of breach
       isResolved,
-      slaHours,
-      percentElapsed: Math.min((hoursElapsed / slaHours) * 100, 100)
+      sloHours,
+      percentElapsed: Math.min((hoursElapsed / sloHours) * 100, 100)
     }
   }
 
-  const formatSLATime = (hours: number) => {
+  const formatSLOTime = (hours: number) => {
     const absHours = Math.abs(hours)
     if (absHours < 24) {
       return `${absHours}h`
@@ -226,7 +226,7 @@ export default function IncidentDetailPage() {
     return `${days}d ${remainingHours}h`
   }
 
-  const slaStatus = calculateSLAStatus()
+  const sloStatus = calculateSLOStatus()
 
   // Fetch incident details and team members
   useEffect(() => {
@@ -297,11 +297,11 @@ export default function IncidentDetailPage() {
     fetchData()
   }, [incidentId])
 
-  // Fetch SLA configurations
+  // Fetch SLO configurations
   useEffect(() => {
-    const fetchSLAConfigurations = async () => {
+    const fetchSLOConfigurations = async () => {
       try {
-        const response = await fetch('/api/sla-configurations')
+        const response = await fetch('/api/slo-configurations')
         if (response.ok) {
           const data = await response.json()
           const slaMap: Record<string, number> = {
@@ -318,14 +318,14 @@ export default function IncidentDetailPage() {
           setSlaConfigurations(slaMap)
         }
       } catch (error) {
-        console.error('Error fetching SLA configurations:', error)
+        console.error('Error fetching SLO configurations:', error)
       }
     }
 
-    fetchSLAConfigurations()
+    fetchSLOConfigurations()
   }, [])
 
-  // Real-time SLA updates (refresh every minute, but stop for resolved incidents)
+  // Real-time SLO updates (refresh every minute, but stop for resolved incidents)
   useEffect(() => {
     if (!incident) return
     
@@ -640,43 +640,43 @@ export default function IncidentDetailPage() {
             </Link>
           </div>
           <div className="flex items-center space-x-3">
-            {/* SLA Alert Clock */}
-            {slaStatus && !isEditing && (
+            {/* SLO Alert Clock */}
+            {sloStatus && !isEditing && (
               <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border ${
-                slaStatus.isResolved
-                  ? slaStatus.isBreached
+                sloStatus.isResolved
+                  ? sloStatus.isBreached
                     ? 'bg-red-50 border-red-200 text-red-700' 
                     : 'bg-green-50 border-green-200 text-green-700'
-                  : slaStatus.isBreached 
+                  : sloStatus.isBreached 
                   ? 'bg-red-50 border-red-200 text-red-700' 
-                  : slaStatus.isNearBreach
+                  : sloStatus.isNearBreach
                   ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
                   : 'bg-green-50 border-green-200 text-green-700'
               }`}>
                 <Clock className={`w-4 h-4 ${
-                  slaStatus.isResolved
-                    ? slaStatus.isBreached
+                  sloStatus.isResolved
+                    ? sloStatus.isBreached
                       ? 'text-red-600'
                       : 'text-green-600'
-                    : slaStatus.isBreached 
+                    : sloStatus.isBreached 
                     ? 'text-red-600' 
-                    : slaStatus.isNearBreach 
+                    : sloStatus.isNearBreach 
                     ? 'text-yellow-600' 
                     : 'text-green-600'
                 }`} />
                 <div className="flex flex-col">
                   <span className="text-xs font-medium">
-                    {slaStatus.isResolved 
-                      ? slaStatus.isBreached
-                        ? `Resolved late by ${formatSLATime(Math.abs(slaStatus.hoursRemaining))}`
-                        : `Resolved in ${formatSLATime(slaStatus.hoursElapsed)}`
-                      : slaStatus.isBreached 
-                      ? `Overdue by ${formatSLATime(Math.abs(slaStatus.hoursRemaining))}` 
-                      : `${formatSLATime(slaStatus.hoursRemaining)} left`
+                    {sloStatus.isResolved 
+                      ? sloStatus.isBreached
+                        ? `Resolved late by ${formatSLOTime(Math.abs(sloStatus.hoursRemaining))}`
+                        : `Resolved in ${formatSLOTime(sloStatus.hoursElapsed)}`
+                      : sloStatus.isBreached 
+                      ? `Overdue by ${formatSLOTime(Math.abs(sloStatus.hoursRemaining))}` 
+                      : `${formatSLOTime(sloStatus.hoursRemaining)} left`
                     }
                   </span>
                   <span className="text-xs opacity-75">
-                    SLA: {formatSLATime(slaStatus.slaHours)}
+                    SLO: {formatSLOTime(sloStatus.sloHours)}
                   </span>
                 </div>
               </div>

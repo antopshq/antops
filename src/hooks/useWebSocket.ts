@@ -86,7 +86,7 @@ export function useWebSocket({
 
       const socket = io(process.env.NODE_ENV === 'production' 
         ? process.env.NEXT_PUBLIC_APP_URL || ''
-        : 'http://localhost:3001', {
+        : 'http://localhost:3000', {
         transports: ['websocket', 'polling'],
         upgrade: true
       })
