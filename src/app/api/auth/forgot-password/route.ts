@@ -45,16 +45,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Profile check result:', { profilesFound: profiles?.length || 0 })
 
-    if (!profiles || profiles.length === 0) {
-      console.log('⚠️ No profile found for email, but returning success for security')
-      // For security, we don't reveal if email exists or not
-      // But we return success message anyway
-      return NextResponse.json({ 
-        message: 'If an account with that email exists, we\'ve sent password reset instructions.' 
-      })
-    }
-
-    // Send password reset email
+    // Always try to send reset email - let Supabase handle if user exists or not
+    // This way we don't reveal if email exists, but still send email if it does
     const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`
     console.log('Sending reset email with redirect:', redirectUrl)
     
