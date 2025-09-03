@@ -100,6 +100,11 @@ export default function SignIn() {
             </Button>
           </form>
           <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 mb-2">
+              <Link href="/auth/forgot-password" className="text-gray-900 hover:text-gray-700 font-medium">
+                Forgot password?
+              </Link>
+            </p>
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
               <Link href="/auth/signup" className="text-gray-900 hover:text-gray-700 font-medium">

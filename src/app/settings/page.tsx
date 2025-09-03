@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Key, Building2, Bell } from 'lucide-react'
+import { Key, Building2, Bell, Shield } from 'lucide-react'
 import { ClientLayout } from '@/components/layout/client-layout'
 import ApiTokensManager from '@/components/settings/api-tokens'
+import { PasswordChangeForm } from '@/components/settings/password-change'
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('tokens')
+  const [activeTab, setActiveTab] = useState('security')
 
   return (
     <ClientLayout>
@@ -16,12 +17,16 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-            <p className="text-gray-600 mt-1">Manage API access, organization, and notification preferences</p>
+            <p className="text-gray-600 mt-1">Manage your account security, API access, and preferences</p>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+            <TabsTrigger value="security" className="flex items-center space-x-2">
+              <Shield className="w-4 h-4" />
+              <span>Security</span>
+            </TabsTrigger>
             <TabsTrigger value="tokens" className="flex items-center space-x-2">
               <Key className="w-4 h-4" />
               <span>API Tokens</span>
@@ -35,6 +40,10 @@ export default function SettingsPage() {
               <span>Notifications</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="security" className="space-y-6">
+            <PasswordChangeForm />
+          </TabsContent>
 
           <TabsContent value="tokens" className="space-y-6">
             <ApiTokensManager />
