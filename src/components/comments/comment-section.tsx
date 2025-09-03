@@ -15,12 +15,16 @@ interface CommentSectionProps {
   itemType: 'incident' | 'problem' | 'change'
   itemId: string
   className?: string
+  teamMembers?: TeamMember[]
 }
 
 interface TeamMember {
   id: string
   name: string
   email: string
+  role: string
+  fullName?: string
+  createdAt: string
 }
 
 // Helper function to get user initials
@@ -51,7 +55,7 @@ function getAvatarGradient(userId: string): string {
   return gradients[index]
 }
 
-export function CommentSection({ itemType, itemId, className = '' }: CommentSectionProps) {
+export function CommentSection({ itemType, itemId, className = '', teamMembers: propTeamMembers }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
@@ -59,15 +63,9 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-  const [showMentionDropdown, setShowMentionDropdown] = useState(false)
-  const [mentionQuery, setMentionQuery] = useState('')
-  const [mentionPosition, setMentionPosition] = useState({ x: 0, y: 0 })
-  const [cursorPosition, setCursorPosition] = useState(0)
   const [mentionsInComment, setMentionsInComment] = useState<string[]>([])
   const [attachedFiles, setAttachedFiles] = useState<{ id: string; name: string; size: number; type: string; file?: File }[]>([])
   
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const editTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   // WebSocket for real-time updates (optional) - TEMPORARILY DISABLED
   let isConnected = false
@@ -105,24 +103,12 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
   // Load comments and team members
   useEffect(() => {
     loadComments()
-    loadTeamMembers()
-  }, [itemType, itemId])
-  
-  // Handle click outside to close mention dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (!target.closest('.wysiwyg-content') && !target.closest('.mention-dropdown')) {
-        setShowMentionDropdown(false)
-        setMentionQuery('')
-      }
+    if (!propTeamMembers) {
+      loadTeamMembers()
+    } else {
+      setTeamMembers(propTeamMembers)
     }
-    
-    if (showMentionDropdown) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showMentionDropdown])
+  }, [itemType, itemId, propTeamMembers])
 
   const loadComments = async () => {
     setLoading(true)
@@ -147,106 +133,24 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
       if (response.ok) {
         const data = await response.json()
         setTeamMembers(data.teamMembers || [])
+      } else {
+        console.error('Failed to fetch team members:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error loading team members:', error)
     }
   }
 
-  // Handle @mentions in textarea
-  const handleTextareaChange = (value: string, isEdit = false) => {
-    if (isEdit) {
-      setEditingContent(value)
-    } else {
-      setNewComment(value)
-    }
-
-    // Check for @ mentions
-    const textarea = isEdit ? editTextareaRef.current : textareaRef.current
-    if (!textarea) return
-
-    const cursorPos = textarea.selectionStart
-    const textBefore = value.substring(0, cursorPos)
-    const atMatch = textBefore.match(/@(\w*)$/)
-
-    if (atMatch) {
-      const query = atMatch[1]
-      setMentionQuery(query)
-      setShowMentionDropdown(true)
-      setCursorPosition(cursorPos)
-
-      // Position dropdown near cursor (simplified positioning)
-      const rect = textarea.getBoundingClientRect()
-      setMentionPosition({
-        x: rect.left + 10,
-        y: rect.top + 30
-      })
-    } else {
-      setShowMentionDropdown(false)
-      setMentionQuery('')
-    }
-
-    // Extract all mentions from the text
-    const mentions = Array.from(value.matchAll(/@\[([^\]]+)\]\(([^)]+)\)/g))
-      .map(match => match[2]) // Extract user ID from [@Name](userId) format
-    
-    if (isEdit) {
-      // For editing, you'd need to track mentions separately
-    } else {
-      setMentionsInComment(mentions)
-    }
-  }
-
-  const insertMention = (member: TeamMember, isEdit = false) => {
-    const textarea = isEdit ? editTextareaRef.current : textareaRef.current
-    if (!textarea) return
-
-    const currentValue = isEdit ? editingContent : newComment
-    const beforeCursor = currentValue.substring(0, cursorPosition)
-    const afterCursor = currentValue.substring(cursorPosition)
-    
-    // Remove the @ and partial query
-    const beforeAtSymbol = beforeCursor.replace(/@\w*$/, '')
-    const mentionText = `@[${member.name}](${member.id}) `
-    const newValue = beforeAtSymbol + mentionText + afterCursor
-
-    if (isEdit) {
-      setEditingContent(newValue)
-    } else {
-      setNewComment(newValue)
-      setMentionsInComment(prev => [...prev, member.id])
-    }
-
-    setShowMentionDropdown(false)
-    setMentionQuery('')
-    
-    // Focus back to textarea
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = beforeAtSymbol.length + mentionText.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-    }, 0)
-  }
-
-  const filteredMembers = teamMembers.filter(member =>
-    member.name.toLowerCase().includes(mentionQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(mentionQuery.toLowerCase())
-  )
-
-  const handleMentionTrigger = useCallback((query: string, position: { x: number; y: number }) => {
-    console.log('Mention trigger:', query, position)
-    if (query === '' || !query) {
-      setShowMentionDropdown(false)
-      setMentionQuery('')
-      return
-    }
-    setMentionQuery(query)
-    setMentionPosition(position)
-    setShowMentionDropdown(true)
-  }, [])
 
   const submitComment = async () => {
     if (!newComment.trim()) return
+    if (submitLoading) {
+      console.log('🐛 DEBUG: Already submitting, ignoring duplicate call')
+      return
+    }
+
+    console.log('🐛 DEBUG: Submitting comment with mentions:', mentionsInComment)
+    console.log('🐛 DEBUG: Comment content:', newComment)
 
     setSubmitLoading(true)
     try {
@@ -442,19 +346,22 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
                 value={newComment}
                 onChange={(value) => {
                   setNewComment(value)
-                  // Extract mentions from the rich text content
-                  const mentions = Array.from(value.matchAll(/@\[([^\]]+)\]\(([^)]+)\)/g))
-                    .map(match => match[2])
-                  setMentionsInComment(mentions)
+                  // Extract mentions from the rich text content - only data-type="mention" elements
+                  console.log('🐛 DEBUG: Full editor content:', value)
                   
-                  // Hide mention dropdown if no @ symbol is found at cursor position
-                  if (!value.includes('@')) {
-                    setShowMentionDropdown(false)
-                    setMentionQuery('')
-                  }
+                  // More precise regex - only match spans that explicitly have data-type="mention"
+                  const mentionMatches = Array.from(value.matchAll(/<span[^>]*data-type="mention"[^>]*data-id="([^"]+)"[^>]*>/g))
+                  const mentions = mentionMatches.map(match => match[1])
+                  
+                  // Remove any duplicates (just in case)
+                  const uniqueMentions = [...new Set(mentions)]
+                  
+                  console.log('🐛 DEBUG: Mention matches found:', mentionMatches.length)
+                  console.log('🐛 DEBUG: Extracted user IDs:', mentions)
+                  console.log('🐛 DEBUG: Unique mentions:', uniqueMentions)
+                  setMentionsInComment(uniqueMentions)
                 }}
                 placeholder="💬 Share your thoughts... Use @ to mention teammates!"
-                onMentionTrigger={(query: string) => handleMentionTrigger(query, { x: 0, y: 0 })}
                 minHeight="120px"
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}
@@ -463,71 +370,8 @@ export function CommentSection({ itemType, itemId, className = '' }: CommentSect
                 maxFileSize={2 * 1024 * 1024}
               />
               
-              {/* Enhanced Mention Dropdown */}
-              {showMentionDropdown && filteredMembers.length > 0 && (
-                <div 
-                  className="mention-dropdown absolute z-50 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-48 overflow-y-auto backdrop-blur-sm bg-white/95"
-                  style={{
-                    top: 'calc(100% + 8px)',
-                    left: '0px',
-                    right: '0px',
-                    minWidth: '280px'
-                  }}
-                >
-                  {filteredMembers.slice(0, 5).map((member) => (
-                    <div
-                      key={member.id}
-                      className="px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 cursor-pointer flex items-center space-x-3 transition-all first:rounded-t-2xl last:rounded-b-2xl"
-                      onClick={() => {
-                        console.log('Member clicked:', member.name, 'Query:', mentionQuery, 'Current comment:', newComment)
-                        
-                        // Insert mention in the rich text format - ensure space after for clean cursor positioning
-                        const mentionText = `@[${member.name}](${member.id}) `
-                        
-                        // Find the most recent @ that hasn't been completed yet
-                        const currentValue = newComment
-                        const lastAtIndex = currentValue.lastIndexOf('@')
-                        
-                        if (lastAtIndex !== -1) {
-                          // Get text after the @ symbol
-                          const afterAt = currentValue.substring(lastAtIndex + 1)
-                          const spaceIndex = afterAt.indexOf(' ')
-                          const textToReplace = spaceIndex === -1 ? afterAt : afterAt.substring(0, spaceIndex)
-                          
-                          // Replace @textToReplace with the mention
-                          const beforeMention = currentValue.substring(0, lastAtIndex)
-                          const afterMention = spaceIndex === -1 ? '' : afterAt.substring(spaceIndex)
-                          const newValue = beforeMention + mentionText + afterMention
-                          
-                          console.log('Replacing:', `@${textToReplace}`, 'with:', mentionText)
-                          console.log('New value:', newValue)
-                          
-                          setNewComment(newValue)
-                          setMentionsInComment(prev => [...prev, member.id])
-                        } else {
-                          // Fallback: append at the end
-                          console.log('No @ found, appending at end')
-                          setNewComment(prev => prev + mentionText)
-                          setMentionsInComment(prev => [...prev, member.id])
-                        }
-                        
-                        setShowMentionDropdown(false)
-                        setMentionQuery('')
-                      }}
-                    >
-                      <div className={`w-8 h-8 bg-gradient-to-r ${getAvatarGradient(member.id)} rounded-full flex items-center justify-center text-white font-medium text-xs`}>
-                        {getInitials(member.name)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm text-gray-900">{member.name}</div>
-                        <div className="text-xs text-gray-500">{member.email}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               <Button
+                type="button"
                 onClick={submitComment}
                 disabled={!newComment.trim() || submitLoading}
                 size="sm"

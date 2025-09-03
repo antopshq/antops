@@ -1041,6 +1041,7 @@ export default function IncidentDetailPage() {
               itemType="incident" 
               itemId={incidentId}
               className="border-0 shadow-sm"
+              teamMembers={teamMembers}
             />
           </div>
 

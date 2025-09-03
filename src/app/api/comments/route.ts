@@ -128,7 +128,9 @@ export async function POST(request: NextRequest) {
       
       try {
         mentions = mentionsStr ? JSON.parse(mentionsStr) : []
-      } catch {
+        console.log('🐛 DEBUG: Parsed mentions from FormData:', mentions)
+      } catch (error) {
+        console.log('🐛 DEBUG: Failed to parse mentions:', error)
         mentions = []
       }
       
@@ -306,8 +308,14 @@ export async function POST(request: NextRequest) {
       changeId: newComment.change_id
     }
 
-    // Send real-time update via WebSocket
+    // Note: Comment notifications are automatically created by database trigger 'create_mention_notifications'
+    // This trigger reads the 'mentions' field and creates notifications in comment_notifications table
+    console.log('📨 Mentions will be processed by database trigger:', mentions.length > 0 ? mentions : 'none')
+
+    // Send real-time update via WebSocket (if available)
+    console.log('🐛 DEBUG: Checking WebSocket condition - global.io exists:', !!(global as any).io, 'itemType:', itemType, 'itemId:', itemId)
     if ((global as any).io && itemType && itemId) {
+      console.log('🐛 DEBUG: WebSocket condition met, proceeding with real-time updates')
       // Broadcast to organization
       (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', {
         type: 'comment_added' as const,
@@ -326,10 +334,9 @@ export async function POST(request: NextRequest) {
         organizationId: user.organizationId as string
       })
 
-      // Send notifications to mentioned users
+      // Send real-time WebSocket notifications for mentions
       if (mentions.length > 0) {
         for (const mentionedUserId of mentions) {
-          // Find user's socket and send notification
           if ((global as any).userSessions) {
             for (const [socketId, userData] of (global as any).userSessions.entries()) {
               if (userData.id === mentionedUserId) {

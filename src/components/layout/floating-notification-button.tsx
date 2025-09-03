@@ -1,48 +1,74 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, X } from 'lucide-react'
+import { Bell, CheckCircle, Clock, AlertTriangle, Send, X, AtSign, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface Notification {
   id: string
+  type: string
   title: string
   message: string
-  type: string
-  created_at: string
   read: boolean
-  change_id?: string
+  createdAt: string
+  changeId?: string
+  incidentId?: string
+  problemId?: string
+  commentId?: string
+  data?: any
+}
+
+interface CommentNotification {
+  id: string
+  commentId: string
+  userId: string
+  isRead: boolean
+  createdAt: string
+  comment?: {
+    id: string
+    content: string
+    author: {
+      id: string
+      name: string
+      email: string
+    }
+    incidentId?: string
+    problemId?: string
+    changeId?: string
+  }
 }
 
 export function FloatingNotificationButton() {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [commentNotifications, setCommentNotifications] = useState<CommentNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications')
+      console.log('🐛 DEBUG: Fetching notifications...')
+      const res = await fetch('/api/notifications?type=all&limit=10')
       if (res.ok) {
         const data = await res.json()
-        const systemNotifications = data.systemNotifications || []
+        console.log('🐛 DEBUG: Received notifications data:', data)
+        console.log('🐛 DEBUG: System notifications count:', data.systemNotifications?.length || 0)
+        console.log('🐛 DEBUG: Comment notifications count:', data.commentNotifications?.length || 0)
         
-        // Transform notifications to match our interface
-        const transformedNotifications = systemNotifications.map((n: any) => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type,
-          created_at: n.createdAt,
-          read: n.read,
-          change_id: n.changeId
-        }))
+        setNotifications(data.systemNotifications || [])
+        setCommentNotifications(data.commentNotifications || [])
         
-        setNotifications(transformedNotifications)
-        setUnreadCount(systemNotifications.filter((n: any) => !n.read).length)
+        const systemUnread = data.systemNotifications?.filter((n: Notification) => !n.read).length || 0
+        const commentUnread = data.commentNotifications?.filter((n: CommentNotification) => !n.isRead).length || 0
+        
+        console.log('🐛 DEBUG: System unread:', systemUnread, 'Comment unread:', commentUnread)
+        setUnreadCount(systemUnread + commentUnread)
+      } else {
+        console.log('🐛 DEBUG: API response not ok:', res.status, res.statusText)
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error)
@@ -55,19 +81,19 @@ export function FloatingNotificationButton() {
     return () => clearInterval(interval)
   }, [])
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = async (notificationIds: string[], isComment = false) => {
     try {
-      const res = await fetch(`/api/notifications/${notificationId}`, {
+      const res = await fetch('/api/notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ read: true })
+        body: JSON.stringify({
+          notificationIds,
+          type: isComment ? 'comment' : 'system'
+        })
       })
 
       if (res.ok) {
-        setNotifications(prev => prev.map(n => 
-          n.id === notificationId ? { ...n, read: true } : n
-        ))
-        setUnreadCount(prev => Math.max(0, prev - 1))
+        fetchNotifications() // Refresh notifications
       }
     } catch (error) {
       console.error('Failed to mark notification as read:', error)
@@ -77,19 +103,70 @@ export function FloatingNotificationButton() {
   const markAllAsRead = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/notifications/mark-all-read', {
-        method: 'PUT'
+      const res = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          markAll: true,
+          type: 'all'
+        })
       })
 
       if (res.ok) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-        setUnreadCount(0)
+        fetchNotifications() // Refresh notifications
       }
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'change_approval_request':
+        return <Clock className="w-4 h-4 text-orange-600" />
+      case 'change_approved':
+        return <CheckCircle className="w-4 h-4 text-green-600" />
+      case 'change_rejected':
+        return <AlertTriangle className="w-4 h-4 text-red-600" />
+      case 'change_auto_started':
+        return <Send className="w-4 h-4 text-blue-600" />
+      case 'change_completion_prompt':
+        return <AlertTriangle className="w-4 h-4 text-orange-600" />
+      case 'mention':
+        return <AtSign className="w-4 h-4 text-purple-600" />
+      case 'comment':
+        return <MessageCircle className="w-4 h-4 text-blue-600" />
+      default:
+        return <Bell className="w-4 h-4 text-gray-600" />
+    }
+  }
+
+  const getSystemNotificationLink = (notification: Notification) => {
+    if (notification.changeId) {
+      return `/changes/${notification.changeId}`
+    }
+    if (notification.incidentId) {
+      return `/incidents/${notification.incidentId}`
+    }
+    if (notification.problemId) {
+      return `/problems/${notification.problemId}`
+    }
+    return '#'
+  }
+
+  const getCommentNotificationLink = (notification: CommentNotification) => {
+    if (notification.comment?.changeId) {
+      return `/changes/${notification.comment.changeId}#comment-${notification.commentId}`
+    }
+    if (notification.comment?.incidentId) {
+      return `/incidents/${notification.comment.incidentId}#comment-${notification.commentId}`
+    }
+    if (notification.comment?.problemId) {
+      return `/problems/${notification.comment.problemId}#comment-${notification.commentId}`
+    }
+    return '#'
   }
 
   const formatTime = (dateString: string) => {
@@ -145,60 +222,92 @@ export function FloatingNotificationButton() {
           </div>
           
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {notifications.length === 0 && commentNotifications.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 No notifications yet
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.slice(0, 10).map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      "p-4 hover:bg-gray-50 cursor-pointer transition-colors",
-                      !notification.read && "bg-orange-50 border-l-4"
-                    )}
-                    style={!notification.read ? { borderLeftColor: '#FF7A1A' } : {}}
+                {/* Comment Notifications (Mentions) */}
+                {commentNotifications.map((notification) => (
+                  <Link 
+                    key={`comment-${notification.id}`}
+                    href={getCommentNotificationLink(notification)}
+                    className="block p-4 hover:bg-gray-50 transition-colors"
                     onClick={() => {
-                      if (!notification.read) {
-                        markAsRead(notification.id)
+                      if (!notification.isRead) {
+                        markAsRead([notification.id], true)
                       }
-                      if (notification.change_id) {
-                        window.location.href = `/changes/${notification.change_id}`
-                      }
+                      setOpen(false)
                     }}
                   >
-                    <div className="flex justify-between items-start space-x-2">
-                      <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm font-medium truncate",
-                          notification.read ? "text-gray-900" : "font-semibold"
-                        )}
-                        style={!notification.read ? { color: '#FF7A1A' } : {}}>
-                          {notification.title}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatTime(notification.created_at)}
-                        </p>
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <AtSign className="w-4 h-4 text-purple-600" />
                       </div>
-                      {!notification.read && (
-                        <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: '#FF7A1A' }} />
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-medium ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
+                          {notification.comment?.author.name} mentioned you
+                        </div>
+                        <div className={`text-xs ${notification.isRead ? 'text-gray-500' : 'text-gray-700'} mt-1 line-clamp-2`}>
+                          {notification.comment?.content?.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {formatTime(notification.createdAt)}
+                        </div>
+                      </div>
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 bg-purple-600 rounded-full flex-shrink-0 mt-2"></div>
                       )}
                     </div>
-                  </div>
+                  </Link>
+                ))}
+                
+                {/* System Notifications */}
+                {notifications.map((notification) => (
+                  <Link 
+                    key={`system-${notification.id}`}
+                    href={getSystemNotificationLink(notification)}
+                    className="block p-4 hover:bg-gray-50 transition-colors"
+                    onClick={() => {
+                      if (!notification.read) {
+                        markAsRead([notification.id], false)
+                      }
+                      setOpen(false)
+                    }}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>
+                          {notification.title}
+                        </div>
+                        <div className={`text-xs ${notification.read ? 'text-gray-500' : 'text-gray-700'} mt-1`}>
+                          {notification.message}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {formatTime(notification.createdAt)}
+                        </div>
+                      </div>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
+                      )}
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
           </div>
           
-          {notifications.length > 10 && (
+          {(notifications.length + commentNotifications.length) > 10 && (
             <div className="p-4 border-t text-center">
-              <Button variant="ghost" size="sm" className="hover:opacity-75" style={{ color: '#FF7A1A' }}>
-                View all notifications
-              </Button>
+              <Link href="/notifications" onClick={() => setOpen(false)}>
+                <Button variant="ghost" size="sm" className="hover:opacity-75" style={{ color: '#FF7A1A' }}>
+                  View all notifications
+                </Button>
+              </Link>
             </div>
           )}
         </PopoverContent>
