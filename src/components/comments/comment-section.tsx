@@ -149,8 +149,6 @@ export function CommentSection({ itemType, itemId, className = '', teamMembers: 
       return
     }
 
-    console.log('🐛 DEBUG: Submitting comment with mentions:', mentionsInComment)
-    console.log('🐛 DEBUG: Comment content:', newComment)
 
     setSubmitLoading(true)
     try {
@@ -347,18 +345,11 @@ export function CommentSection({ itemType, itemId, className = '', teamMembers: 
                 onChange={(value) => {
                   setNewComment(value)
                   // Extract mentions from the rich text content - only data-type="mention" elements
-                  console.log('🐛 DEBUG: Full editor content:', value)
-                  
-                  // More precise regex - only match spans that explicitly have data-type="mention"
                   const mentionMatches = Array.from(value.matchAll(/<span[^>]*data-type="mention"[^>]*data-id="([^"]+)"[^>]*>/g))
                   const mentions = mentionMatches.map(match => match[1])
                   
                   // Remove any duplicates (just in case)
                   const uniqueMentions = [...new Set(mentions)]
-                  
-                  console.log('🐛 DEBUG: Mention matches found:', mentionMatches.length)
-                  console.log('🐛 DEBUG: Extracted user IDs:', mentions)
-                  console.log('🐛 DEBUG: Unique mentions:', uniqueMentions)
                   setMentionsInComment(uniqueMentions)
                 }}
                 placeholder="💬 Share your thoughts... Use @ to mention teammates!"

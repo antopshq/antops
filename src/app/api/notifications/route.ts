@@ -6,22 +6,17 @@ import { CommentNotification, Notification } from '@/lib/types'
 // Get notifications for the current user
 export async function GET(request: NextRequest) {
   try {
-    console.log('🐛 DEBUG: GET /api/notifications called')
     const authContext = await getAuthenticatedUser(request)
     if (!authContext.isAuthenticated || !authContext.user) {
-      console.log('🐛 DEBUG: User not authenticated')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const user = authContext.user
-    console.log('🐛 DEBUG: User authenticated:', user.id, user.email)
 
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
     const type = searchParams.get('type') // 'comment' | 'system' | 'all'
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
-    
-    console.log('🐛 DEBUG: Query params - type:', type, 'limit:', limit, 'unreadOnly:', unreadOnly)
 
     const supabase = await createSupabaseServerClient()
 
@@ -108,7 +103,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
       }
 
-      console.log('🐛 DEBUG: Raw comment notification data from DB:', commentData)
 
       commentNotifications = commentData?.map((notification: any) => ({
         id: notification.id,
@@ -136,8 +130,6 @@ export async function GET(request: NextRequest) {
       })) || []
     }
 
-    console.log('🐛 DEBUG: Final response - systemNotifications:', systemNotifications.length, 'commentNotifications:', commentNotifications.length)
-    
     return NextResponse.json({
       systemNotifications,
       commentNotifications,

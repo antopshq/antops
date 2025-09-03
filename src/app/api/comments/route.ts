@@ -128,9 +128,7 @@ export async function POST(request: NextRequest) {
       
       try {
         mentions = mentionsStr ? JSON.parse(mentionsStr) : []
-        console.log('🐛 DEBUG: Parsed mentions from FormData:', mentions)
       } catch (error) {
-        console.log('🐛 DEBUG: Failed to parse mentions:', error)
         mentions = []
       }
       
@@ -313,9 +311,7 @@ export async function POST(request: NextRequest) {
     console.log('📨 Mentions will be processed by database trigger:', mentions.length > 0 ? mentions : 'none')
 
     // Send real-time update via WebSocket (if available)
-    console.log('🐛 DEBUG: Checking WebSocket condition - global.io exists:', !!(global as any).io, 'itemType:', itemType, 'itemId:', itemId)
     if ((global as any).io && itemType && itemId) {
-      console.log('🐛 DEBUG: WebSocket condition met, proceeding with real-time updates')
       // Broadcast to organization
       (global as any).io.to(`org:${user.organizationId}`).emit('realtime_update', {
         type: 'comment_added' as const,

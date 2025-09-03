@@ -51,24 +51,15 @@ export function FloatingNotificationButton() {
 
   const fetchNotifications = async () => {
     try {
-      console.log('🐛 DEBUG: Fetching notifications...')
       const res = await fetch('/api/notifications?type=all&limit=10')
       if (res.ok) {
         const data = await res.json()
-        console.log('🐛 DEBUG: Received notifications data:', data)
-        console.log('🐛 DEBUG: System notifications count:', data.systemNotifications?.length || 0)
-        console.log('🐛 DEBUG: Comment notifications count:', data.commentNotifications?.length || 0)
-        
         setNotifications(data.systemNotifications || [])
         setCommentNotifications(data.commentNotifications || [])
         
         const systemUnread = data.systemNotifications?.filter((n: Notification) => !n.read).length || 0
         const commentUnread = data.commentNotifications?.filter((n: CommentNotification) => !n.isRead).length || 0
-        
-        console.log('🐛 DEBUG: System unread:', systemUnread, 'Comment unread:', commentUnread)
         setUnreadCount(systemUnread + commentUnread)
-      } else {
-        console.log('🐛 DEBUG: API response not ok:', res.status, res.statusText)
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error)
