@@ -883,6 +883,7 @@ export default function ChangeDetailPage() {
               itemType="change" 
               itemId={changeId}
               className="border-0 shadow-sm"
+              teamMembers={teamMembers}
             />
           </div>
 

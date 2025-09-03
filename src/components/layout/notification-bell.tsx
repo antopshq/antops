@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, CheckCircle, Clock, AlertTriangle, Send, X } from 'lucide-react'
+import { Bell, CheckCircle, Clock, AlertTriangle, Send, X, AtSign, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -17,36 +17,62 @@ interface Notification {
   changeId?: string
   incidentId?: string
   problemId?: string
+  commentId?: string
   data?: any
+}
+
+interface CommentNotification {
+  id: string
+  commentId: string
+  userId: string
+  isRead: boolean
+  createdAt: string
+  comment?: {
+    id: string
+    content: string
+    author: {
+      id: string
+      name: string
+      email: string
+    }
+    incidentId?: string
+    problemId?: string
+    changeId?: string
+  }
 }
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [commentNotifications, setCommentNotifications] = useState<CommentNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications?type=system&limit=10')
+      const response = await fetch('/api/notifications?type=all&limit=10')
       if (response.ok) {
         const data = await response.json()
         setNotifications(data.systemNotifications || [])
-        setUnreadCount(data.systemNotifications?.filter((n: Notification) => !n.read).length || 0)
+        setCommentNotifications(data.commentNotifications || [])
+        
+        const systemUnread = data.systemNotifications?.filter((n: Notification) => !n.read).length || 0
+        const commentUnread = data.commentNotifications?.filter((n: CommentNotification) => !n.isRead).length || 0
+        setUnreadCount(systemUnread + commentUnread)
       }
     } catch (error) {
       console.error('Error fetching notifications:', error)
     }
   }
 
-  const markAsRead = async (notificationIds: string[]) => {
+  const markAsRead = async (notificationIds: string[], isComment = false) => {
     try {
       const response = await fetch('/api/notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notificationIds,
-          type: 'system'
+          type: isComment ? 'comment' : 'system'
         })
       })
 
@@ -66,7 +92,7 @@ export function NotificationBell() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           markAll: true,
-          type: 'system'
+          type: 'all'
         })
       })
 
@@ -92,12 +118,16 @@ export function NotificationBell() {
         return <Send className="w-4 h-4 text-blue-600" />
       case 'change_completion_prompt':
         return <AlertTriangle className="w-4 h-4 text-orange-600" />
+      case 'mention':
+        return <AtSign className="w-4 h-4 text-purple-600" />
+      case 'comment':
+        return <MessageCircle className="w-4 h-4 text-blue-600" />
       default:
         return <Bell className="w-4 h-4 text-gray-600" />
     }
   }
 
-  const getNotificationLink = (notification: Notification) => {
+  const getSystemNotificationLink = (notification: Notification) => {
     if (notification.changeId) {
       return `/changes/${notification.changeId}`
     }
@@ -106,6 +136,19 @@ export function NotificationBell() {
     }
     if (notification.problemId) {
       return `/problems/${notification.problemId}`
+    }
+    return '#'
+  }
+
+  const getCommentNotificationLink = (notification: CommentNotification) => {
+    if (notification.comment?.changeId) {
+      return `/changes/${notification.comment.changeId}#comment-${notification.commentId}`
+    }
+    if (notification.comment?.incidentId) {
+      return `/incidents/${notification.comment.incidentId}#comment-${notification.commentId}`
+    }
+    if (notification.comment?.problemId) {
+      return `/problems/${notification.comment.problemId}#comment-${notification.commentId}`
     }
     return '#'
   }
@@ -178,20 +221,56 @@ export function NotificationBell() {
           </div>
         </div>
         
-        {notifications.length === 0 ? (
+        {notifications.length === 0 && commentNotifications.length === 0 ? (
           <div className="p-4 text-center text-sm text-gray-500">
             No notifications
           </div>
         ) : (
           <div className="max-h-80 overflow-y-auto">
+            {/* Comment Notifications (Mentions) */}
+            {commentNotifications.map((notification) => (
+              <Link 
+                key={`comment-${notification.id}`}
+                href={getCommentNotificationLink(notification)}
+                className="block p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  if (!notification.isRead) {
+                    markAsRead([notification.id], true)
+                  }
+                  setIsOpen(false)
+                }}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <AtSign className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-medium ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
+                      {notification.comment?.author.name} mentioned you
+                    </div>
+                    <div className={`text-xs ${notification.isRead ? 'text-gray-500' : 'text-gray-700'} mt-1 line-clamp-2`}>
+                      {notification.comment?.content?.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {formatTimeAgo(notification.createdAt)}
+                    </div>
+                  </div>
+                  {!notification.isRead && (
+                    <div className="w-2 h-2 bg-purple-600 rounded-full flex-shrink-0 mt-2"></div>
+                  )}
+                </div>
+              </Link>
+            ))}
+            
+            {/* System Notifications */}
             {notifications.map((notification) => (
               <Link 
-                key={notification.id}
-                href={getNotificationLink(notification)}
+                key={`system-${notification.id}`}
+                href={getSystemNotificationLink(notification)}
                 className="block p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 onClick={() => {
                   if (!notification.read) {
-                    markAsRead([notification.id])
+                    markAsRead([notification.id], false)
                   }
                   setIsOpen(false)
                 }}

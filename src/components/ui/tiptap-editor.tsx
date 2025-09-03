@@ -39,6 +39,9 @@ interface TeamMember {
   id: string
   name: string
   email: string
+  role: string
+  fullName?: string
+  createdAt: string
 }
 
 interface TiptapEditorProps {
@@ -161,14 +164,22 @@ export function TiptapEditor({
                 
                 const renderItems = () => {
                   component.innerHTML = props.items
-                    .map((item, index) => `
+                    .map((item: any, index: number) => `
                       <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded ${
                         index === (props as any).selectedIndex ? 'bg-blue-50 text-blue-600' : ''
-                      }">
-                        ${item}
+                      }" data-item-id="${item.id}" data-item-label="${item.label}">
+                        ${item.label || item.name || item}
                       </div>
                     `)
                     .join('')
+                  
+                  // Add click handlers
+                  const items = component.querySelectorAll('[data-item-id]')
+                  items.forEach((element, index) => {
+                    element.addEventListener('click', () => {
+                      props.command({ id: props.items[index].id, label: props.items[index].label })
+                    })
+                  })
                 }
                 
                 renderItems()
@@ -176,14 +187,22 @@ export function TiptapEditor({
               onUpdate: (props) => {
                 if (component) {
                   component.innerHTML = props.items
-                    .map((item, index) => `
+                    .map((item: any, index: number) => `
                       <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded ${
                         index === (props as any).selectedIndex ? 'bg-blue-50 text-blue-600' : ''
-                      }">
-                        ${item}
+                      }" data-item-id="${item.id}" data-item-label="${item.label}">
+                        ${item.label || item.name || item}
                       </div>
                     `)
                     .join('')
+                  
+                  // Add click handlers
+                  const items = component.querySelectorAll('[data-item-id]')
+                  items.forEach((element, index) => {
+                    element.addEventListener('click', () => {
+                      props.command({ id: props.items[index].id, label: props.items[index].label })
+                    })
+                  })
                 }
               },
               onKeyDown: (props) => {

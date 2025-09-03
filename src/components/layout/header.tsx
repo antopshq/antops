@@ -3,7 +3,6 @@
 import { User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
-import { NotificationBell } from './notification-bell'
 
 interface HeaderProps {
   user?: {
@@ -25,18 +24,16 @@ export function Header({ user }: HeaderProps) {
   }
 
   return (
-    <header className="border-b border-gray-200 h-16" style={{backgroundColor: '#fa8c16'}}>
+    <header className="border-b border-gray-200 h-16 bg-white">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-medium text-black">
+          <h2 className="text-lg font-medium text-gray-800">
             Welcome back, {user?.name || 'User'}
           </h2>
         </div>
         
         <div className="flex items-center space-x-4">
-          <NotificationBell />
-          
-          <div className="flex items-center space-x-2 text-sm text-black">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
             <User className="w-4 h-4" />
             <span>{user?.email}</span>
           </div>
@@ -45,7 +42,7 @@ export function Header({ user }: HeaderProps) {
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className="text-black hover:text-gray-800 hover:bg-orange-600"
+            className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign out

@@ -1,4 +1,4 @@
-export type NotificationType = 'change_starting' | 'change_overdue' | 'change_completed' | 'incident_created' | 'problem_identified' | 'team_invitation'
+export type NotificationType = 'change_starting' | 'change_overdue' | 'change_completed' | 'incident_created' | 'problem_identified' | 'team_invitation' | 'mention'
 
 export type NotificationChannel = 'email' | 'slack' | 'teams' | 'sms' | 'webhook'
 
@@ -139,5 +139,24 @@ Best regards,
 The ANTOPS Team
     `,
     variables: ['inviterName', 'organizationName', 'role', 'inviteUrl', 'expiresAt']
+  },
+  {
+    type: 'mention',
+    channel: 'email',
+    subject: 'You were mentioned in a comment - {{itemType}} {{itemTitle}}',
+    body: `
+Hi {{mentionedUserName}},
+
+{{mentionerName}} mentioned you in a comment on {{itemType}} "{{itemTitle}}":
+
+💬 Comment:
+{{commentContent}}
+
+View the full discussion: {{itemUrl}}
+
+Best regards,
+ANTOPS
+    `,
+    variables: ['mentionedUserName', 'mentionerName', 'itemType', 'itemTitle', 'commentContent', 'itemUrl']
   }
 ]

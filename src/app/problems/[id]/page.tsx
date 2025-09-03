@@ -919,6 +919,7 @@ export default function ProblemDetailPage() {
               itemType="problem" 
               itemId={problemId}
               className="border-0 shadow-sm"
+              teamMembers={teamMembers}
             />
           </div>
 
