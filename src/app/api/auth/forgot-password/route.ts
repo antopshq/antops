@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
     console.log('Forgot password request for:', email)
     console.log('Environment check:', {
       siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
-      nodeEnv: process.env.NODE_ENV
+      nodeEnv: process.env.NODE_ENV,
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SITE_URL'))
     })
 
     // Validate input
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServerClient()
 
     // Check if user exists first (optional - for better UX)
+    console.log('Checking profiles table for email:', email.toLowerCase())
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('email')
@@ -43,7 +45,11 @@ export async function POST(request: NextRequest) {
       // Continue anyway - don't block password reset due to DB issues
     }
 
-    console.log('Profile check result:', { profilesFound: profiles?.length || 0 })
+    console.log('Profile check result:', { 
+      profilesFound: profiles?.length || 0,
+      profileError: profileError?.message,
+      actualProfiles: profiles
+    })
 
     // Always try to send reset email - let Supabase handle if user exists or not
     // This way we don't reveal if email exists, but still send email if it does
