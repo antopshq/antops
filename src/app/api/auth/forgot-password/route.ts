@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Always try to send reset email - let Supabase handle if user exists or not
     // This way we don't reveal if email exists, but still send email if it does
-    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`
+    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://app.antopshq.com'}/auth/reset-password`
     console.log('Sending reset email with redirect:', redirectUrl)
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
