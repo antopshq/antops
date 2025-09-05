@@ -9,18 +9,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 
 function ResetPasswordContent() {
-  const [email, setEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPasswords, setShowPasswords] = useState({ new: false, confirm: false })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Check if user is authenticated (from password reset link)
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setIsAuthenticated(true)
+      } else {
+        setError('This password reset link is invalid or has expired. Please request a new password reset.')
+      }
+    }
+    checkAuth()
+  }, [])
 
   const passwordStrength = (password: string) => {
     if (password.length < 8) return { strength: 'weak', message: 'At least 8 characters required' }
@@ -42,7 +55,7 @@ function ResetPasswordContent() {
     setError('')
 
     // Validation
-    if (!email || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       setError('All fields are required')
       setLoading(false)
       return
@@ -61,40 +74,25 @@ function ResetPasswordContent() {
     }
 
     try {
-      // Get the code from URL
-      const urlParams = new URLSearchParams(window.location.search)
-      const code = urlParams.get('code')
+      console.log('Updating password via Supabase...')
       
-      if (!code) {
-        setError('Invalid or expired reset link. Please request a new password reset.')
+      // Update password using Supabase auth (user should already be authenticated)
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) {
+        console.error('Password update error:', error)
+        setError(error.message || 'Failed to update password')
         setLoading(false)
         return
       }
 
-      console.log('Calling dev reset API...')
-      
-      // Use the dev reset endpoint that works
-      const res = await fetch('/api/auth/dev-reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email,
-          newPassword 
-        })
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        console.log('Password reset successful!')
-        setSuccess(true)
-        setTimeout(() => {
-          router.push('/auth/signin')
-        }, 3000)
-      } else {
-        setError(data.error || 'Failed to reset password')
-        setLoading(false)
-      }
+      console.log('Password updated successfully!')
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/auth/signin')
+      }, 3000)
 
     } catch (err) {
       console.error('Reset password error:', err)
@@ -111,6 +109,19 @@ function ResetPasswordContent() {
   }
 
   const strength = passwordStrength(newPassword)
+
+  // Don't show the form until we verify authentication
+  if (!isAuthenticated && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <Card className="w-full max-w-md border-0 shadow-sm">
+          <CardContent className="flex items-center justify-center p-6">
+            <div className="text-center">Verifying reset link...</div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (success) {
     return (
@@ -173,19 +184,6 @@ function ResetPasswordContent() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Address */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                required
-              />
-            </div>
-
             {/* New Password */}
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
