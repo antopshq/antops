@@ -27,36 +27,47 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseServerClient()
 
-    // Set the session using the access token
-    const { data, error } = await supabase.auth.setSession({
-      access_token: token,
-      refresh_token: '' // Not needed for password reset
-    })
+    // For password reset codes, we use getUser with the authorization code
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+      
+      if (userError || !user) {
+        console.error('User verification error:', userError)
+        return NextResponse.json({ 
+          error: 'Invalid or expired reset token. Please request a new password reset.' 
+        }, { status: 400 })
+      }
 
-    if (error) {
-      console.error('Session error:', error)
+      console.log('User verified successfully, updating password for user:', user.id)
+
+      // Create admin client to update password
+      const { createSupabaseAdminClient } = await import('@/lib/supabase')
+      const adminSupabase = createSupabaseAdminClient()
+      
+      // Use admin client to update user password
+      const { error: updateError } = await adminSupabase.auth.admin.updateUserById(
+        user.id,
+        { password: newPassword }
+      )
+
+      if (updateError) {
+        console.error('Password update error:', updateError)
+        return NextResponse.json({ 
+          error: 'Failed to update password. Please try again.' 
+        }, { status: 500 })
+      }
+
+      console.log('✅ Password reset successfully')
+      return NextResponse.json({ 
+        message: 'Password reset successfully. You can now sign in with your new password.' 
+      })
+
+    } catch (err) {
+      console.error('Reset password error:', err)
       return NextResponse.json({ 
         error: 'Invalid or expired reset token. Please request a new password reset.' 
       }, { status: 400 })
     }
-
-    console.log('Session set successfully, updating password')
-
-    // Now update the password using the authenticated session
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword
-    })
-
-    if (updateError) {
-      console.error('Password update error:', updateError)
-      return NextResponse.json({ 
-        error: 'Failed to update password. Please try again.' 
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({ 
-      message: 'Password reset successfully. You can now sign in with your new password.' 
-    })
 
   } catch (error) {
     console.error('Reset password API error:', error)
