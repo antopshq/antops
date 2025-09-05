@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Always try to send reset email - let Supabase handle if user exists or not
     // This way we don't reveal if email exists, but still send email if it does
-    const redirectUrl = 'https://app.antopshq.com/auth/reset-password'
+    const redirectUrl = `https://app.antopshq.com/auth/reset-password?v=${Date.now()}`
     console.log('🔥 HARDCODED REDIRECT URL:', redirectUrl)
     console.log('🔥 TIMESTAMP:', new Date().toISOString())
     
