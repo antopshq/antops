@@ -58,15 +58,24 @@ function ResetPasswordContent() {
       return
     }
 
-    // Get the token from URL query parameters (Supabase sends it as ?code=xxx)
+    // Get token from URL - check both query params and hash fragments
     const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('code')
-
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    
+    const codeFromQuery = urlParams.get('code')
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    
     console.log('Reset password debug:', {
       fullUrl: window.location.href,
       search: window.location.search,
-      token: token ? `${token.substring(0, 10)}...` : 'not found'
+      hash: window.location.hash,
+      codeFromQuery: codeFromQuery ? `${codeFromQuery.substring(0, 10)}...` : 'not found',
+      accessToken: accessToken ? `${accessToken.substring(0, 10)}...` : 'not found',
+      refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'not found'
     })
+
+    const token = accessToken || codeFromQuery
 
     if (!token) {
       console.log('❌ No token found in URL')
