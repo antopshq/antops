@@ -4,26 +4,32 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { code } = body
+    const { access_token, token_type } = body
 
-    console.log('Exchange code request:', {
-      hasCode: !!code,
-      codePreview: code ? `${code.substring(0, 10)}...` : 'none'
+    console.log('Token verification request:', {
+      hasToken: !!access_token,
+      tokenType: token_type,
+      tokenPreview: access_token ? `${access_token.substring(0, 20)}...` : 'none'
     })
 
-    if (!code) {
+    if (!access_token) {
       return NextResponse.json({ 
-        error: 'Authorization code is required' 
+        error: 'Access token is required' 
       }, { status: 400 })
     }
 
     const supabase = await createSupabaseServerClient()
 
-    console.log('Attempting to exchange code for session...')
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    console.log('Setting session with provided token...')
+    
+    // Set the session using the access token from the hash
+    const { data, error } = await supabase.auth.setSession({
+      access_token,
+      refresh_token: access_token // For password recovery, access_token can serve as refresh_token
+    })
 
     if (error) {
-      console.error('❌ Code exchange failed:', error)
+      console.error('❌ Token verification failed:', error)
       console.error('Error details:', {
         message: error.message,
         status: error.status,
@@ -31,21 +37,21 @@ export async function POST(request: NextRequest) {
       })
       
       return NextResponse.json({ 
-        error: 'Invalid or expired reset link. Please request a new password reset.' 
+        error: 'Invalid or expired reset token. Please request a new password reset.' 
       }, { status: 400 })
     }
 
     if (!data.session || !data.user) {
       console.error('❌ No session or user returned')
       return NextResponse.json({ 
-        error: 'Authentication failed' 
+        error: 'Token verification failed' 
       }, { status: 400 })
     }
 
-    console.log('✅ Code exchanged successfully, user:', data.user.id)
+    console.log('✅ Token verified successfully, user:', data.user.id)
     
     return NextResponse.json({ 
-      message: 'Authentication successful',
+      message: 'Token verification successful',
       user: {
         id: data.user.id,
         email: data.user.email
@@ -53,7 +59,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Exchange code API error:', error)
+    console.error('Verify token API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
