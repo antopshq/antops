@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import ResetPasswordHandler from '@/components/auth/reset-password-handler'
+import ResetPasswordFormWrapper from '@/components/auth/reset-password-form-wrapper'
 
 export default function ResetPassword() {
   return (
@@ -13,7 +13,7 @@ export default function ResetPassword() {
         </Card>
       </div>
     }>
-      <ResetPasswordHandler />
+      <ResetPasswordFormWrapper />
     </Suspense>
   )
 }
