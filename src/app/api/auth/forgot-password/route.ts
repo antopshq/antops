@@ -50,10 +50,10 @@ export async function POST(request: NextRequest) {
       actualProfiles: profiles
     })
 
-    // Use redirect URL that will receive hash-based tokens instead of PKCE codes
-    // The redirect URL still needs to be provided for the email template
-    const redirectUrl = 'https://app.antopshq.com/auth/reset-password'
-    console.log('Sending reset email with hash-based token redirect:', redirectUrl)
+    // Use the confirm route to handle both PKCE codes and hash tokens
+    // This route will process the tokens and redirect to the reset password page
+    const redirectUrl = 'https://app.antopshq.com/api/auth/confirm?next=/auth/reset-password'
+    console.log('Sending reset email with confirm route redirect:', redirectUrl)
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl
