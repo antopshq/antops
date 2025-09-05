@@ -58,10 +58,9 @@ function ResetPasswordContent() {
       return
     }
 
-    // Get the token from URL fragments (Supabase auth sends it in the hash)
-    const hash = window.location.hash
-    const params = new URLSearchParams(hash.substring(1))
-    const token = params.get('access_token')
+    // Get the token from URL query parameters (Supabase sends it as ?code=xxx)
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('code')
 
     if (!token) {
       setError('Invalid or expired reset link. Please request a new password reset.')
