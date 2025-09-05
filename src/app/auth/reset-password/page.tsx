@@ -62,7 +62,14 @@ function ResetPasswordContent() {
     const urlParams = new URLSearchParams(window.location.search)
     const token = urlParams.get('code')
 
+    console.log('Reset password debug:', {
+      fullUrl: window.location.href,
+      search: window.location.search,
+      token: token ? `${token.substring(0, 10)}...` : 'not found'
+    })
+
     if (!token) {
+      console.log('❌ No token found in URL')
       setError('Invalid or expired reset link. Please request a new password reset.')
       setLoading(false)
       return
