@@ -50,10 +50,10 @@ export async function POST(request: NextRequest) {
       actualProfiles: profiles
     })
 
-    // Always try to send reset email - let Supabase handle if user exists or not
-    // This way we don't reveal if email exists, but still send email if it does
-    const redirectUrl = 'https://app.antopshq.com/api/auth/confirm?next=/auth/reset-password'
-    console.log('Sending reset email with SSR redirect:', redirectUrl)
+    // Use redirect URL that will receive hash-based tokens instead of PKCE codes
+    // The redirect URL still needs to be provided for the email template
+    const redirectUrl = 'https://app.antopshq.com/auth/reset-password'
+    console.log('Sending reset email with hash-based token redirect:', redirectUrl)
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl
