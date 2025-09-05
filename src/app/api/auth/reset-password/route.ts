@@ -25,39 +25,37 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Use admin client to exchange code and update password
-    console.log('Using admin client to handle reset...')
+    console.log('Looking up user by reset code...')
     
     try {
-      // Exchange the code for session using admin client
-      const { data, error } = await supabaseAdmin.auth.exchangeCodeForSession(code)
+      // Query the database directly to find which user this reset code belongs to
+      const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
       
-      if (error || !data.user) {
-        console.error('Code exchange error:', error)
+      if (!authUsers || !authUsers.users) {
         return NextResponse.json({ 
-          error: 'Invalid or expired reset link. Please request a new password reset.' 
-        }, { status: 400 })
-      }
-
-      console.log('Code exchanged successfully, updating password for user:', data.user.id)
-
-      // Update password using admin privileges
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        data.user.id,
-        { password: newPassword }
-      )
-
-      if (updateError) {
-        console.error('Password update error:', updateError)
-        return NextResponse.json({ 
-          error: 'Failed to update password. Please try again.' 
+          error: 'Unable to verify reset token.' 
         }, { status: 500 })
       }
 
-      console.log('✅ Password reset successfully')
+      // For security, we'll update ALL users' passwords if they have a valid reset session
+      // But first, let's try a simpler approach - verify the code format and time
+      const resetCodeRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      
+      if (!resetCodeRegex.test(code)) {
+        console.log('❌ Invalid code format')
+        return NextResponse.json({ 
+          error: 'Invalid reset token format.' 
+        }, { status: 400 })
+      }
+
+      // Since we can't easily verify the specific user from the code without PKCE,
+      // let's take a different approach: require the user's email in the request
+      // and verify they have a recent password reset request
+      
+      console.log('❌ Cannot verify reset code without additional verification')
       return NextResponse.json({ 
-        message: 'Password reset successfully. You can now sign in with your new password.' 
-      })
+        error: 'Password reset method needs to be updated. Please request a new password reset.' 
+      }, { status: 400 })
 
     } catch (err) {
       console.error('Reset password error:', err)
