@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createSupabaseServerClient, supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,12 +40,8 @@ export async function POST(request: NextRequest) {
 
       console.log('User verified successfully, updating password for user:', user.id)
 
-      // Create admin client to update password
-      const { createSupabaseAdminClient } = await import('@/lib/supabase')
-      const adminSupabase = createSupabaseAdminClient()
-      
       // Use admin client to update user password
-      const { error: updateError } = await adminSupabase.auth.admin.updateUserById(
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         user.id,
         { password: newPassword }
       )
