@@ -27,17 +27,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseServerClient()
 
-    // For password reset, we need to exchange the token for a session first
-    const { data, error } = await supabase.auth.exchangeCodeForSession(token)
+    // Set the session using the access token
+    const { data, error } = await supabase.auth.setSession({
+      access_token: token,
+      refresh_token: '' // Not needed for password reset
+    })
 
     if (error) {
-      console.error('Token exchange error:', error)
+      console.error('Session error:', error)
       return NextResponse.json({ 
         error: 'Invalid or expired reset token. Please request a new password reset.' 
       }, { status: 400 })
     }
 
-    console.log('Token exchange successful, updating password')
+    console.log('Session set successfully, updating password')
 
     // Now update the password using the authenticated session
     const { error: updateError } = await supabase.auth.updateUser({
