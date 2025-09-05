@@ -15,10 +15,42 @@ export default function ResetPasswordFormWrapper() {
   const router = useRouter()
 
   useEffect(() => {
-    const handleHashAuth = async () => {
-      console.log('Checking URL for auth hash...')
+    const handleAuth = async () => {
+      console.log('Checking URL for auth tokens...')
       
-      // Check for hash-based authentication (non-PKCE)
+      // First check URL query parameters (from /api/auth/confirm redirect)
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
+      
+      console.log('URL search params:', { hasCode: !!code })
+      
+      if (code) {
+        try {
+          console.log('Found authorization code in URL, attempting exchange...')
+          
+          // Try to exchange the code for a session
+          const res = await fetch('/api/auth/exchange-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          })
+          
+          if (res.ok) {
+            console.log('✅ Code exchange successful')
+            setIsAuthenticated(true)
+            // Clean up URL
+            router.replace('/auth/reset-password')
+            return
+          } else {
+            const data = await res.json()
+            console.log('❌ Code exchange failed, trying other methods:', data.error)
+          }
+        } catch (err) {
+          console.error('Code exchange error:', err)
+        }
+      }
+      
+      // Then check for hash-based authentication (non-PKCE)
       const hash = window.location.hash
       console.log('Current hash:', hash)
       
@@ -50,46 +82,49 @@ export default function ResetPasswordFormWrapper() {
               setIsAuthenticated(true)
               // Clean up URL by removing the hash
               router.replace('/auth/reset-password')
+              return
             } else {
               const data = await res.json()
               console.error('❌ Token verification failed:', data.error)
               setError(data.error || 'Invalid or expired reset link')
+              setIsLoading(false)
+              return
             }
           } catch (err) {
             console.error('Token verification error:', err)
             setError('Something went wrong during authentication')
+            setIsLoading(false)
+            return
           }
-        } else {
-          console.log('No valid recovery token found in hash')
-          setError('Invalid reset link format')
         }
-      } else {
-        console.log('No hash found, checking for existing session...')
-        
-        // Check if user already has a valid session
-        try {
-          const res = await fetch('/api/auth/session')
-          if (res.ok) {
-            const data = await res.json()
-            if (data.user) {
-              console.log('✅ Existing session found')
-              setIsAuthenticated(true)
-            } else {
-              setError('No authentication found. Please request a new password reset link.')
-            }
+      }
+      
+      console.log('No tokens found in URL, checking for existing session...')
+      
+      // Check if user already has a valid session
+      try {
+        const res = await fetch('/api/auth/session')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user) {
+            console.log('✅ Existing session found')
+            setIsAuthenticated(true)
           } else {
+            console.log('❌ No existing session')
             setError('No authentication found. Please request a new password reset link.')
           }
-        } catch (err) {
-          console.error('Session check error:', err)
-          setError('Failed to verify authentication')
+        } else {
+          setError('No authentication found. Please request a new password reset link.')
         }
+      } catch (err) {
+        console.error('Session check error:', err)
+        setError('Failed to verify authentication')
       }
       
       setIsLoading(false)
     }
 
-    handleHashAuth()
+    handleAuth()
   }, [router])
 
   if (isLoading) {
