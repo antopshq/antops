@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState('')
@@ -71,9 +71,19 @@ function ResetPasswordContent() {
       }
 
       console.log('Exchanging code for session...')
+      console.log('Environment variables check:', {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'present' : 'missing',
+        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing'
+      })
+      
+      // Create supabase client directly
+      const supabaseClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
       
       // Exchange the code for a session
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+      const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code)
       
       if (error) {
         console.error('Code exchange error:', error)
@@ -85,7 +95,7 @@ function ResetPasswordContent() {
       console.log('Session established, updating password...')
 
       // Now update the password using the authenticated session
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabaseClient.auth.updateUser({
         password: newPassword
       })
 
