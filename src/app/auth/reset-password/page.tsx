@@ -1,15 +1,19 @@
-import { createSupabaseServerClient } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
-import ResetPasswordForm from '@/components/auth/reset-password-form'
+import { Suspense } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import ResetPasswordHandler from '@/components/auth/reset-password-handler'
 
-export default async function ResetPassword() {
-  // Check authentication server-side
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect('/auth/auth-error')
-  }
-
-  return <ResetPasswordForm />
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <Card className="w-full max-w-md border-0 shadow-sm">
+          <CardContent className="flex items-center justify-center p-6">
+            <div className="text-center">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <ResetPasswordHandler />
+    </Suspense>
+  )
 }
