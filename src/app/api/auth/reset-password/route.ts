@@ -4,18 +4,18 @@ import { createSupabaseServerClient, supabaseAdmin } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { token, newPassword } = body
+    const { code, newPassword } = body
 
     console.log('Reset password request:', {
-      token: token ? `${token.substring(0, 10)}...` : 'missing',
+      code: code ? `${code.substring(0, 10)}...` : 'missing',
       passwordLength: newPassword?.length || 0
     })
 
     // Validate input
-    if (!token || !newPassword) {
-      console.log('❌ Missing token or password:', { hasToken: !!token, hasPassword: !!newPassword })
+    if (!code || !newPassword) {
+      console.log('❌ Missing code or password:', { hasCode: !!code, hasPassword: !!newPassword })
       return NextResponse.json({ 
-        error: 'Reset token and new password are required' 
+        error: 'Reset code and new password are required' 
       }, { status: 400 })
     }
 
@@ -25,24 +25,25 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const supabase = await createSupabaseServerClient()
-
-    // For password reset codes, we use getUser with the authorization code
+    // Use admin client to exchange code and update password
+    console.log('Using admin client to handle reset...')
+    
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+      // Exchange the code for session using admin client
+      const { data, error } = await supabaseAdmin.auth.exchangeCodeForSession(code)
       
-      if (userError || !user) {
-        console.error('User verification error:', userError)
+      if (error || !data.user) {
+        console.error('Code exchange error:', error)
         return NextResponse.json({ 
-          error: 'Invalid or expired reset token. Please request a new password reset.' 
+          error: 'Invalid or expired reset link. Please request a new password reset.' 
         }, { status: 400 })
       }
 
-      console.log('User verified successfully, updating password for user:', user.id)
+      console.log('Code exchanged successfully, updating password for user:', data.user.id)
 
-      // Use admin client to update user password
+      // Update password using admin privileges
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        user.id,
+        data.user.id,
         { password: newPassword }
       )
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       console.error('Reset password error:', err)
       return NextResponse.json({ 
-        error: 'Invalid or expired reset token. Please request a new password reset.' 
+        error: 'Invalid or expired reset link. Please request a new password reset.' 
       }, { status: 400 })
     }
 
