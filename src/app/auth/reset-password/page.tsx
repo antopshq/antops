@@ -70,47 +70,30 @@ function ResetPasswordContent() {
         return
       }
 
-      console.log('Exchanging code for session...')
-      console.log('Environment variables check:', {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'present' : 'missing',
-        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing'
-      })
+      console.log('Calling reset password API with code...')
       
-      // Create supabase client directly
-      const supabaseClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-      
-      // Exchange the code for a session
-      const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code)
-      
-      if (error) {
-        console.error('Code exchange error:', error)
-        setError('Invalid or expired reset link. Please request a new password reset.')
-        setLoading(false)
-        return
-      }
-
-      console.log('Session established, updating password...')
-
-      // Now update the password using the authenticated session
-      const { error: updateError } = await supabaseClient.auth.updateUser({
-        password: newPassword
+      // Call our backend API to handle the reset
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code,
+          newPassword 
+        })
       })
 
-      if (updateError) {
-        console.error('Password update error:', updateError)
-        setError('Failed to update password. Please try again.')
-        setLoading(false)
-        return
-      }
+      const data = await res.json()
 
-      console.log('Password updated successfully!')
-      setSuccess(true)
-      setTimeout(() => {
-        router.push('/auth/signin')
-      }, 3000)
+      if (res.ok) {
+        console.log('Password reset successful!')
+        setSuccess(true)
+        setTimeout(() => {
+          router.push('/auth/signin')
+        }, 3000)
+      } else {
+        setError(data.error || 'Failed to reset password')
+        setLoading(false)
+      }
 
     } catch (err) {
       console.error('Reset password error:', err)
