@@ -36,23 +36,16 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle code format (PKCE flow)
+  // Handle code format - for password reset, we need to pass the code to the client
+  // The server can't handle PKCE flow without the code verifier
   if (code) {
-    console.log('Attempting to exchange code for session...')
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (!error && data.session) {
-      console.log('✅ Code exchanged successfully, user:', data.user?.id)
-      console.log('Redirecting to:', next)
-      return NextResponse.redirect(new URL(next, request.url))
-    } else {
-      console.error('❌ Code exchange failed:', error)
-      console.error('Error details:', {
-        message: error?.message,
-        status: error?.status,
-        code: error?.code
-      })
-    }
+    console.log('Found authorization code, redirecting to client-side handler')
+    // Redirect to the reset password page with the code
+    // The client-side will handle the PKCE exchange
+    const redirectUrl = new URL(next, request.url)
+    redirectUrl.searchParams.set('code', code)
+    console.log('Redirecting to client handler:', redirectUrl.toString())
+    return NextResponse.redirect(redirectUrl)
   }
 
   console.log('❌ No valid authentication method found')
