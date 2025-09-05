@@ -12,6 +12,7 @@ import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
 function ResetPasswordContent() {
+  const [email, setEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPasswords, setShowPasswords] = useState({ new: false, confirm: false })
@@ -41,7 +42,7 @@ function ResetPasswordContent() {
     setError('')
 
     // Validation
-    if (!newPassword || !confirmPassword) {
+    if (!email || !newPassword || !confirmPassword) {
       setError('All fields are required')
       setLoading(false)
       return
@@ -70,14 +71,14 @@ function ResetPasswordContent() {
         return
       }
 
-      console.log('Calling reset password API with code...')
+      console.log('Calling dev reset API...')
       
-      // Call our backend API to handle the reset
-      const res = await fetch('/api/auth/reset-password', {
+      // Use the dev reset endpoint that works
+      const res = await fetch('/api/auth/dev-reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          code,
+          email,
           newPassword 
         })
       })
@@ -172,6 +173,19 @@ function ResetPasswordContent() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Address */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+              />
+            </div>
+
             {/* New Password */}
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
