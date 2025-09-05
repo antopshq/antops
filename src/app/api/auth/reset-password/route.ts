@@ -6,8 +6,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { token, newPassword } = body
 
+    console.log('Reset password request:', {
+      token: token ? `${token.substring(0, 10)}...` : 'missing',
+      passwordLength: newPassword?.length || 0
+    })
+
     // Validate input
     if (!token || !newPassword) {
+      console.log('❌ Missing token or password:', { hasToken: !!token, hasPassword: !!newPassword })
       return NextResponse.json({ 
         error: 'Reset token and new password are required' 
       }, { status: 400 })
