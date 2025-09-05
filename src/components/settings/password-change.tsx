@@ -229,9 +229,9 @@ export function PasswordChangeForm() {
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="text-sm font-medium text-gray-900 mb-2">Password Requirements:</h4>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• At least 8 characters long</li>
-              <li>• Different from your current password</li>
-              <li>• Recommended: Include uppercase, lowercase, numbers, and symbols</li>
+              <li>At least 8 characters long</li>
+              <li>Different from your current password</li>
+              <li>Recommended: Include uppercase, lowercase, numbers, and symbols</li>
             </ul>
           </div>
 

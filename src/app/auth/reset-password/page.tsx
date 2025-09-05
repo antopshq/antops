@@ -58,10 +58,9 @@ function ResetPasswordContent() {
       return
     }
 
-    // Get the token from URL fragments (Supabase auth sends it in the hash)
-    const hash = window.location.hash
-    const params = new URLSearchParams(hash.substring(1))
-    const token = params.get('access_token')
+    // Get the token from URL query parameters (Supabase sends it as ?code=xxx)
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('code')
 
     if (!token) {
       setError('Invalid or expired reset link. Please request a new password reset.')
@@ -239,8 +238,8 @@ function ResetPasswordContent() {
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="text-sm font-medium text-gray-900 mb-2">Password Requirements:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• At least 8 characters long</li>
-                <li>• Recommended: Include uppercase, lowercase, numbers, and symbols</li>
+                <li>At least 8 characters long</li>
+                <li>Recommended: Include uppercase, lowercase, numbers, and symbols</li>
               </ul>
             </div>
 

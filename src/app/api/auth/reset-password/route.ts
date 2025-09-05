@@ -22,22 +22,27 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServerClient()
 
     // Verify the reset token and update password
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type: 'recovery'
     })
 
     if (error) {
-      console.error('Password reset error:', error)
-      
-      // Handle specific error types
-      if (error.message.includes('token')) {
-        return NextResponse.json({ 
-          error: 'Invalid or expired reset token. Please request a new password reset.' 
-        }, { status: 400 })
-      }
-      
+      console.error('Token verification error:', error)
       return NextResponse.json({ 
-        error: 'Failed to reset password. Please try again.' 
+        error: 'Invalid or expired reset token. Please request a new password reset.' 
+      }, { status: 400 })
+    }
+
+    // Now update the password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+
+    if (updateError) {
+      console.error('Password update error:', updateError)
+      return NextResponse.json({ 
+        error: 'Failed to update password. Please try again.' 
       }, { status: 500 })
     }
 
