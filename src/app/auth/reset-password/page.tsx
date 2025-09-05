@@ -58,55 +58,55 @@ function ResetPasswordContent() {
       return
     }
 
-    // Get token from URL - check both query params and hash fragments
-    const urlParams = new URLSearchParams(window.location.search)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    
-    const codeFromQuery = urlParams.get('code')
-    const accessToken = hashParams.get('access_token')
-    const refreshToken = hashParams.get('refresh_token')
-    
-    console.log('Reset password debug:', {
-      fullUrl: window.location.href,
-      search: window.location.search,
-      hash: window.location.hash,
-      codeFromQuery: codeFromQuery ? `${codeFromQuery.substring(0, 10)}...` : 'not found',
-      accessToken: accessToken ? `${accessToken.substring(0, 10)}...` : 'not found',
-      refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'not found'
-    })
-
-    const token = accessToken || codeFromQuery
-
-    if (!token) {
-      console.log('❌ No token found in URL')
-      setError('Invalid or expired reset link. Please request a new password reset.')
-      setLoading(false)
-      return
-    }
-
     try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          token,
-          newPassword 
-        })
+      // Get the code from URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
+      
+      if (!code) {
+        setError('Invalid or expired reset link. Please request a new password reset.')
+        setLoading(false)
+        return
+      }
+
+      console.log('Exchanging code for session...')
+      
+      // Import supabase client
+      const { supabase } = await import('@/lib/supabase')
+      
+      // Exchange the code for a session
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+      
+      if (error) {
+        console.error('Code exchange error:', error)
+        setError('Invalid or expired reset link. Please request a new password reset.')
+        setLoading(false)
+        return
+      }
+
+      console.log('Session established, updating password...')
+
+      // Now update the password using the authenticated session
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
       })
 
-      const data = await res.json()
-
-      if (res.ok) {
-        setSuccess(true)
-        setTimeout(() => {
-          router.push('/auth/signin')
-        }, 3000)
-      } else {
-        setError(data.error || 'Failed to reset password')
+      if (updateError) {
+        console.error('Password update error:', updateError)
+        setError('Failed to update password. Please try again.')
+        setLoading(false)
+        return
       }
+
+      console.log('Password updated successfully!')
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/auth/signin')
+      }, 3000)
+
     } catch (err) {
+      console.error('Reset password error:', err)
       setError('Something went wrong. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
