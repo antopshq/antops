@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState('')
@@ -70,9 +71,6 @@ function ResetPasswordContent() {
       }
 
       console.log('Exchanging code for session...')
-      
-      // Import supabase client
-      const { supabase } = await import('@/lib/supabase')
       
       // Exchange the code for a session
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
