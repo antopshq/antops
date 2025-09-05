@@ -9,8 +9,7 @@ export async function POST(request: NextRequest) {
     console.log('Forgot password request for:', email)
     console.log('Environment check:', {
       siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
-      nodeEnv: process.env.NODE_ENV,
-      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SITE_URL'))
+      nodeEnv: process.env.NODE_ENV
     })
 
     // Validate input
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Always try to send reset email - let Supabase handle if user exists or not
     // This way we don't reveal if email exists, but still send email if it does
-    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://app.antopshq.com'}/auth/reset-password`
+    const redirectUrl = 'https://app.antopshq.com/auth/reset-password'
     console.log('Sending reset email with redirect:', redirectUrl)
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
