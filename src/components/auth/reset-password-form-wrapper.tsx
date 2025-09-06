@@ -16,16 +16,16 @@ export default function ResetPasswordFormWrapper() {
 
   useEffect(() => {
     const handleAuth = async () => {
-      console.log('Checking URL for auth tokens...')
-      
-      // First check URL query parameters (from /api/auth/confirm redirect)
-      const urlParams = new URLSearchParams(window.location.search)
-      const code = urlParams.get('code')
-      
-      console.log('URL search params:', { hasCode: !!code })
-      
-      if (code) {
-        try {
+      try {
+        console.log('Checking URL for auth tokens...')
+        
+        // First check URL query parameters (from /api/auth/confirm redirect)
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get('code')
+        
+        console.log('URL search params:', { hasCode: !!code })
+        
+        if (code) {
           console.log('Found authorization code in URL, attempting exchange...')
           
           // Try to exchange the code for a session
@@ -38,6 +38,7 @@ export default function ResetPasswordFormWrapper() {
           if (res.ok) {
             console.log('✅ Code exchange successful')
             setIsAuthenticated(true)
+            setIsLoading(false)
             // Clean up URL
             router.replace('/auth/reset-password')
             return
@@ -45,26 +46,22 @@ export default function ResetPasswordFormWrapper() {
             const data = await res.json()
             console.log('❌ Code exchange failed, trying other methods:', data.error)
           }
-        } catch (err) {
-          console.error('Code exchange error:', err)
         }
-      }
-      
-      // Then check for hash-based authentication (non-PKCE)
-      const hash = window.location.hash
-      console.log('Current hash:', hash)
-      
-      if (hash) {
-        // Parse hash parameters for token-based auth
-        const params = new URLSearchParams(hash.substring(1))
-        const accessToken = params.get('access_token')
-        const tokenType = params.get('token_type')
-        const type = params.get('type')
         
-        console.log('Hash params:', { accessToken: !!accessToken, tokenType, type })
+        // Then check for hash-based authentication (non-PKCE)
+        const hash = window.location.hash
+        console.log('Current hash:', hash)
         
-        if (accessToken && type === 'recovery') {
-          try {
+        if (hash) {
+          // Parse hash parameters for token-based auth
+          const params = new URLSearchParams(hash.substring(1))
+          const accessToken = params.get('access_token')
+          const tokenType = params.get('token_type')
+          const type = params.get('type')
+          
+          console.log('Hash params:', { accessToken: !!accessToken, tokenType, type })
+          
+          if (accessToken && type === 'recovery') {
             console.log('Found recovery token, verifying session...')
             
             // Call API to establish session with the token
@@ -80,6 +77,7 @@ export default function ResetPasswordFormWrapper() {
             if (res.ok) {
               console.log('✅ Token verification successful')
               setIsAuthenticated(true)
+              setIsLoading(false)
               // Clean up URL by removing the hash
               router.replace('/auth/reset-password')
               return
@@ -90,19 +88,12 @@ export default function ResetPasswordFormWrapper() {
               setIsLoading(false)
               return
             }
-          } catch (err) {
-            console.error('Token verification error:', err)
-            setError('Something went wrong during authentication')
-            setIsLoading(false)
-            return
           }
         }
-      }
-      
-      console.log('No tokens found in URL, checking for existing session...')
-      
-      // Check if user already has a valid session
-      try {
+        
+        console.log('No tokens found in URL, checking for existing session...')
+        
+        // Check if user already has a valid session
         const res = await fetch('/api/auth/session')
         if (res.ok) {
           const data = await res.json()
@@ -117,11 +108,12 @@ export default function ResetPasswordFormWrapper() {
           setError('No authentication found. Please request a new password reset link.')
         }
       } catch (err) {
-        console.error('Session check error:', err)
+        console.error('Authentication check error:', err)
         setError('Failed to verify authentication')
+      } finally {
+        // Ensure loading is always set to false
+        setIsLoading(false)
       }
-      
-      setIsLoading(false)
     }
 
     handleAuth()
@@ -129,7 +121,7 @@ export default function ResetPasswordFormWrapper() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600" style={{background: 'linear-gradient(135deg, #fa8c16 0%, #ff7875 50%, #ffa940 100%)'}}>
         <Card className="w-full max-w-md border-0 shadow-sm">
           <CardContent className="flex items-center justify-center p-6">
             <div className="text-center">Verifying reset link...</div>
@@ -141,7 +133,7 @@ export default function ResetPasswordFormWrapper() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600" style={{background: 'linear-gradient(135deg, #fa8c16 0%, #ff7875 50%, #ffa940 100%)'}}>
         <Card className="w-full max-w-md border-0 shadow-sm">
           <CardHeader className="space-y-4 pb-6">
             <div className="flex justify-center">
