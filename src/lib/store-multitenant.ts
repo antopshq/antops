@@ -18,7 +18,7 @@ export async function getIncidents(): Promise<Incident[]> {
     .select(`
       id, organization_id, incident_number, title, description, priority, status,
       criticality, urgency, assigned_to, created_by, problem_id, tags, affected_services, links,
-      created_at, updated_at, resolved_at,
+      customer, created_at, updated_at, resolved_at,
       assigned_profile:profiles!assigned_to(full_name, email),
       linked_problem:problems!problem_id(title)
     `)
@@ -104,6 +104,7 @@ export async function getIncidents(): Promise<Incident[]> {
     tags: incident.tags || [],
     affectedServices: incident.affected_services || [],
     links: incident.links || [],
+    customer: incident.customer,
     // Add service information for easy access
     serviceInfo: (incident.affected_services || []).map((serviceId: string) => {
       const info = serviceMap.get(serviceId)
@@ -127,7 +128,7 @@ export async function getIncident(id: string): Promise<Incident | null> {
     .select(`
       id, organization_id, incident_number, title, description, priority, status,
       criticality, urgency, assigned_to, created_by, problem_id, tags, affected_services, links,
-      created_at, updated_at, resolved_at,
+      customer, created_at, updated_at, resolved_at,
       assigned_profile:profiles!assigned_to(full_name, email)
     `)
     .eq('id', id)
@@ -155,6 +156,7 @@ export async function getIncident(id: string): Promise<Incident | null> {
     tags: incident.tags || [],
     affectedServices: incident.affected_services || [],
     links: incident.links || [],
+    customer: incident.customer,
     createdAt: incident.created_at,
     updatedAt: incident.updated_at,
     resolvedAt: incident.resolved_at
@@ -180,6 +182,7 @@ export async function createIncident(data: Omit<Incident, 'id' | 'organizationId
       problem_id: data.problemId || null,
       tags: data.tags,
       affected_services: data.affectedServices,
+      customer: data.customer || null,
       resolved_at: data.resolvedAt || null
     })
     .select()
@@ -204,6 +207,7 @@ export async function createIncident(data: Omit<Incident, 'id' | 'organizationId
     problemId: incident.problem_id,
     tags: incident.tags || [],
     affectedServices: incident.affected_services || [],
+    customer: incident.customer,
     createdAt: incident.created_at,
     updatedAt: incident.updated_at,
     resolvedAt: incident.resolved_at
@@ -225,6 +229,7 @@ export async function updateIncident(id: string, data: Partial<Incident>): Promi
   if (data.tags !== undefined) updateData.tags = data.tags
   if (data.affectedServices !== undefined) updateData.affected_services = data.affectedServices
   if (data.links !== undefined) updateData.links = data.links
+  if (data.customer !== undefined) updateData.customer = data.customer
   if (data.resolvedAt !== undefined) updateData.resolved_at = data.resolvedAt
 
   const { data: incident, error } = await supabase
@@ -253,6 +258,7 @@ export async function updateIncident(id: string, data: Partial<Incident>): Promi
     problemId: incident.problem_id,
     tags: incident.tags || [],
     affectedServices: incident.affected_services || [],
+    customer: incident.customer,
     createdAt: incident.created_at,
     updatedAt: incident.updated_at,
     resolvedAt: incident.resolved_at
@@ -549,3 +555,4 @@ export async function updateChange(id: string, data: Partial<Change>): Promise<C
     completedAt: change.completed_at
   }
 }
+

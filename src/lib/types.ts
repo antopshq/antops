@@ -68,6 +68,7 @@ export interface Incident {
   serviceInfo?: ServiceInfo[]
   links?: ExternalLink[]
   attachments?: CommentAttachment[] // File attachments (max 2, 2MB each)
+  customer?: string // Customer name or identifier
 }
 
 export interface Change {
@@ -131,6 +132,7 @@ export interface CommentAttachment {
   type: string
   url: string
 }
+
 
 export interface Comment {
   id: string

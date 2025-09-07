@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Handle both FormData (with files) and JSON (without files)
     const contentType = request.headers.get('content-type')
     let title: string, description: string, priority: string, criticality: string, urgency: string
-    let assignedTo: string, problemId: string, affectedServices: string[], tags: string[], files: File[] = []
+    let assignedTo: string, problemId: string, customer: string, affectedServices: string[], tags: string[], files: File[] = []
     
     if (contentType?.includes('multipart/form-data')) {
       // Handle FormData for file uploads
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       urgency = formData.get('urgency') as string
       assignedTo = formData.get('assignedTo') as string
       problemId = formData.get('problemId') as string
+      customer = formData.get('customer') as string
       
       try {
         affectedServices = JSON.parse(formData.get('affectedServices') as string || '[]')
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
       urgency = body.urgency
       assignedTo = body.assignedTo
       problemId = body.problemId
+      customer = body.customer
       affectedServices = body.affectedServices || []
       tags = body.tags || []
     }
@@ -137,6 +139,7 @@ export async function POST(request: NextRequest) {
       urgency: (urgency || 'medium') as Urgency,
       assignedTo: assignedTo || undefined,
       problemId: problemId || undefined,
+      customer: customer || undefined,
       createdBy: user.id,
       tags: tags || [],
       affectedServices: validatedServices

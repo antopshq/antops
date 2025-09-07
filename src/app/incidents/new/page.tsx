@@ -50,6 +50,7 @@ export default function NewIncidentPage() {
     autoPriority: true,
     assignedTo: '',
     problemId: '',
+    customer: '',
     affectedServices: [] as string[],
     tags: ''
   })
@@ -144,6 +145,7 @@ export default function NewIncidentPage() {
       formDataToSend.append('priority', calculatedPriority)
       formDataToSend.append('assignedTo', formData.assignedTo === 'unassigned' ? '' : formData.assignedTo || '')
       formDataToSend.append('problemId', formData.problemId === 'none' ? '' : formData.problemId || '')
+      formDataToSend.append('customer', formData.customer || '')
       formDataToSend.append('affectedServices', JSON.stringify(formData.affectedServices))
       formDataToSend.append('tags', JSON.stringify(tagsToArray(formData.tags)))
       
@@ -348,6 +350,22 @@ export default function NewIncidentPage() {
                 </Select>
                 <p className="text-xs text-gray-600">
                   Assign this incident to a specific team member for resolution
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customer" className="text-sm font-medium">
+                  Customer
+                </Label>
+                <Input
+                  id="customer"
+                  value={formData.customer}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customer: e.target.value }))}
+                  className="h-10 border-gray-200 focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+                  placeholder="Customer name or identifier (optional)"
+                />
+                <p className="text-xs text-gray-600">
+                  Specify the customer affected by this incident
                 </p>
               </div>
 
