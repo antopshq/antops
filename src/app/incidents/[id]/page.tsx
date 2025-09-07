@@ -1074,35 +1074,125 @@ export default function IncidentDetailPage() {
             {/* Related Problems */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center">
-                  <Wrench className="w-4 h-4 mr-2 text-red-600" />
-                  Related Problems
+                <CardTitle className="text-base font-bold flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Wrench className="w-4 h-4 mr-2 text-red-600" />
+                    Related Problems
+                  </div>
+                  {isEditing && (
+                    <Link href="/problems/new" target="_blank">
+                      <Button size="sm" variant="outline" className="h-6 text-xs">
+                        <Plus className="w-3 h-3 mr-1" />
+                        New
+                      </Button>
+                    </Link>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                {relatedProblem ? (
-                  <div className="p-2 bg-red-50 rounded border border-red-200">
-                    <Link href={`/problems/${relatedProblem.id}`}>
-                      <h4 className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer mb-1">
-                        {relatedProblem.problem_number && (
-                          <span className="text-xs text-red-600 font-medium mr-1">
-                            {relatedProblem.problem_number}
-                          </span>
-                        )}
-                        {relatedProblem.title}
-                      </h4>
-                    </Link>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <Badge variant="outline" className={`${getPriorityColor(relatedProblem.priority)} text-xs px-1 py-0`}>
-                        {relatedProblem.priority}
-                      </Badge>
-                      <Badge variant="outline" className={`${getStatusColor(relatedProblem.status)} text-xs px-1 py-0`}>
-                        {relatedProblem.status}
-                      </Badge>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    {/* Problem Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Link to Problem</Label>
+                      <Select
+                        value={editData.problemId}
+                        onValueChange={(value: string) => 
+                          setEditData(prev => ({ ...prev, problemId: value }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a problem to link..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No problem linked</SelectItem>
+                          {problems.map((problem) => (
+                            <SelectItem key={problem.id} value={problem.id}>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-gray-500">
+                                  {problem.problem_number || problem.id.substring(0, 8)}
+                                </span>
+                                <span className="truncate max-w-[200px]">{problem.title}</span>
+                                <Badge variant="outline" className={`${getPriorityColor(problem.priority)} text-xs`}>
+                                  {problem.priority}
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                    
+                    {/* Show selected problem details */}
+                    {editData.problemId && editData.problemId !== 'none' && (
+                      <div className="p-2 bg-red-50 rounded border border-red-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            {(() => {
+                              const selectedProblem = problems.find(p => p.id === editData.problemId)
+                              return selectedProblem ? (
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900 mb-1">
+                                    {selectedProblem.problem_number && (
+                                      <span className="text-xs text-red-600 font-medium mr-1">
+                                        {selectedProblem.problem_number}
+                                      </span>
+                                    )}
+                                    {selectedProblem.title}
+                                  </h4>
+                                  <div className="flex items-center space-x-1 mt-1">
+                                    <Badge variant="outline" className={`${getPriorityColor(selectedProblem.priority)} text-xs px-1 py-0`}>
+                                      {selectedProblem.priority}
+                                    </Badge>
+                                    <Badge variant="outline" className={`${getStatusColor(selectedProblem.status)} text-xs px-1 py-0`}>
+                                      {selectedProblem.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-gray-500">Problem not found</div>
+                              )
+                            })()}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditData(prev => ({ ...prev, problemId: 'none' }))}
+                            className="h-6 w-6 p-0 hover:bg-red-200 text-red-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500">No related problems</p>
+                  <>
+                    {relatedProblem ? (
+                      <div className="p-2 bg-red-50 rounded border border-red-200">
+                        <Link href={`/problems/${relatedProblem.id}`}>
+                          <h4 className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer mb-1">
+                            {relatedProblem.problem_number && (
+                              <span className="text-xs text-red-600 font-medium mr-1">
+                                {relatedProblem.problem_number}
+                              </span>
+                            )}
+                            {relatedProblem.title}
+                          </h4>
+                        </Link>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <Badge variant="outline" className={`${getPriorityColor(relatedProblem.priority)} text-xs px-1 py-0`}>
+                            {relatedProblem.priority}
+                          </Badge>
+                          <Badge variant="outline" className={`${getStatusColor(relatedProblem.status)} text-xs px-1 py-0`}>
+                            {relatedProblem.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">No related problems</p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
