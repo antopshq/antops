@@ -39,6 +39,7 @@ interface Incident {
   updatedAt: string
   resolvedAt?: string
   problemId?: string
+  customer?: string
   tags: string[]
   affectedServices: string[]
   links?: { title: string; url: string; type?: string }[]
@@ -167,6 +168,7 @@ export default function IncidentDetailPage() {
     status: 'open' as 'open' | 'investigating' | 'resolved',
     assignedTo: '',
     problemId: '',
+    customer: '',
     affectedServices: [] as string[],
     tags: '',
     links: [] as { title: string; url: string; type?: string }[]
@@ -250,6 +252,7 @@ export default function IncidentDetailPage() {
             status: incidentData.status,
             assignedTo: incidentData.assignedTo || 'unassigned',
             problemId: incidentData.problemId || 'none',
+            customer: incidentData.customer || '',
             affectedServices: incidentData.affectedServices || [],
             tags: tagsFromArray(incidentData.tags || []),
             links: incidentData.links || []
@@ -390,6 +393,7 @@ export default function IncidentDetailPage() {
         formData.append('status', editData.status)
         formData.append('assignedTo', editData.assignedTo === 'unassigned' ? '' : editData.assignedTo || '')
         formData.append('problemId', editData.problemId === 'none' ? '' : editData.problemId || '')
+        formData.append('customer', editData.customer || '')
         formData.append('affectedServices', JSON.stringify(editData.affectedServices))
         formData.append('tags', JSON.stringify(tagsToArray(editData.tags)))
         formData.append('links', JSON.stringify(editData.links))
@@ -415,6 +419,7 @@ export default function IncidentDetailPage() {
             priority: calculatedPriority,
             assignedTo: editData.assignedTo === 'unassigned' ? null : editData.assignedTo || null,
             problemId: editData.problemId === 'none' ? null : editData.problemId || null,
+            customer: editData.customer || null,
             affectedServices: editData.affectedServices,
             tags: tagsToArray(editData.tags),
             links: editData.links
@@ -442,6 +447,7 @@ export default function IncidentDetailPage() {
           status: updatedIncident.status,
           assignedTo: updatedIncident.assignedTo || 'unassigned',
           problemId: updatedIncident.problemId || 'none',
+          customer: updatedIncident.customer || '',
           affectedServices: updatedIncident.affectedServices || [],
           tags: tagsFromArray(updatedIncident.tags || []),
           links: updatedIncident.links || []
@@ -576,6 +582,7 @@ export default function IncidentDetailPage() {
           status: updatedIncident.status,
           assignedTo: updatedIncident.assignedTo || 'unassigned',
           problemId: updatedIncident.problemId || 'none',
+          customer: updatedIncident.customer || '',
           affectedServices: updatedIncident.affectedServices || [],
           tags: tagsFromArray(updatedIncident.tags || []),
           links: updatedIncident.links || []
@@ -803,6 +810,23 @@ export default function IncidentDetailPage() {
                         ) : (
                           'Unassigned'
                         )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Customer */}
+                  <div className="text-sm">
+                    <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Customer</div>
+                    {isEditing ? (
+                      <Input
+                        value={editData.customer || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, customer: e.target.value }))}
+                        className="w-48 h-8"
+                        placeholder="Customer name (optional)"
+                      />
+                    ) : (
+                      <div className="font-medium text-gray-900">
+                        {incident.customer || <span className="text-gray-400 italic">None</span>}
                       </div>
                     )}
                   </div>

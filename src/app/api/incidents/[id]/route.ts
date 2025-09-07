@@ -51,7 +51,7 @@ export async function PUT(
     // Handle both FormData (with files) and JSON (without files)
     const contentType = request.headers.get('content-type')
     let title: string, description: string, priority: string, criticality: string, urgency: string, status: string
-    let assignedTo: string, problemId: string, affectedServices: string[], tags: string[], links: any[], autoPriority: boolean, closureComment: string
+    let assignedTo: string, problemId: string, customer: string, affectedServices: string[], tags: string[], links: any[], autoPriority: boolean, closureComment: string
     let files: File[] = []
     
     if (contentType?.includes('multipart/form-data')) {
@@ -65,6 +65,7 @@ export async function PUT(
       status = formData.get('status') as string
       assignedTo = formData.get('assignedTo') as string
       problemId = formData.get('problemId') as string
+      customer = formData.get('customer') as string
       autoPriority = formData.get('autoPriority') === 'true'
       closureComment = formData.get('closureComment') as string || ''
       
@@ -102,6 +103,7 @@ export async function PUT(
       status = body.status
       assignedTo = body.assignedTo
       problemId = body.problemId
+      customer = body.customer
       affectedServices = body.affectedServices || []
       tags = body.tags || []
       links = body.links || []
@@ -206,6 +208,11 @@ export async function PUT(
     // Only update problemId if it's provided
     if (problemId !== undefined) {
       updateData.problemId = problemId || null
+    }
+
+    // Only update customer if it's provided
+    if (customer !== undefined) {
+      updateData.customer = customer || null
     }
 
     // Set resolvedAt when status changes to resolved
