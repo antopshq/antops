@@ -1190,7 +1190,9 @@ export default function IncidentDetailPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-500">No related problems</p>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">No related problems</p>
+                      </div>
                     )}
                   </>
                 )}
@@ -1281,7 +1283,14 @@ export default function IncidentDetailPage() {
                     label=""
                   />
                 ) : (
-                  <TagDisplay tags={incident.tags || []} size="sm" />
+                  <div className="text-center">
+                    <TagDisplay 
+                      tags={incident.tags || []} 
+                      size="sm" 
+                      emptyText="No tags"
+                      showEmpty={true}
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1318,7 +1327,9 @@ export default function IncidentDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-gray-500">No external links</p>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">No external links</p>
+                    </div>
                   )}
                   
                   {isEditing && (
