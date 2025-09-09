@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     console.log('🔔 PagerDuty webhook received')
 
     // Get headers for validation
-    const headersList = headers()
+    const headersList = await headers()
     const signature = headersList.get('x-pagerduty-signature')
     const timestamp = headersList.get('x-pagerduty-timestamp')
 
