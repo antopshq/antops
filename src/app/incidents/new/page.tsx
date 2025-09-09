@@ -94,10 +94,11 @@ export default function NewIncidentPage() {
     fetchData()
   }, [])
 
-  // Handle AI pre-filled data from URL parameters
+  // Handle pre-filled data from URL parameters (AI or PagerDuty)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     
+    // Handle AI pre-filled data
     if (urlParams.has('ai_title')) {
       const aiData = {
         title: urlParams.get('ai_title') || '',
@@ -124,6 +125,31 @@ export default function NewIncidentPage() {
 
       setAiAnalysis(aiData)
       setShowAiInsights(true)
+
+      // Clean URL parameters
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    // Handle PagerDuty pre-filled data
+    else if (urlParams.get('source') === 'pagerduty') {
+      const pagerDutyData = {
+        title: urlParams.get('title') || '',
+        description: urlParams.get('description') || '',
+        criticality: (urlParams.get('criticality') as Criticality) || 'medium',
+        urgency: (urlParams.get('urgency') as Urgency) || 'medium',
+        customer: urlParams.get('customer') || '',
+        tags: urlParams.get('tags') || ''
+      }
+
+      // Pre-fill form with PagerDuty data
+      setFormData(prev => ({
+        ...prev,
+        title: pagerDutyData.title,
+        description: pagerDutyData.description,
+        criticality: pagerDutyData.criticality,
+        urgency: pagerDutyData.urgency,
+        customer: pagerDutyData.customer,
+        tags: pagerDutyData.tags
+      }))
 
       // Clean URL parameters
       window.history.replaceState({}, '', window.location.pathname)

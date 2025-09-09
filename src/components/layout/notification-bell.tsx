@@ -122,12 +122,29 @@ export function NotificationBell() {
         return <AtSign className="w-4 h-4 text-purple-600" />
       case 'comment':
         return <MessageCircle className="w-4 h-4 text-blue-600" />
+      case 'pagerduty_alert':
+        return <AlertTriangle className="w-4 h-4 text-red-600" />
       default:
         return <Bell className="w-4 h-4 text-gray-600" />
     }
   }
 
   const getSystemNotificationLink = (notification: Notification) => {
+    // Handle PagerDuty alerts - redirect to incident creation with prefill data
+    if (notification.type === 'pagerduty_alert' && notification.data?.prefill) {
+      const prefill = notification.data.prefill
+      const params = new URLSearchParams({
+        title: prefill.title || '',
+        description: prefill.description || '',
+        criticality: prefill.criticality || 'medium',
+        urgency: prefill.urgency || 'medium',
+        customer: prefill.customer || '',
+        tags: prefill.tags || '',
+        source: 'pagerduty'
+      })
+      return `/incidents/new?${params.toString()}`
+    }
+    
     if (notification.changeId) {
       return `/changes/${notification.changeId}`
     }

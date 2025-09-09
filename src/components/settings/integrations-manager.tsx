@@ -1,0 +1,378 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap } from 'lucide-react'
+import { Tooltip } from '@/components/ui/tooltip'
+
+interface PagerDutyIntegration {
+  id?: string
+  enabled: boolean
+  webhookUrl: string
+  apiKey: string
+  routingKey: string
+  organizationId: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export function IntegrationsManager() {
+  const [pagerDutyConfig, setPagerDutyConfig] = useState<PagerDutyIntegration>({
+    enabled: false,
+    webhookUrl: '',
+    apiKey: '',
+    routingKey: '',
+    organizationId: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [webhookUrlGenerated, setWebhookUrlGenerated] = useState(false)
+
+  // Generate webhook URL on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !webhookUrlGenerated) {
+      const webhookUrl = `${window.location.origin}/api/webhooks/pagerduty`
+      setPagerDutyConfig(prev => ({ ...prev, webhookUrl }))
+      setWebhookUrlGenerated(true)
+    }
+  }, [webhookUrlGenerated])
+
+  // Fetch existing configuration
+  useEffect(() => {
+    const fetchConfiguration = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/integrations/pagerduty')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.integration) {
+            setPagerDutyConfig(data.integration)
+            setWebhookUrlGenerated(true)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch PagerDuty configuration:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchConfiguration()
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/integrations/pagerduty', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pagerDutyConfig)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPagerDutyConfig(data.integration)
+        setMessage({ type: 'success', text: 'PagerDuty integration saved successfully!' })
+      } else {
+        const errorData = await response.json()
+        setMessage({ type: 'error', text: errorData.error || 'Failed to save configuration' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to save configuration' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const testConnection = async () => {
+    setTestingConnection(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/integrations/pagerduty/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: pagerDutyConfig.apiKey })
+      })
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'PagerDuty connection test successful!' })
+      } else {
+        const errorData = await response.json()
+        setMessage({ type: 'error', text: errorData.error || 'Connection test failed' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Connection test failed' })
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
+  const copyWebhookUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(pagerDutyConfig.webhookUrl)
+      setMessage({ type: 'success', text: 'Webhook URL copied to clipboard!' })
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to copy webhook URL' })
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Integrations</CardTitle>
+          <CardDescription>
+            Connect external tools and services to automatically create incidents and receive alerts
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* PagerDuty Integration */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="flex flex-row items-center space-y-0 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold flex items-center space-x-2">
+                <span>PagerDuty</span>
+                <Badge variant={pagerDutyConfig.enabled ? "default" : "secondary"}>
+                  {pagerDutyConfig.enabled ? 'Enabled' : 'Disabled'}
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Receive PagerDuty alerts as notifications and auto-create incidents
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          {message && (
+            <div className={`p-3 rounded-lg border ${
+              message.type === 'success' 
+                ? 'bg-green-50 border-green-200 text-green-800' 
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
+              <div className="flex items-center space-x-2">
+                {message.type === 'success' ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">{message.text}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Enable Integration Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <Label htmlFor="pagerduty-enabled" className="text-sm font-medium">
+                Enable PagerDuty Integration
+              </Label>
+              <p className="text-sm text-gray-600 mt-1">
+                Allow PagerDuty alerts to create notifications and incidents
+              </p>
+            </div>
+            <Checkbox
+              id="pagerduty-enabled"
+              checked={pagerDutyConfig.enabled}
+              onCheckedChange={(enabled) => 
+                setPagerDutyConfig(prev => ({ ...prev, enabled: enabled as boolean }))
+              }
+            />
+          </div>
+
+          {pagerDutyConfig.enabled && (
+            <>
+              {/* Webhook URL */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Webhook URL</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    value={pagerDutyConfig.webhookUrl}
+                    readOnly
+                    className="font-mono text-xs bg-gray-50"
+                  />
+                  <Tooltip content="Copy webhook URL">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={copyWebhookUrl}
+                      className="px-3"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Configure this URL in your PagerDuty service webhook settings
+                </p>
+              </div>
+
+              {/* API Key */}
+              <div className="space-y-2">
+                <Label htmlFor="pagerduty-api-key" className="text-sm font-medium">
+                  PagerDuty API Key
+                </Label>
+                <Input
+                  id="pagerduty-api-key"
+                  type="password"
+                  placeholder="Enter your PagerDuty API key"
+                  value={pagerDutyConfig.apiKey}
+                  onChange={(e) => 
+                    setPagerDutyConfig(prev => ({ ...prev, apiKey: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-gray-600">
+                  Used to validate webhook requests and fetch additional incident data
+                </p>
+              </div>
+
+              {/* Routing Key */}
+              <div className="space-y-2">
+                <Label htmlFor="pagerduty-routing-key" className="text-sm font-medium">
+                  Integration Key (Optional)
+                </Label>
+                <Input
+                  id="pagerduty-routing-key"
+                  placeholder="Enter your PagerDuty integration key"
+                  value={pagerDutyConfig.routingKey}
+                  onChange={(e) => 
+                    setPagerDutyConfig(prev => ({ ...prev, routingKey: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-gray-600">
+                  Used to filter alerts from specific PagerDuty integrations
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-3 pt-4 border-t">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {saving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Save Configuration
+                    </>
+                  )}
+                </Button>
+
+                {pagerDutyConfig.apiKey && (
+                  <Button
+                    variant="outline"
+                    onClick={testConnection}
+                    disabled={testingConnection || loading}
+                  >
+                    {testingConnection ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Testing...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Test Connection
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('https://support.pagerduty.com/docs/webhooks', '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  PagerDuty Docs
+                </Button>
+              </div>
+            </>
+          )}
+
+          {!pagerDutyConfig.enabled && (
+            <div className="text-center py-8 text-gray-500">
+              <Zap className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-sm">Enable PagerDuty integration to configure webhook settings</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Setup Instructions */}
+      {pagerDutyConfig.enabled && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Setup Instructions</CardTitle>
+            <CardDescription>How to configure PagerDuty to send alerts to your system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                  1
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Copy the webhook URL above</p>
+                  <p className="text-xs text-gray-600 mt-1">This URL will receive PagerDuty webhook events</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                  2
+                </div>
+                <div>
+                  <p className="text-sm font-medium">In PagerDuty, go to Services & Integrations</p>
+                  <p className="text-xs text-gray-600 mt-1">Select the service you want to integrate</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                  3
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Add a new webhook integration</p>
+                  <p className="text-xs text-gray-600 mt-1">Paste the webhook URL and configure the events you want to receive</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                  4
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Save configuration and test connection</p>
+                  <p className="text-xs text-gray-600 mt-1">Use the "Test Connection" button above to verify the integration</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
