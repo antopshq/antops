@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ interface PagerDutyIntegration {
 }
 
 export function IntegrationsManager() {
+  const { user } = useAuth()
   const [pagerDutyConfig, setPagerDutyConfig] = useState<PagerDutyIntegration>({
     enabled: false,
     webhookUrl: '',
@@ -34,6 +36,9 @@ export function IntegrationsManager() {
   const [testingConnection, setTestingConnection] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [webhookUrlGenerated, setWebhookUrlGenerated] = useState(false)
+
+  // Check if user has permission to manage integrations
+  const hasIntegrationPermission = user?.role && ['owner', 'admin', 'manager'].includes(user.role)
 
   // Generate webhook URL on component mount
   useEffect(() => {
@@ -138,8 +143,28 @@ export function IntegrationsManager() {
         </CardHeader>
       </Card>
 
-      {/* PagerDuty Integration */}
-      <Card className="border-0 shadow-sm">
+      {/* Permission Check */}
+      {!hasIntegrationPermission && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <AlertTriangle className="w-12 h-12 text-orange-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+              <p className="text-gray-600">
+                Integration settings can only be managed by organization owners, admins, or managers.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                Current role: <span className="font-medium">{user?.role || 'member'}</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PagerDuty Integration - Only show if user has permission */}
+      {hasIntegrationPermission && (
+        <>
+          <Card className="border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center space-y-0 pb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -319,59 +344,61 @@ export function IntegrationsManager() {
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
 
-      {/* Setup Instructions */}
-      {pagerDutyConfig.enabled && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Setup Instructions</CardTitle>
-            <CardDescription>How to configure PagerDuty to send alerts to your system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
-                  1
+          {/* Setup Instructions */}
+          {pagerDutyConfig.enabled && (
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Setup Instructions</CardTitle>
+                <CardDescription>How to configure PagerDuty to send alerts to your system</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                      1
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Copy the webhook URL above</p>
+                      <p className="text-xs text-gray-600 mt-1">This URL will receive PagerDuty webhook events</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                      2
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">In PagerDuty, go to Services & Integrations</p>
+                      <p className="text-xs text-gray-600 mt-1">Select the service you want to integrate</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                      3
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Add a new webhook integration</p>
+                      <p className="text-xs text-gray-600 mt-1">Paste the webhook URL and configure the events you want to receive</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
+                      4
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Save configuration and test connection</p>
+                      <p className="text-xs text-gray-600 mt-1">Use the "Test Connection" button above to verify the integration</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Copy the webhook URL above</p>
-                  <p className="text-xs text-gray-600 mt-1">This URL will receive PagerDuty webhook events</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
-                  2
-                </div>
-                <div>
-                  <p className="text-sm font-medium">In PagerDuty, go to Services & Integrations</p>
-                  <p className="text-xs text-gray-600 mt-1">Select the service you want to integrate</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
-                  3
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Add a new webhook integration</p>
-                  <p className="text-xs text-gray-600 mt-1">Paste the webhook URL and configure the events you want to receive</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0 mt-0.5">
-                  4
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Save configuration and test connection</p>
-                  <p className="text-xs text-gray-600 mt-1">Use the "Test Connection" button above to verify the integration</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   )
