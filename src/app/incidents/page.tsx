@@ -71,6 +71,7 @@ interface Incident {
   tags: string[]
   affectedServices: string[]
   serviceInfo?: ServiceInfo[]
+  customer?: string
 }
 
 export default function IncidentsPage() {
@@ -538,6 +539,7 @@ export default function IncidentsPage() {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Assignee</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Customer</th>
                   <th 
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28 cursor-pointer hover:bg-gray-100 select-none"
                     onClick={() => handleSort('created')}
@@ -584,6 +586,13 @@ export default function IncidentsPage() {
                       <div className="text-sm text-gray-900">
                         {incident.assignedToName || (
                           <span className="text-gray-400 italic">Unassigned</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-gray-900">
+                        {incident.customer || (
+                          <span className="text-gray-400 italic">None</span>
                         )}
                       </div>
                     </td>

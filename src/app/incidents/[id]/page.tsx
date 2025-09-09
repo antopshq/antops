@@ -39,6 +39,7 @@ interface Incident {
   updatedAt: string
   resolvedAt?: string
   problemId?: string
+  customer?: string
   tags: string[]
   affectedServices: string[]
   links?: { title: string; url: string; type?: string }[]
@@ -167,6 +168,7 @@ export default function IncidentDetailPage() {
     status: 'open' as 'open' | 'investigating' | 'resolved',
     assignedTo: '',
     problemId: '',
+    customer: '',
     affectedServices: [] as string[],
     tags: '',
     links: [] as { title: string; url: string; type?: string }[]
@@ -250,6 +252,7 @@ export default function IncidentDetailPage() {
             status: incidentData.status,
             assignedTo: incidentData.assignedTo || 'unassigned',
             problemId: incidentData.problemId || 'none',
+            customer: incidentData.customer || '',
             affectedServices: incidentData.affectedServices || [],
             tags: tagsFromArray(incidentData.tags || []),
             links: incidentData.links || []
@@ -390,6 +393,7 @@ export default function IncidentDetailPage() {
         formData.append('status', editData.status)
         formData.append('assignedTo', editData.assignedTo === 'unassigned' ? '' : editData.assignedTo || '')
         formData.append('problemId', editData.problemId === 'none' ? '' : editData.problemId || '')
+        formData.append('customer', editData.customer || '')
         formData.append('affectedServices', JSON.stringify(editData.affectedServices))
         formData.append('tags', JSON.stringify(tagsToArray(editData.tags)))
         formData.append('links', JSON.stringify(editData.links))
@@ -415,6 +419,7 @@ export default function IncidentDetailPage() {
             priority: calculatedPriority,
             assignedTo: editData.assignedTo === 'unassigned' ? null : editData.assignedTo || null,
             problemId: editData.problemId === 'none' ? null : editData.problemId || null,
+            customer: editData.customer || null,
             affectedServices: editData.affectedServices,
             tags: tagsToArray(editData.tags),
             links: editData.links
@@ -442,6 +447,7 @@ export default function IncidentDetailPage() {
           status: updatedIncident.status,
           assignedTo: updatedIncident.assignedTo || 'unassigned',
           problemId: updatedIncident.problemId || 'none',
+          customer: updatedIncident.customer || '',
           affectedServices: updatedIncident.affectedServices || [],
           tags: tagsFromArray(updatedIncident.tags || []),
           links: updatedIncident.links || []
@@ -576,6 +582,7 @@ export default function IncidentDetailPage() {
           status: updatedIncident.status,
           assignedTo: updatedIncident.assignedTo || 'unassigned',
           problemId: updatedIncident.problemId || 'none',
+          customer: updatedIncident.customer || '',
           affectedServices: updatedIncident.affectedServices || [],
           tags: tagsFromArray(updatedIncident.tags || []),
           links: updatedIncident.links || []
@@ -803,6 +810,23 @@ export default function IncidentDetailPage() {
                         ) : (
                           'Unassigned'
                         )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Customer */}
+                  <div className="text-sm">
+                    <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Customer</div>
+                    {isEditing ? (
+                      <Input
+                        value={editData.customer || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, customer: e.target.value }))}
+                        className="w-48 h-8"
+                        placeholder="Customer name (optional)"
+                      />
+                    ) : (
+                      <div className="font-medium text-gray-900">
+                        {incident.customer || <span className="text-gray-400 italic">None</span>}
                       </div>
                     )}
                   </div>
@@ -1050,35 +1074,127 @@ export default function IncidentDetailPage() {
             {/* Related Problems */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center">
-                  <Wrench className="w-4 h-4 mr-2 text-red-600" />
-                  Related Problems
+                <CardTitle className="text-base font-bold flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Wrench className="w-4 h-4 mr-2 text-red-600" />
+                    Related Problems
+                  </div>
+                  {isEditing && (
+                    <Link href="/problems/new" target="_blank">
+                      <Button size="sm" variant="outline" className="h-6 text-xs">
+                        <Plus className="w-3 h-3 mr-1" />
+                        New
+                      </Button>
+                    </Link>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                {relatedProblem ? (
-                  <div className="p-2 bg-red-50 rounded border border-red-200">
-                    <Link href={`/problems/${relatedProblem.id}`}>
-                      <h4 className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer mb-1">
-                        {relatedProblem.problem_number && (
-                          <span className="text-xs text-red-600 font-medium mr-1">
-                            {relatedProblem.problem_number}
-                          </span>
-                        )}
-                        {relatedProblem.title}
-                      </h4>
-                    </Link>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <Badge variant="outline" className={`${getPriorityColor(relatedProblem.priority)} text-xs px-1 py-0`}>
-                        {relatedProblem.priority}
-                      </Badge>
-                      <Badge variant="outline" className={`${getStatusColor(relatedProblem.status)} text-xs px-1 py-0`}>
-                        {relatedProblem.status}
-                      </Badge>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    {/* Problem Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Link to Problem</Label>
+                      <Select
+                        value={editData.problemId}
+                        onValueChange={(value: string) => 
+                          setEditData(prev => ({ ...prev, problemId: value }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a problem to link..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No problem linked</SelectItem>
+                          {problems.map((problem) => (
+                            <SelectItem key={problem.id} value={problem.id}>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-gray-500">
+                                  {problem.problem_number || problem.id.substring(0, 8)}
+                                </span>
+                                <span className="truncate max-w-[200px]">{problem.title}</span>
+                                <Badge variant="outline" className={`${getPriorityColor(problem.priority)} text-xs`}>
+                                  {problem.priority}
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                    
+                    {/* Show selected problem details */}
+                    {editData.problemId && editData.problemId !== 'none' && (
+                      <div className="p-2 bg-red-50 rounded border border-red-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            {(() => {
+                              const selectedProblem = problems.find(p => p.id === editData.problemId)
+                              return selectedProblem ? (
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900 mb-1">
+                                    {selectedProblem.problem_number && (
+                                      <span className="text-xs text-red-600 font-medium mr-1">
+                                        {selectedProblem.problem_number}
+                                      </span>
+                                    )}
+                                    {selectedProblem.title}
+                                  </h4>
+                                  <div className="flex items-center space-x-1 mt-1">
+                                    <Badge variant="outline" className={`${getPriorityColor(selectedProblem.priority)} text-xs px-1 py-0`}>
+                                      {selectedProblem.priority}
+                                    </Badge>
+                                    <Badge variant="outline" className={`${getStatusColor(selectedProblem.status)} text-xs px-1 py-0`}>
+                                      {selectedProblem.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-gray-500">Problem not found</div>
+                              )
+                            })()}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditData(prev => ({ ...prev, problemId: 'none' }))}
+                            className="h-6 w-6 p-0 hover:bg-red-200 text-red-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500">No related problems</p>
+                  <>
+                    {relatedProblem ? (
+                      <div className="p-2 bg-red-50 rounded border border-red-200">
+                        <Link href={`/problems/${relatedProblem.id}`}>
+                          <h4 className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer mb-1">
+                            {relatedProblem.problem_number && (
+                              <span className="text-xs text-red-600 font-medium mr-1">
+                                {relatedProblem.problem_number}
+                              </span>
+                            )}
+                            {relatedProblem.title}
+                          </h4>
+                        </Link>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <Badge variant="outline" className={`${getPriorityColor(relatedProblem.priority)} text-xs px-1 py-0`}>
+                            {relatedProblem.priority}
+                          </Badge>
+                          <Badge variant="outline" className={`${getStatusColor(relatedProblem.status)} text-xs px-1 py-0`}>
+                            {relatedProblem.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">No related problems</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -1167,7 +1283,14 @@ export default function IncidentDetailPage() {
                     label=""
                   />
                 ) : (
-                  <TagDisplay tags={incident.tags || []} size="sm" />
+                  <div className="text-center">
+                    <TagDisplay 
+                      tags={incident.tags || []} 
+                      size="sm" 
+                      emptyText="No tags"
+                      showEmpty={true}
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1204,7 +1327,9 @@ export default function IncidentDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-gray-500">No external links</p>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">No external links</p>
+                    </div>
                   )}
                   
                   {isEditing && (

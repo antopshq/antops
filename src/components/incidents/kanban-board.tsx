@@ -46,6 +46,7 @@ interface Incident {
   problemTitle?: string
   tags: string[]
   affectedServices: string[]
+  customer?: string
 }
 
 interface KanbanBoardProps {
