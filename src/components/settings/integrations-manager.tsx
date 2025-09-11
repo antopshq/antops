@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -233,7 +233,7 @@ export function IntegrationsManager() {
               Allow PagerDuty alerts to create notifications and incidents
             </p>
           </div>
-          <Checkbox
+          <Switch
             id="pagerduty-enabled"
             checked={pagerDutyConfig.enabled}
             onCheckedChange={(enabled) => 
