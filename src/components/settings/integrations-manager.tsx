@@ -35,7 +35,7 @@ interface Integration {
 }
 
 export function IntegrationsManager() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [pagerDutyConfig, setPagerDutyConfig] = useState<PagerDutyIntegration>({
     enabled: false,
     webhookUrl: '',
@@ -373,8 +373,20 @@ export function IntegrationsManager() {
         </CardHeader>
       </Card>
 
-      {/* Permission Check */}
-      {!hasIntegrationPermission && (
+      {/* Loading State */}
+      {authLoading && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-4 animate-spin" />
+              <p className="text-gray-600">Loading integrations...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Permission Check - Only show if auth has finished loading */}
+      {!authLoading && !hasIntegrationPermission && (
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6">
             <div className="text-center py-8">
@@ -391,8 +403,8 @@ export function IntegrationsManager() {
         </Card>
       )}
 
-      {/* Integration Cards Grid - Only show if user has permission */}
-      {hasIntegrationPermission && (
+      {/* Integration Cards Grid - Only show if user has permission and auth has finished loading */}
+      {!authLoading && hasIntegrationPermission && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {availableIntegrations.map((integration) => {
             const IconComponent = integration.icon
