@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail } from 'lucide-react'
+import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail, BarChart3 } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
@@ -19,6 +19,17 @@ interface PagerDutyIntegration {
   apiKey: string
   routingKey: string
   organizationId: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface GrafanaIntegration {
+  id?: string
+  enabled: boolean
+  webhookUrl: string
+  apiKey?: string
+  organizationId: string
+  autoCreateIncidents: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -43,6 +54,13 @@ export function IntegrationsManager() {
     routingKey: '',
     organizationId: ''
   })
+  const [grafanaConfig, setGrafanaConfig] = useState<GrafanaIntegration>({
+    enabled: false,
+    webhookUrl: '',
+    apiKey: '',
+    organizationId: '',
+    autoCreateIncidents: true
+  })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
@@ -64,6 +82,16 @@ export function IntegrationsManager() {
       iconColor: 'text-green-600',
       enabled: pagerDutyConfig.enabled,
       category: 'alerting'
+    },
+    {
+      id: 'grafana',
+      name: 'Grafana',
+      description: 'Receive Grafana alert notifications and auto-create incidents from dashboards',
+      icon: BarChart3,
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+      enabled: grafanaConfig.enabled,
+      category: 'monitoring'
     },
     {
       id: 'slack',
@@ -90,18 +118,20 @@ export function IntegrationsManager() {
       name: 'Email Notifications',
       description: 'Send email alerts for incident escalations',
       icon: Mail,
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
       enabled: false,
       category: 'communication'
     }
   ]
 
-  // Generate webhook URL on component mount
+  // Generate webhook URLs on component mount
   useEffect(() => {
     if (typeof window !== 'undefined' && !webhookUrlGenerated) {
-      const webhookUrl = `${window.location.origin}/api/webhooks/pagerduty`
-      setPagerDutyConfig(prev => ({ ...prev, webhookUrl }))
+      const pagerDutyWebhookUrl = `${window.location.origin}/api/webhooks/pagerduty`
+      const grafanaWebhookUrl = `${window.location.origin}/api/webhooks/grafana`
+      setPagerDutyConfig(prev => ({ ...prev, webhookUrl: pagerDutyWebhookUrl }))
+      setGrafanaConfig(prev => ({ ...prev, webhookUrl: grafanaWebhookUrl }))
       setWebhookUrlGenerated(true)
     }
   }, [webhookUrlGenerated])
@@ -111,16 +141,27 @@ export function IntegrationsManager() {
     const fetchConfiguration = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/integrations/pagerduty')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.integration) {
-            setPagerDutyConfig(data.integration)
+        
+        // Fetch PagerDuty configuration
+        const pagerDutyResponse = await fetch('/api/integrations/pagerduty')
+        if (pagerDutyResponse.ok) {
+          const pagerDutyData = await pagerDutyResponse.json()
+          if (pagerDutyData.integration) {
+            setPagerDutyConfig(pagerDutyData.integration)
             setWebhookUrlGenerated(true)
           }
         }
+
+        // Fetch Grafana configuration
+        const grafanaResponse = await fetch('/api/integrations/grafana')
+        if (grafanaResponse.ok) {
+          const grafanaData = await grafanaResponse.json()
+          if (grafanaData.integration) {
+            setGrafanaConfig(grafanaData.integration)
+          }
+        }
       } catch (error) {
-        console.error('Failed to fetch PagerDuty configuration:', error)
+        console.error('Failed to fetch integration configurations:', error)
       } finally {
         setLoading(false)
       }
@@ -179,13 +220,39 @@ export function IntegrationsManager() {
     }
   }
 
-  const copyWebhookUrl = async () => {
+  const copyWebhookUrl = async (webhookUrl: string, integrationName: string) => {
     try {
-      await navigator.clipboard.writeText(pagerDutyConfig.webhookUrl)
-      setMessage({ type: 'success', text: 'Webhook URL copied to clipboard!' })
+      await navigator.clipboard.writeText(webhookUrl)
+      setMessage({ type: 'success', text: `${integrationName} webhook URL copied to clipboard!` })
       setTimeout(() => setMessage(null), 3000)
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to copy webhook URL' })
+    }
+  }
+
+  const handleGrafanaSave = async () => {
+    setSaving(true)
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/integrations/grafana', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(grafanaConfig)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGrafanaConfig(data.integration)
+        setMessage({ type: 'success', text: 'Grafana integration saved successfully!' })
+      } else {
+        const errorData = await response.json()
+        setMessage({ type: 'error', text: errorData.error || 'Failed to save configuration' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to save configuration' })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -258,7 +325,7 @@ export function IntegrationsManager() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={copyWebhookUrl}
+                    onClick={() => copyWebhookUrl(pagerDutyConfig.webhookUrl, 'PagerDuty')}
                     className="px-3"
                   >
                     <Copy className="w-4 h-4" />
@@ -362,6 +429,160 @@ export function IntegrationsManager() {
     </DialogContent>
   )
 
+  const renderGrafanaConfig = () => (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-orange-600" />
+          </div>
+          <div>
+            <span>Grafana Integration</span>
+          </div>
+        </DialogTitle>
+        <DialogDescription>
+          Configure Grafana to send alert notifications and auto-create incidents from monitoring dashboards
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-6">
+        {message && (
+          <div className={`p-3 rounded-lg border ${
+            message.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {message.type === 'success' ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <AlertTriangle className="w-4 h-4" />
+              )}
+              <span className="text-sm font-medium">{message.text}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Enable Integration Toggle */}
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <Label htmlFor="grafana-enabled" className="text-sm font-medium">
+              Enable Grafana Integration
+            </Label>
+            <p className="text-sm text-gray-600 mt-1">
+              Allow Grafana alerts to create notifications and incidents
+            </p>
+          </div>
+          <Switch
+            id="grafana-enabled"
+            checked={grafanaConfig.enabled}
+            onCheckedChange={(enabled) => 
+              setGrafanaConfig(prev => ({ ...prev, enabled: enabled as boolean }))
+            }
+          />
+        </div>
+
+        {grafanaConfig.enabled && (
+          <>
+            {/* Webhook URL */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Webhook URL</Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={grafanaConfig.webhookUrl}
+                  readOnly
+                  className="font-mono text-xs bg-gray-50"
+                />
+                <Tooltip content="Copy webhook URL">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyWebhookUrl(grafanaConfig.webhookUrl, 'Grafana')}
+                    className="px-3"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </Tooltip>
+              </div>
+              <p className="text-xs text-gray-600">
+                Configure this URL in your Grafana notification channels
+              </p>
+            </div>
+
+            {/* Auto Create Incidents */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div>
+                <Label htmlFor="grafana-auto-create" className="text-sm font-medium">
+                  Auto-create Incidents
+                </Label>
+                <p className="text-sm text-gray-600 mt-1">
+                  Automatically create incidents when users click on Grafana notifications
+                </p>
+              </div>
+              <Switch
+                id="grafana-auto-create"
+                checked={grafanaConfig.autoCreateIncidents}
+                onCheckedChange={(enabled) => 
+                  setGrafanaConfig(prev => ({ ...prev, autoCreateIncidents: enabled as boolean }))
+                }
+              />
+            </div>
+
+            {/* Optional API Key */}
+            <div className="space-y-2">
+              <Label htmlFor="grafana-api-key" className="text-sm font-medium">
+                Grafana API Key (Optional)
+              </Label>
+              <Input
+                id="grafana-api-key"
+                type="password"
+                placeholder="Enter your Grafana API key"
+                value={grafanaConfig.apiKey || ''}
+                onChange={(e) => 
+                  setGrafanaConfig(prev => ({ ...prev, apiKey: e.target.value }))
+                }
+              />
+              <p className="text-xs text-gray-600">
+                Used to validate webhook requests and fetch additional dashboard data
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+
+      <DialogFooter className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => window.open('https://grafana.com/docs/grafana/latest/alerting/manage-notifications/webhook-notifier/', '_blank')}
+        >
+          <ExternalLink className="w-4 h-4 mr-2" />
+          Documentation
+        </Button>
+        
+        <div className="flex space-x-3">
+          <Button
+            onClick={handleGrafanaSave}
+            disabled={saving || loading}
+            className="bg-orange-600 hover:bg-orange-700"
+          >
+            {saving ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Settings className="w-4 h-4 mr-2" />
+                Save Configuration
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogFooter>
+    </DialogContent>
+  )
+
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-sm">
@@ -439,9 +660,10 @@ export function IntegrationsManager() {
                 
                 {/* Render configuration dialog based on integration type */}
                 {integration.id === 'pagerduty' && selectedIntegration === 'pagerduty' && renderPagerDutyConfig()}
+                {integration.id === 'grafana' && selectedIntegration === 'grafana' && renderGrafanaConfig()}
                 
                 {/* Placeholder for other integrations */}
-                {integration.id !== 'pagerduty' && selectedIntegration === integration.id && (
+                {!['pagerduty', 'grafana'].includes(integration.id) && selectedIntegration === integration.id && (
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle className="flex items-center space-x-3">

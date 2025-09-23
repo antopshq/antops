@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, CheckCircle, Clock, AlertTriangle, Send, X, AtSign, MessageCircle } from 'lucide-react'
+import { Bell, CheckCircle, Clock, AlertTriangle, Send, X, AtSign, MessageCircle, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -124,6 +124,8 @@ export function NotificationBell() {
         return <MessageCircle className="w-4 h-4 text-blue-600" />
       case 'pagerduty_alert':
         return <AlertTriangle className="w-4 h-4 text-red-600" />
+      case 'grafana_alert':
+        return <BarChart3 className="w-4 h-4 text-orange-600" />
       default:
         return <Bell className="w-4 h-4 text-gray-600" />
     }
@@ -141,6 +143,22 @@ export function NotificationBell() {
         customer: prefill.customer || '',
         tags: prefill.tags || '',
         source: 'pagerduty'
+      })
+      return `/incidents/new?${params.toString()}`
+    }
+
+    // Handle Grafana alerts - redirect to incident creation with prefill data
+    if (notification.type === 'grafana_alert' && notification.data?.prefill) {
+      const prefill = notification.data.prefill
+      const params = new URLSearchParams({
+        title: prefill.title || '',
+        description: prefill.description || '',
+        criticality: prefill.criticality || 'medium',
+        urgency: prefill.urgency || 'medium',
+        customer: prefill.customer || '',
+        tags: prefill.tags || '',
+        affectedServices: prefill.affectedServices?.join(',') || '',
+        source: 'grafana'
       })
       return `/incidents/new?${params.toString()}`
     }
