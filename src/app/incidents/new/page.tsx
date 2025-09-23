@@ -154,6 +154,33 @@ export default function NewIncidentPage() {
       // Clean URL parameters
       window.history.replaceState({}, '', window.location.pathname)
     }
+    // Handle Grafana pre-filled data
+    else if (urlParams.get('source') === 'grafana') {
+      const grafanaData = {
+        title: urlParams.get('title') || '',
+        description: urlParams.get('description') || '',
+        criticality: (urlParams.get('criticality') as Criticality) || 'medium',
+        urgency: (urlParams.get('urgency') as Urgency) || 'medium',
+        customer: urlParams.get('customer') || '',
+        tags: urlParams.get('tags') || ''
+      }
+      const affectedServices = urlParams.get('affectedServices')?.split(',').filter(Boolean) || []
+
+      // Pre-fill form with Grafana data
+      setFormData(prev => ({
+        ...prev,
+        title: grafanaData.title,
+        description: grafanaData.description,
+        criticality: grafanaData.criticality,
+        urgency: grafanaData.urgency,
+        customer: grafanaData.customer,
+        tags: grafanaData.tags,
+        affectedServices: affectedServices
+      }))
+
+      // Clean URL parameters
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
