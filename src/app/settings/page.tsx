@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Key, Building2, Bell, Shield } from 'lucide-react'
+import { Key, Building2, Bell, Shield, Zap } from 'lucide-react'
 import { ClientLayout } from '@/components/layout/client-layout'
 import ApiTokensManager from '@/components/settings/api-tokens'
 import { PasswordChangeForm } from '@/components/settings/password-change'
+import { IntegrationsManager } from '@/components/settings/integrations-manager'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('security')
@@ -22,7 +23,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
             <TabsTrigger value="security" className="flex items-center space-x-2">
               <Shield className="w-4 h-4" />
               <span>Security</span>
@@ -30,6 +31,10 @@ export default function SettingsPage() {
             <TabsTrigger value="tokens" className="flex items-center space-x-2">
               <Key className="w-4 h-4" />
               <span>API Tokens</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center space-x-2">
+              <Zap className="w-4 h-4" />
+              <span>Integrations</span>
             </TabsTrigger>
             <TabsTrigger value="organization" className="flex items-center space-x-2">
               <Building2 className="w-4 h-4" />
@@ -47,6 +52,10 @@ export default function SettingsPage() {
 
           <TabsContent value="tokens" className="space-y-6">
             <ApiTokensManager />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6">
+            <IntegrationsManager />
           </TabsContent>
 
           <TabsContent value="organization" className="space-y-6">
