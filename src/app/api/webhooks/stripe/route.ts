@@ -25,16 +25,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
 
   try {
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = event.data.object
+        const subscription = event.data.object as any // Type as any to avoid Stripe type issues
         const customerId = subscription.customer as string
         const organizationId = subscription.metadata?.organization_id
-        const planId = subscription.metadata?.plan_id || getPlanFromPriceId(subscription.items.data[0]?.price.id)
+        const planId = subscription.metadata?.plan_id || getPlanFromPriceId(subscription.items?.data?.[0]?.price?.id)
 
         if (!organizationId) {
           console.error('No organization_id in subscription metadata')
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
             subscription_id: subscription.id,
             subscription_status: subscription.status,
             current_plan: planId || 'free',
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : null,
+            current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
             trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
             cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
             canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object
+        const subscription = event.data.object as any
         const organizationId = subscription.metadata?.organization_id
 
         if (!organizationId) {
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object
+        const invoice = event.data.object as any
         const customerId = invoice.customer as string
         const subscriptionId = invoice.subscription as string
 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object
+        const invoice = event.data.object as any
         const customerId = invoice.customer as string
         const subscriptionId = invoice.subscription as string
 
