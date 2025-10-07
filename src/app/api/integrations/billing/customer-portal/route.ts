@@ -33,26 +33,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { return_url } = body
 
-    // For now, return a placeholder response since we don't have Stripe configured yet
-    // In a real implementation, you would create a Stripe customer portal session here
-    const mockPortalUrl = `https://billing.stripe.com/p/login/test_${integration.stripe_customer_id}`
-    
-    return NextResponse.json({ 
-      url: mockPortalUrl,
-      message: 'Customer portal URL generated. This is a placeholder until Stripe is configured.' 
-    })
-
-    // Real Stripe implementation would look like this:
-    /*
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+    // Create Stripe customer portal session
+    const { stripe } = await import('@/lib/stripe')
     
     const session = await stripe.billingPortal.sessions.create({
       customer: integration.stripe_customer_id,
-      return_url: return_url || `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=integrations`,
+      return_url: return_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?tab=integrations`,
     })
 
     return NextResponse.json({ url: session.url })
-    */
     
   } catch (error) {
     console.error('Unexpected error:', error)
