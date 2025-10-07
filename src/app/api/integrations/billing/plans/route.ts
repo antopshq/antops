@@ -1,100 +1,110 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createSupabaseServerClient } from '@/lib/supabase'
+import { STRIPE_CONFIG, formatPrice } from '@/lib/stripe'
 
-// Define subscription plans
-const SUBSCRIPTION_PLANS = {
-  free: {
-    id: 'free',
-    name: 'Free',
-    description: 'Perfect for small teams getting started',
-    price: 0,
-    interval: null,
-    features: [
-      'Up to 5 team members',
-      'Up to 100 incidents per month',
-      '1GB storage',
-      'Basic integrations',
-      'Email support'
-    ],
-    limits: {
-      seats: 5,
-      incidents: 100,
-      storage: 1,
-      integrations: ['pagerduty', 'grafana', 'email']
+// Build subscription plans with real Stripe pricing
+const buildSubscriptionPlans = () => {
+  return {
+    free: {
+      id: 'free',
+      name: 'Free',
+      description: 'Perfect for small teams getting started',
+      price: 0,
+      yearlyPrice: 0,
+      interval: null,
+      features: [
+        'Up to 5 team members',
+        'Up to 100 incidents per month',
+        '1GB storage',
+        'Basic integrations',
+        'Email support'
+      ],
+      limits: {
+        seats: 5,
+        incidents: 100,
+        storage: 1,
+        integrations: ['pagerduty', 'grafana', 'email']
+      }
+    },
+    starter: {
+      id: 'starter',
+      name: 'Starter',
+      description: 'Great for growing teams',
+      price: STRIPE_CONFIG.prices.starter_monthly.amount,
+      yearlyPrice: STRIPE_CONFIG.prices.starter_yearly.amount,
+      interval: 'month',
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.starter_monthly.amount),
+      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.starter_yearly.amount),
+      features: [
+        'Up to 25 team members',
+        'Unlimited incidents',
+        '10GB storage',
+        'All integrations',
+        'Priority support',
+        'Advanced reporting'
+      ],
+      limits: {
+        seats: 25,
+        incidents: -1,
+        storage: 10,
+        integrations: 'all'
+      }
+    },
+    professional: {
+      id: 'professional',
+      name: 'Professional',
+      description: 'Perfect for established teams',
+      price: STRIPE_CONFIG.prices.professional_monthly.amount,
+      yearlyPrice: STRIPE_CONFIG.prices.professional_yearly.amount,
+      interval: 'month',
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.professional_monthly.amount),
+      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.professional_yearly.amount),
+      features: [
+        'Unlimited team members',
+        'Unlimited incidents',
+        '100GB storage',
+        'All integrations',
+        'Priority support',
+        'Advanced reporting',
+        'SSO authentication',
+        'API access'
+      ],
+      limits: {
+        seats: -1,
+        incidents: -1,
+        storage: 100,
+        integrations: 'all'
+      }
+    },
+    enterprise: {
+      id: 'enterprise',
+      name: 'Enterprise',
+      description: 'For large organizations with advanced needs',
+      price: STRIPE_CONFIG.prices.enterprise_monthly.amount,
+      yearlyPrice: STRIPE_CONFIG.prices.enterprise_yearly.amount,
+      interval: 'month',
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_monthly.amount),
+      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_yearly.amount),
+      features: [
+        'Unlimited everything',
+        'Unlimited storage',
+        'All integrations',
+        'Dedicated support',
+        'Advanced reporting',
+        'SSO authentication',
+        'API access',
+        'Custom workflows',
+        'On-premise deployment',
+        'SLA guarantees'
+      ],
+      limits: {
+        seats: -1,
+        incidents: -1,
+        storage: -1,
+        integrations: 'all'
+      }
     }
-  },
-  starter: {
-    id: 'starter',
-    name: 'Starter',
-    description: 'Great for growing teams',
-    price: 29,
-    interval: 'month',
-    features: [
-      'Up to 25 team members',
-      'Unlimited incidents',
-      '10GB storage',
-      'All integrations',
-      'Priority support',
-      'Advanced reporting'
-    ],
-    limits: {
-      seats: 25,
-      incidents: -1, // unlimited
-      storage: 10,
-      integrations: 'all'
-    },
-    stripe_price_id: 'price_starter_monthly' // placeholder
-  },
-  professional: {
-    id: 'professional',
-    name: 'Professional',
-    description: 'Perfect for established teams',
-    price: 99,
-    interval: 'month',
-    features: [
-      'Unlimited team members',
-      'Unlimited incidents',
-      '100GB storage',
-      'All integrations',
-      'Priority support',
-      'Advanced reporting',
-      'SSO authentication',
-      'API access'
-    ],
-    limits: {
-      seats: -1, // unlimited
-      incidents: -1, // unlimited
-      storage: 100,
-      integrations: 'all'
-    },
-    stripe_price_id: 'price_professional_monthly' // placeholder
-  },
-  enterprise: {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'For large organizations with advanced needs',
-    price: 299,
-    interval: 'month',
-    features: [
-      'Unlimited everything',
-      'Unlimited storage',
-      'All integrations',
-      'Dedicated support',
-      'Advanced reporting',
-      'SSO authentication',
-      'API access',
-      'Custom workflows',
-      'On-premise deployment',
-      'SLA guarantees'
-    ],
-    limits: {
-      seats: -1, // unlimited
-      incidents: -1, // unlimited
-      storage: -1, // unlimited
-      integrations: 'all'
-    },
-    stripe_price_id: 'price_enterprise_monthly' // placeholder
   }
 }
 
@@ -120,7 +130,7 @@ export async function GET(request: NextRequest) {
     const subscriptionStatus = integration?.subscription_status || null
 
     return NextResponse.json({ 
-      plans: SUBSCRIPTION_PLANS,
+      plans: buildSubscriptionPlans(),
       currentPlan,
       subscriptionStatus,
       canUpgrade: ['owner', 'admin'].includes(user.role)
@@ -152,11 +162,12 @@ export async function POST(request: NextRequest) {
     const { plan_id, interval } = body
 
     // Validate plan
-    if (!plan_id || !SUBSCRIPTION_PLANS[plan_id as keyof typeof SUBSCRIPTION_PLANS]) {
+    const plans = buildSubscriptionPlans()
+    if (!plan_id || !plans[plan_id as keyof typeof plans]) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 })
     }
 
-    const selectedPlan = SUBSCRIPTION_PLANS[plan_id as keyof typeof SUBSCRIPTION_PLANS]
+    const selectedPlan = plans[plan_id as keyof typeof plans]
 
     // For free plan, just update the database
     if (plan_id === 'free') {
@@ -188,36 +199,86 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // For paid plans, return a placeholder checkout URL
-    // In a real implementation, you would create a Stripe checkout session here
-    const mockCheckoutUrl = `https://checkout.stripe.com/pay/cs_test_${plan_id}_${Date.now()}`
+    // Create Stripe checkout session for paid plans
+    const { stripe, STRIPE_CONFIG } = await import('@/lib/stripe')
     
-    return NextResponse.json({ 
-      checkout_url: mockCheckoutUrl,
-      message: 'Checkout URL generated. This is a placeholder until Stripe is configured.' 
-    })
+    // Find the appropriate price ID
+    const priceKey = `${plan_id}_${interval || 'monthly'}`
+    const priceConfig = STRIPE_CONFIG.prices[priceKey as keyof typeof STRIPE_CONFIG.prices]
+    
+    if (!priceConfig) {
+      return NextResponse.json({ error: 'Invalid plan or interval' }, { status: 400 })
+    }
 
-    // Real Stripe implementation would look like this:
-    /*
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-    
+    // Create or get Stripe customer
+    let customerId = null
+    const { data: existingIntegration } = await supabase
+      .from('billing_integrations')
+      .select('stripe_customer_id')
+      .eq('organization_id', user.organizationId)
+      .single()
+
+    if (existingIntegration?.stripe_customer_id) {
+      customerId = existingIntegration.stripe_customer_id
+    } else {
+      // Create new Stripe customer
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          organization_id: user.organizationId,
+          user_id: user.id
+        }
+      })
+      customerId = customer.id
+
+      // Save customer ID to database
+      await supabase
+        .from('billing_integrations')
+        .upsert({
+          organization_id: user.organizationId,
+          stripe_customer_id: customerId,
+          enabled: true
+        }, { 
+          onConflict: 'organization_id',
+          ignoreDuplicates: false 
+        })
+    }
+
+    // Create checkout session  
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      customer: customerId,
       payment_method_types: ['card'],
       line_items: [{
-        price: selectedPlan.stripe_price_id,
+        price_data: {
+          currency: priceConfig.currency,
+          product_data: {
+            name: STRIPE_CONFIG.products[priceConfig.product as keyof typeof STRIPE_CONFIG.products].name,
+            description: STRIPE_CONFIG.products[priceConfig.product as keyof typeof STRIPE_CONFIG.products].description,
+          },
+          unit_amount: priceConfig.amount,
+          recurring: {
+            interval: priceConfig.interval as 'month' | 'year',
+          },
+        },
         quantity: 1,
       }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=integrations&success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=integrations&canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?tab=integrations&success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?tab=integrations&canceled=true`,
       metadata: {
-        organization_id: userProfile.organization_id,
-        plan_id: plan_id
+        organization_id: user.organizationId,
+        plan_id: plan_id,
+        interval: interval || 'month'
+      },
+      subscription_data: {
+        metadata: {
+          organization_id: user.organizationId,
+          plan_id: plan_id
+        }
       }
     })
 
     return NextResponse.json({ checkout_url: session.url })
-    */
     
   } catch (error) {
     console.error('Unexpected error:', error)
