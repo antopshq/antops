@@ -1,0 +1,5 @@
+-- Create indexes for billing_integrations table
+CREATE INDEX idx_billing_integrations_organization_id ON billing_integrations(organization_id);
+CREATE INDEX idx_billing_integrations_stripe_customer_id ON billing_integrations(stripe_customer_id);
+CREATE INDEX idx_billing_integrations_subscription_id ON billing_integrations(subscription_id);
+CREATE INDEX idx_billing_integrations_enabled ON billing_integrations(enabled);
