@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-enhanced'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { STRIPE_CONFIG, formatPrice } from '@/lib/stripe'
 
 // Build subscription plans with real Stripe pricing
@@ -117,7 +117,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { user } = authContext
-    const supabase = await createSupabaseServerClient()
+    
+    // Use service role client to bypass RLS for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Get current billing configuration
     const { data: integration, error: integrationError } = await supabase
@@ -150,7 +161,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { user } = authContext
-    const supabase = await createSupabaseServerClient()
+    
+    // Use service role client to bypass RLS for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Check if user has permission to modify billing (owners and admins only)
     if (!['owner', 'admin'].includes(user.role)) {
