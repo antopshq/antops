@@ -11,12 +11,11 @@ const buildSubscriptionPlans = () => {
       name: 'Free',
       description: 'Perfect for small teams getting started',
       price: 0,
-      yearlyPrice: 0,
+      weeklyPrice: 0,
       interval: null,
       features: [
         'Up to 5 team members',
         'Up to 100 incidents per month',
-        '1GB storage',
         'Basic integrations',
         'Email support'
       ],
@@ -27,76 +26,22 @@ const buildSubscriptionPlans = () => {
         integrations: ['pagerduty', 'grafana', 'email']
       }
     },
-    starter: {
-      id: 'starter',
-      name: 'Starter',
-      description: 'Great for growing teams',
-      price: STRIPE_CONFIG.prices.starter_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.starter_yearly.amount,
-      interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.starter_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.starter_yearly.amount),
-      features: [
-        'Up to 25 team members',
-        'Unlimited incidents',
-        '10GB storage',
-        'All integrations',
-        'Priority support',
-        'Advanced reporting'
-      ],
-      limits: {
-        seats: 25,
-        incidents: -1,
-        storage: 10,
-        integrations: 'all'
-      }
-    },
-    professional: {
-      id: 'professional',
-      name: 'Professional',
-      description: 'Perfect for established teams',
-      price: STRIPE_CONFIG.prices.professional_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.professional_yearly.amount,
-      interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.professional_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.professional_yearly.amount),
+    pro: {
+      id: 'pro',
+      name: 'Pro',
+      description: 'Professional features for growing teams',
+      price: STRIPE_CONFIG.prices.pro_weekly_usd.amount,
+      weeklyPrice: STRIPE_CONFIG.prices.pro_weekly_usd.amount,
+      interval: 'week',
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.pro_weekly_usd.amount),
+      formattedPriceEur: formatPrice(STRIPE_CONFIG.prices.pro_weekly_eur.amount, 'eur'),
       features: [
         'Unlimited team members',
         'Unlimited incidents',
-        '100GB storage',
         'All integrations',
         'Priority support',
         'Advanced reporting',
-        'SSO authentication',
-        'API access'
-      ],
-      limits: {
-        seats: -1,
-        incidents: -1,
-        storage: 100,
-        integrations: 'all'
-      }
-    },
-    enterprise: {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'For large organizations with advanced needs',
-      price: STRIPE_CONFIG.prices.enterprise_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.enterprise_yearly.amount,
-      interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_yearly.amount),
-      features: [
-        'Unlimited everything',
-        'Unlimited storage',
-        'All integrations',
-        'Dedicated support',
-        'Advanced reporting',
-        'SSO authentication',
-        'API access',
-        'Custom workflows',
-        'On-premise deployment',
-        'SLA guarantees'
+        'Weekly billing on Mondays'
       ],
       limits: {
         seats: -1,
@@ -222,14 +167,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session for paid plans
-    const { stripe, STRIPE_CONFIG } = await import('@/lib/stripe')
+    const { stripe, STRIPE_CONFIG, getUserCurrency } = await import('@/lib/stripe')
     
-    // Find the appropriate price ID
-    const priceKey = `${plan_id}_${interval || 'monthly'}`
+    // For Pro plan, determine currency based on user preference
+    const currency = getUserCurrency()
+    const priceKey = `${plan_id}_weekly_${currency}`
     const priceConfig = STRIPE_CONFIG.prices[priceKey as keyof typeof STRIPE_CONFIG.prices]
     
     if (!priceConfig) {
-      return NextResponse.json({ error: 'Invalid plan or interval' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid plan or currency' }, { status: 400 })
     }
 
     // Create or get Stripe customer
@@ -280,7 +226,7 @@ export async function POST(request: NextRequest) {
           },
           unit_amount: priceConfig.amount,
           recurring: {
-            interval: priceConfig.interval as 'month' | 'year',
+            interval: priceConfig.interval as 'week' | 'month' | 'year',
           },
         },
         quantity: 1,

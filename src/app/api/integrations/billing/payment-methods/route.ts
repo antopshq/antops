@@ -86,7 +86,6 @@ export async function POST(request: NextRequest) {
     })
 
     // Create weekly subscription for Pro plan
-    const priceKey = `pro_weekly_${currency.toLowerCase()}`
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
@@ -99,10 +98,9 @@ export async function POST(request: NextRequest) {
           unit_amount: 999, // 9.99 in cents
           recurring: {
             interval: 'week',
-            // Set billing to occur on Mondays (1st day of week)
             interval_count: 1,
           },
-        },
+        } as any, // Type assertion to avoid Stripe type issues
       }],
       default_payment_method: payment_method_id,
       billing_cycle_anchor: getNextMondayTimestamp(),
@@ -113,6 +111,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Type assertion for subscription object to handle Stripe API response types
+    const sub = subscription as any
+
     // Update billing integration with subscription info
     const { data: integration, error: updateError } = await supabase
       .from('billing_integrations')
@@ -120,13 +121,13 @@ export async function POST(request: NextRequest) {
         organization_id: user.organizationId,
         enabled: true,
         current_plan: 'pro',
-        subscription_status: subscription.status as any,
+        subscription_status: sub.status,
         stripe_customer_id: customerId,
-        subscription_id: subscription.id,
-        price_id: subscription.items.data[0].price.id,
+        subscription_id: sub.id,
+        price_id: sub.items.data[0].price.id,
         billing_interval: 'week',
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
       }, { 
         onConflict: 'organization_id',
         ignoreDuplicates: false 
@@ -142,10 +143,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       integration,
       subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end
+        id: sub.id,
+        status: sub.status,
+        current_period_start: sub.current_period_start,
+        current_period_end: sub.current_period_end
       },
       message: 'Payment method added and subscription created successfully' 
     })
