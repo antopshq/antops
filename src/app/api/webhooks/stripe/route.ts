@@ -41,6 +41,10 @@ export async function POST(req: NextRequest) {
           break
         }
 
+        // Determine billing interval based on subscription
+        const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'week'
+        const priceId = subscription.items?.data?.[0]?.price?.id
+
         // Update billing integration
         await supabase
           .from('billing_integrations')
@@ -50,6 +54,8 @@ export async function POST(req: NextRequest) {
             subscription_id: subscription.id,
             subscription_status: subscription.status,
             current_plan: planId || 'free',
+            billing_interval: interval,
+            price_id: priceId,
             current_period_start: subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : null,
             current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
             trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
@@ -64,7 +70,7 @@ export async function POST(req: NextRequest) {
             ignoreDuplicates: false 
           })
 
-        console.log(`✅ Updated subscription for organization ${organizationId}`)
+        console.log(`✅ Updated subscription for organization ${organizationId}, plan: ${planId}, interval: ${interval}`)
         break
       }
 
