@@ -12,58 +12,24 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 // Stripe product and price configuration
 export const STRIPE_CONFIG = {
   products: {
-    starter: {
-      name: 'Starter Plan',
-      description: 'Great for growing teams',
-      features: ['Up to 25 team members', 'Unlimited incidents', '10GB storage', 'All integrations'],
-    },
-    professional: {
-      name: 'Professional Plan', 
-      description: 'Perfect for established teams',
-      features: ['Unlimited team members', 'Unlimited incidents', '100GB storage', 'SSO authentication'],
-    },
-    enterprise: {
-      name: 'Enterprise Plan',
-      description: 'For large organizations',
-      features: ['Unlimited everything', 'Dedicated support', 'Custom workflows', 'SLA guarantees'],
+    pro: {
+      name: 'Pro Plan',
+      description: 'Professional features for growing teams',
+      features: ['Unlimited team members', 'Unlimited incidents', 'All integrations', 'Priority support'],
     }
   },
   prices: {
-    starter_monthly: {
-      amount: 2900, // $29.00 in cents
+    pro_weekly_usd: {
+      amount: 999, // $9.99 in cents
       currency: 'usd',
-      interval: 'month',
-      product: 'starter'
+      interval: 'week',
+      product: 'pro'
     },
-    starter_yearly: {
-      amount: 29000, // $290.00 in cents (2 months free)
-      currency: 'usd', 
-      interval: 'year',
-      product: 'starter'
-    },
-    professional_monthly: {
-      amount: 9900, // $99.00 in cents
-      currency: 'usd',
-      interval: 'month',
-      product: 'professional'
-    },
-    professional_yearly: {
-      amount: 99000, // $990.00 in cents (2 months free)
-      currency: 'usd',
-      interval: 'year', 
-      product: 'professional'
-    },
-    enterprise_monthly: {
-      amount: 29900, // $299.00 in cents
-      currency: 'usd',
-      interval: 'month',
-      product: 'enterprise'
-    },
-    enterprise_yearly: {
-      amount: 299000, // $2990.00 in cents (2 months free)
-      currency: 'usd',
-      interval: 'year',
-      product: 'enterprise'
+    pro_weekly_eur: {
+      amount: 999, // €9.99 in cents
+      currency: 'eur',
+      interval: 'week',
+      product: 'pro'
     }
   }
 }
@@ -80,9 +46,19 @@ export function formatPrice(amount: number, currency: string = 'usd'): string {
 // Helper function to get plan from price ID
 export function getPlanFromPriceId(priceId: string): string | null {
   for (const [key, price] of Object.entries(STRIPE_CONFIG.prices)) {
-    if (key.includes('starter')) return 'starter'
-    if (key.includes('professional')) return 'professional'  
-    if (key.includes('enterprise')) return 'enterprise'
+    if (key.includes('pro')) return 'pro'
   }
   return null
+}
+
+// Helper function to detect user's currency preference
+export function getUserCurrency(): 'usd' | 'eur' {
+  // Check browser language/locale to determine currency preference
+  const locale = typeof window !== 'undefined' ? navigator.language : 'en-US'
+  
+  // European locales get EUR, others get USD
+  const europeanLocales = ['de', 'fr', 'es', 'it', 'nl', 'pt', 'pl', 'sv', 'no', 'dk', 'fi']
+  const isEuropean = europeanLocales.some(lang => locale.toLowerCase().startsWith(lang))
+  
+  return isEuropean || locale.toLowerCase().startsWith('en-gb') ? 'eur' : 'usd'
 }

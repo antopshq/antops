@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail, BarChart3, CreditCard } from 'lucide-react'
+import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail, BarChart3, CreditCard, Plus, Trash2 } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm'
 
 interface PagerDutyIntegration {
   id?: string
@@ -39,11 +40,20 @@ interface BillingIntegration {
   enabled: boolean
   stripeCustomerId?: string
   subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | null
-  currentPlan: 'free' | 'starter' | 'professional' | 'enterprise'
+  currentPlan: 'free' | 'pro'
   billingEmail?: string
   organizationId: string
   createdAt?: string
   updatedAt?: string
+}
+
+interface PaymentMethod {
+  id: string
+  brand: string
+  last4: string
+  exp_month: number
+  exp_year: number
+  created: number
 }
 
 interface Integration {
@@ -79,12 +89,14 @@ export function IntegrationsManager() {
     currentPlan: 'free',
     organizationId: ''
   })
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [webhookUrlGenerated, setWebhookUrlGenerated] = useState(false)
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
 
   // Check if user has permission to manage integrations
   const hasIntegrationPermission = user?.role && ['owner', 'admin', 'manager'].includes(user.role)
@@ -196,6 +208,15 @@ export function IntegrationsManager() {
           const billingData = await billingResponse.json()
           if (billingData.integration) {
             setBillingConfig(billingData.integration)
+          }
+        }
+
+        // Fetch Payment Methods
+        const paymentMethodsResponse = await fetch('/api/integrations/billing/payment-methods')
+        if (paymentMethodsResponse.ok) {
+          const paymentMethodsData = await paymentMethodsResponse.json()
+          if (paymentMethodsData.paymentMethods) {
+            setPaymentMethods(paymentMethodsData.paymentMethods)
           }
         }
       } catch (error) {
@@ -343,6 +364,60 @@ export function IntegrationsManager() {
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to open customer portal' })
     }
+  }
+
+  const handlePaymentMethodSuccess = async (paymentMethodId: string) => {
+    setSaving(true)
+    setMessage(null)
+    
+    try {
+      // Detect user currency
+      const currency = getUserCurrency()
+      
+      const response = await fetch('/api/integrations/billing/payment-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          payment_method_id: paymentMethodId,
+          currency: currency
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBillingConfig(data.integration)
+        setShowPaymentForm(false)
+        setMessage({ type: 'success', text: data.message || 'Payment method added successfully' })
+        
+        // Refresh payment methods list
+        const paymentMethodsResponse = await fetch('/api/integrations/billing/payment-methods')
+        if (paymentMethodsResponse.ok) {
+          const paymentMethodsData = await paymentMethodsResponse.json()
+          if (paymentMethodsData.paymentMethods) {
+            setPaymentMethods(paymentMethodsData.paymentMethods)
+          }
+        }
+      } else {
+        const errorData = await response.json()
+        setMessage({ type: 'error', text: errorData.error || 'Failed to add payment method' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to add payment method' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePaymentMethodError = (error: string) => {
+    setMessage({ type: 'error', text: error })
+  }
+
+  // Helper function to detect user's currency preference
+  const getUserCurrency = (): 'usd' | 'eur' => {
+    const locale = typeof window !== 'undefined' ? navigator.language : 'en-US'
+    const europeanLocales = ['de', 'fr', 'es', 'it', 'nl', 'pt', 'pl', 'sv', 'no', 'dk', 'fi']
+    const isEuropean = europeanLocales.some(lang => locale.toLowerCase().startsWith(lang))
+    return isEuropean || locale.toLowerCase().startsWith('en-gb') ? 'eur' : 'usd'
   }
 
   const renderPagerDutyConfig = () => (
@@ -565,6 +640,11 @@ export function IntegrationsManager() {
                   {billingConfig.subscriptionStatus || 'Free'}
                 </span>
               </p>
+              {billingConfig.currentPlan === 'pro' && (
+                <p className="text-sm text-indigo-600 mt-1">
+                  {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / week (billed weekly on Mondays)
+                </p>
+              )}
             </div>
             <div className="text-right">
               <Badge 
@@ -582,44 +662,92 @@ export function IntegrationsManager() {
           </div>
         </div>
 
-        {/* Billing Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <CreditCard className="w-5 h-5 text-blue-600" />
-              <h4 className="font-medium">Payment Methods</h4>
+        {/* Payment Methods Management */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-gray-900">Payment Methods</h4>
+            {billingConfig.currentPlan === 'free' && !showPaymentForm && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowPaymentForm(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Payment Method & Upgrade to Pro
+              </Button>
+            )}
+          </div>
+
+          {/* Payment Method Form */}
+          {showPaymentForm && (
+            <Card className="p-4 border-2 border-blue-200 bg-blue-50">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-medium text-blue-900">Add Payment Method & Upgrade to Pro</h5>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPaymentForm(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+                <div className="bg-white p-4 rounded-lg">
+                  <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+                    <h6 className="font-medium text-indigo-900 mb-1">Pro Plan Benefits</h6>
+                    <ul className="text-sm text-indigo-700 space-y-1">
+                      <li>• Unlimited team members</li>
+                      <li>• Unlimited incidents</li>
+                      <li>• All integrations</li>
+                      <li>• Priority support</li>
+                      <li>• Weekly billing: {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / week</li>
+                    </ul>
+                  </div>
+                  <PaymentMethodForm
+                    onSuccess={handlePaymentMethodSuccess}
+                    onError={handlePaymentMethodError}
+                    loading={saving}
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Existing Payment Methods */}
+          {paymentMethods.length > 0 && (
+            <div className="space-y-2">
+              {paymentMethods.map((pm) => (
+                <Card key={pm.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <p className="font-medium capitalize">
+                          {pm.brand} **** **** **** {pm.last4}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Expires {pm.exp_month.toString().padStart(2, '0')}/{pm.exp_year}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">Default</Badge>
+                  </div>
+                </Card>
+              ))}
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Manage your payment methods and billing details
-            </p>
+          )}
+
+          {/* Customer Portal Link */}
+          {billingConfig.stripeCustomerId && (
             <Button 
               variant="outline" 
               className="w-full" 
               onClick={handleCustomerPortal}
-              disabled={!billingConfig.stripeCustomerId}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Manage Payment Methods
-            </Button>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <RefreshCw className="w-5 h-5 text-green-600" />
-              <h4 className="font-medium">Subscription Plans</h4>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Upgrade or change your subscription plan
-            </p>
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => window.open('/api/integrations/billing/plans', '_blank')}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              View Plans & Pricing
+              Manage Billing & Invoices
             </Button>
-          </Card>
+          )}
         </div>
 
         {/* Usage & Limits */}
@@ -627,21 +755,27 @@ export function IntegrationsManager() {
           <h4 className="font-medium text-gray-900">Usage & Limits</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">∞</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '5' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Team Members</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Up to 5 members' : 'Unlimited'}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">∞</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '100' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Incidents/Month</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Up to 100/month' : 'Unlimited'}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">✓</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '3' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Integrations</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Basic integrations' : 'All integrations'}
