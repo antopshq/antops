@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
                 interval_count: 1,
               },
             } as any, // Type assertion to avoid Stripe type issues
+            quantity: 1,
           }],
           billing_cycle_anchor: billingCycleAnchor,
           trial_end: billingCycleAnchor, // Trial until first billing date

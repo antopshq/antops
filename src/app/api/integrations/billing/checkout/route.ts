@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
             interval: 'month',
           },
         } as any, // Type assertion to avoid Stripe type issues
+        quantity: 1,
       }],
       billing_address_collection: 'required',
       customer_update: {
