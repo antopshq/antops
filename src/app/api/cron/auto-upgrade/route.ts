@@ -68,10 +68,11 @@ export async function POST(request: NextRequest) {
 
         // Get organization owner to create customer if needed
         const { data: owner, error: ownerError } = await supabase
-          .from('user_profiles')
-          .select('user_id, email')
+          .from('organization_memberships')
+          .select('user_id, profiles!inner(email)')
           .eq('organization_id', org.id)
           .eq('role', 'owner')
+          .not('joined_at', 'is', null)
           .single()
 
         if (ownerError || !owner) {
@@ -80,12 +81,28 @@ export async function POST(request: NextRequest) {
           continue
         }
 
+        // Count active members for pricing
+        const { count: userCount, error: userCountError } = await supabase
+          .from('organization_memberships')
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', org.id)
+          .not('joined_at', 'is', null)
+
+        if (userCountError) {
+          console.error(`Failed to count users for organization ${org.id}`)
+          errors.push(`Failed to count users for organization ${org.id}`)
+          continue
+        }
+
+        const numberOfUsers = userCount || 1
+        const totalAmount = 999 * numberOfUsers // €9.99 per user in cents
+
         // Create or get Stripe customer
         const billing = org.billing_integrations?.[0]
         let customerId = billing?.stripe_customer_id
         if (!customerId) {
           const customer = await stripe.customers.create({
-            email: owner.email,
+            email: owner.profiles.email,
             metadata: {
               organization_id: org.id,
               user_id: owner.user_id,
@@ -111,7 +128,7 @@ export async function POST(request: NextRequest) {
                 name: 'Pro Plan',
                 description: 'Professional features for growing teams',
               },
-              unit_amount: 999, // 9.99 in cents
+              unit_amount: totalAmount, // €9.99 per user in cents
               recurring: {
                 interval: 'month',
                 interval_count: 1,
@@ -126,7 +143,8 @@ export async function POST(request: NextRequest) {
             plan_id: 'pro',
             billing_frequency: 'monthly',
             org_created_at: org.created_at,
-            auto_upgraded: 'true'
+            auto_upgraded: 'true',
+            user_count: numberOfUsers.toString()
           }
         })
 
