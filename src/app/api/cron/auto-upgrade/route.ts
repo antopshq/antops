@@ -67,17 +67,30 @@ export async function POST(request: NextRequest) {
         console.log(`Processing auto-upgrade for organization: ${org.name} (${org.id}) - billing expired at ${org.billing_expires_at}`)
 
         // Get organization owner to create customer if needed
-        const { data: owner, error: ownerError } = await supabase
+        const { data: ownerMembership, error: ownerError } = await supabase
           .from('organization_memberships')
-          .select('user_id, profiles!inner(email)')
+          .select('user_id')
           .eq('organization_id', org.id)
           .eq('role', 'owner')
           .not('joined_at', 'is', null)
           .single()
 
-        if (ownerError || !owner) {
+        if (ownerError || !ownerMembership) {
           console.error(`No owner found for organization ${org.id}`)
           errors.push(`No owner found for organization ${org.id}`)
+          continue
+        }
+
+        // Get owner's profile for email
+        const { data: ownerProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', ownerMembership.user_id)
+          .single()
+
+        if (profileError || !ownerProfile) {
+          console.error(`No profile found for owner of organization ${org.id}`)
+          errors.push(`No profile found for owner of organization ${org.id}`)
           continue
         }
 
@@ -102,10 +115,10 @@ export async function POST(request: NextRequest) {
         let customerId = billing?.stripe_customer_id
         if (!customerId) {
           const customer = await stripe.customers.create({
-            email: owner.profiles.email,
+            email: ownerProfile.email,
             metadata: {
               organization_id: org.id,
-              user_id: owner.user_id,
+              user_id: ownerMembership.user_id,
               auto_upgrade: 'true'
             }
           })
@@ -196,7 +209,7 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('notifications')
           .insert({
-            user_id: owner.user_id,
+            user_id: ownerMembership.user_id,
             organization_id: org.id,
             type: 'billing_upgrade',
             title: 'Automatically Upgraded to Pro Plan',
