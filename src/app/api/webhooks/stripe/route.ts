@@ -42,8 +42,18 @@ export async function POST(req: NextRequest) {
         }
 
         // Determine billing interval based on subscription
-        const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'week'
+        const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month'
         const priceId = subscription.items?.data?.[0]?.price?.id
+
+        // Update billing integration
+        // Update organization billing tier
+        await supabase
+          .from('organizations')
+          .update({
+            billing_tier: planId === 'pro' ? 'pro' : 'free',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', organizationId)
 
         // Update billing integration
         await supabase
@@ -84,6 +94,14 @@ export async function POST(req: NextRequest) {
         }
 
         // Downgrade to free plan
+        await supabase
+          .from('organizations')
+          .update({
+            billing_tier: 'free',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', organizationId)
+
         await supabase
           .from('billing_integrations')
           .update({

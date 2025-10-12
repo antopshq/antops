@@ -642,7 +642,7 @@ export function IntegrationsManager() {
               </p>
               {billingConfig.currentPlan === 'pro' && (
                 <p className="text-sm text-indigo-600 mt-1">
-                  {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / week (billed weekly on Mondays)
+                  {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / month (billed monthly on organization anniversary)
                 </p>
               )}
             </div>
@@ -700,7 +700,7 @@ export function IntegrationsManager() {
                       <li>• Unlimited incidents</li>
                       <li>• All integrations</li>
                       <li>• Priority support</li>
-                      <li>• Weekly billing: {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / week</li>
+                      <li>• Monthly billing: {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / month</li>
                     </ul>
                   </div>
                   <PaymentMethodForm

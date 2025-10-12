@@ -30,18 +30,18 @@ const buildSubscriptionPlans = () => {
       id: 'pro',
       name: 'Pro',
       description: 'Professional features for growing teams',
-      price: STRIPE_CONFIG.prices.pro_weekly_usd.amount,
-      weeklyPrice: STRIPE_CONFIG.prices.pro_weekly_usd.amount,
-      interval: 'week',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.pro_weekly_usd.amount),
-      formattedPriceEur: formatPrice(STRIPE_CONFIG.prices.pro_weekly_eur.amount, 'eur'),
+      price: STRIPE_CONFIG.prices.pro_monthly_usd.amount,
+      monthlyPrice: STRIPE_CONFIG.prices.pro_monthly_usd.amount,
+      interval: 'month',
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.pro_monthly_usd.amount),
+      formattedPriceEur: formatPrice(STRIPE_CONFIG.prices.pro_monthly_eur.amount, 'eur'),
       features: [
         'Unlimited team members',
         'Unlimited incidents',
         'All integrations',
         'Priority support',
         'Advanced reporting',
-        'Weekly billing on Mondays'
+        'Monthly billing on organization anniversary'
       ],
       limits: {
         seats: -1,
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     
     // For Pro plan, determine currency based on user preference
     const currency = getUserCurrency()
-    const priceKey = `${plan_id}_weekly_${currency}`
+    const priceKey = `${plan_id}_monthly_${currency}`
     const priceConfig = STRIPE_CONFIG.prices[priceKey as keyof typeof STRIPE_CONFIG.prices]
     
     if (!priceConfig) {
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
           },
           unit_amount: priceConfig.amount,
           recurring: {
-            interval: priceConfig.interval as 'week' | 'month' | 'year',
+            interval: priceConfig.interval as 'month' | 'year',
           },
         },
         quantity: 1,

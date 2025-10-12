@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-enhanced'
 import { createClient } from '@supabase/supabase-js'
-import { stripe } from '@/lib/stripe'
+import { stripe, calculateBillingCycleAnchor } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +36,17 @@ export async function POST(request: NextRequest) {
 
     if (!payment_method_id) {
       return NextResponse.json({ error: 'Payment method ID is required' }, { status: 400 })
+    }
+
+    // Get organization creation date for billing cycle calculation
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .select('created_at')
+      .eq('id', user.organizationId)
+      .single()
+
+    if (orgError || !orgData) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
     // Get or create Stripe customer
@@ -85,7 +96,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create weekly subscription for Pro plan
+    // Create monthly subscription for Pro plan based on organization creation date
+    const billingCycleAnchor = calculateBillingCycleAnchor(orgData.created_at)
+    
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
@@ -97,22 +110,37 @@ export async function POST(request: NextRequest) {
           },
           unit_amount: 999, // 9.99 in cents
           recurring: {
-            interval: 'week',
+            interval: 'month',
             interval_count: 1,
           },
         } as any, // Type assertion to avoid Stripe type issues
       }],
       default_payment_method: payment_method_id,
-      billing_cycle_anchor: getNextMondayTimestamp(),
+      billing_cycle_anchor: billingCycleAnchor,
       metadata: {
         organization_id: user.organizationId,
         plan_id: 'pro',
-        billing_frequency: 'weekly'
+        billing_frequency: 'monthly',
+        org_created_at: orgData.created_at
       }
     })
 
     // Type assertion for subscription object to handle Stripe API response types
     const sub = subscription as any
+
+    // Update organization billing tier
+    const { error: orgUpdateError } = await supabase
+      .from('organizations')
+      .update({
+        billing_tier: 'pro',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.organizationId)
+
+    if (orgUpdateError) {
+      console.error('Failed to update organization billing tier:', orgUpdateError)
+      // Continue anyway, as the Stripe subscription was created
+    }
 
     // Update billing integration with subscription info
     const { data: integration, error: updateError } = await supabase
@@ -125,7 +153,7 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: customerId,
         subscription_id: sub.id,
         price_id: sub.items.data[0].price.id,
-        billing_interval: 'week',
+        billing_interval: 'month',
         current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
       }, { 
@@ -218,17 +246,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper function to get next Monday timestamp
-function getNextMondayTimestamp(): number {
-  const now = new Date()
-  const monday = new Date(now)
-  
-  // Get the number of days until next Monday (1 = Monday)
-  const daysUntilMonday = (1 + 7 - now.getDay()) % 7 || 7
-  monday.setDate(now.getDate() + daysUntilMonday)
-  
-  // Set to beginning of day
-  monday.setHours(0, 0, 0, 0)
-  
-  return Math.floor(monday.getTime() / 1000)
-}
