@@ -63,29 +63,21 @@ export function getUserCurrency(): 'usd' | 'eur' {
   return isEuropean || locale.toLowerCase().startsWith('en-gb') ? 'eur' : 'usd'
 }
 
-// Helper function to calculate billing cycle anchor based on organization creation date
+// Helper function to calculate billing cycle anchor for end-of-month billing
 export function calculateBillingCycleAnchor(orgCreatedAt: string): number {
-  const orgCreationDate = new Date(orgCreatedAt)
   const now = new Date()
   
-  // Get the day of month when org was created
-  const billingDay = orgCreationDate.getDate()
+  // Get the last day of the current month
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
   
-  // Calculate next billing date
-  const nextBillingDate = new Date(now.getFullYear(), now.getMonth(), billingDay)
-  
-  // If the billing day has already passed this month, move to next month
-  if (nextBillingDate <= now) {
-    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1)
+  // If we're already past the 25th of the month, bill at end of next month
+  // This gives some buffer time for month-end user counting
+  if (now.getDate() > 25) {
+    const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0)
+    return Math.floor(lastDayOfNextMonth.getTime() / 1000)
   }
   
-  // Handle edge case where billing day doesn't exist in target month (e.g., Jan 31 -> Feb 31)
-  if (nextBillingDate.getDate() !== billingDay) {
-    // If the day doesn't exist, use the last day of the month
-    nextBillingDate.setDate(0) // Sets to last day of previous month
-  }
-  
-  return Math.floor(nextBillingDate.getTime() / 1000)
+  return Math.floor(lastDayOfMonth.getTime() / 1000)
 }
 
 // Helper function to check if organization's free month has expired

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 })
     }
 
-    // Get organization creation date for billing cycle calculation
+    // Get organization data and user count
     const { data: orgData, error: orgError } = await supabase
       .from('organizations')
       .select('created_at')
@@ -48,6 +48,20 @@ export async function POST(request: NextRequest) {
     if (orgError || !orgData) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
+
+    // Count active members in the organization
+    const { count: userCount, error: userCountError } = await supabase
+      .from('organization_memberships')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', user.organizationId)
+      .not('joined_at', 'is', null) // Only count users who have actually joined
+
+    if (userCountError) {
+      return NextResponse.json({ error: 'Failed to count organization members' }, { status: 500 })
+    }
+
+    const numberOfUsers = userCount || 1 // Minimum 1 user
+    const totalAmount = 999 * numberOfUsers // €9.99 per user in cents
 
     // Get or create Stripe customer
     let customerId = null
@@ -84,7 +98,7 @@ export async function POST(request: NextRequest) {
         })
     }
 
-    // Calculate billing cycle based on organization creation date
+    // Calculate billing cycle for end-of-month billing
     const billingCycleAnchor = calculateBillingCycleAnchor(orgData.created_at)
 
     // Create checkout session for Pro plan subscription
@@ -97,10 +111,10 @@ export async function POST(request: NextRequest) {
           currency: currency.toLowerCase(),
           product_data: {
             name: 'Pro Plan',
-            description: 'Professional features for growing teams',
+            description: `Professional features for growing teams (${numberOfUsers} user${numberOfUsers > 1 ? 's' : ''})`,
             images: [`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/logo.png`],
           },
-          unit_amount: 999, // $9.99 in cents
+          unit_amount: totalAmount, // €9.99 per user in cents
           recurring: {
             interval: 'month',
           },
@@ -118,7 +132,8 @@ export async function POST(request: NextRequest) {
           organization_id: user.organizationId,
           plan_id: 'pro',
           billing_frequency: 'monthly',
-          org_created_at: orgData.created_at
+          org_created_at: orgData.created_at,
+          user_count: numberOfUsers.toString()
         }
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?tab=integrations&success=true&session_id={CHECKOUT_SESSION_ID}`,
