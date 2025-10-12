@@ -647,17 +647,50 @@ export function IntegrationsManager() {
         {/* Payment Methods Management */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-gray-900">Payment Methods</h4>
-            {billingConfig.currentPlan === 'free' && !showPaymentForm && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowPaymentForm(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Payment Method & Upgrade to Pro
-              </Button>
-            )}
+            <h4 className="font-medium text-gray-900">Subscription Management</h4>
+            <div className="flex space-x-2">
+              {/* Debug info - remove in production */}
+              <div className="text-xs text-gray-500">
+                Plan: {billingConfig.currentPlan || 'unknown'} | 
+                Status: {billingConfig.subscriptionStatus || 'none'}
+              </div>
+              
+              {billingConfig.currentPlan === 'free' && !showPaymentForm && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowPaymentForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              )}
+              
+              {billingConfig.currentPlan === 'pro' && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleCustomerPortal}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Manage Subscription
+                </Button>
+              )}
+              
+              {/* Fallback button if no plan is detected */}
+              {!billingConfig.currentPlan && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowPaymentForm(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Subscribe to Pro
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Payment Method Form */}
@@ -1015,6 +1048,29 @@ export function IntegrationsManager() {
               <p className="text-gray-500 text-sm mt-2">
                 Current role: <span className="font-medium">{user?.role || 'member'}</span>
               </p>
+              {!hasBillingPermission && (
+                <p className="text-amber-600 text-sm mt-2 font-medium">
+                  💡 Note: Billing & subscription management requires 'owner' or 'admin' role
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Billing Permission Notice for non-billing users */}
+      {!authLoading && hasIntegrationPermission && !hasBillingPermission && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="w-5 h-5 text-amber-600" />
+              <div>
+                <h4 className="font-medium text-amber-900">Billing & Subscription Management</h4>
+                <p className="text-sm text-amber-700">
+                  To configure payment and subscription settings, you need 'owner' or 'admin' role.
+                  Current role: <span className="font-medium">{user?.role}</span>
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
