@@ -89,16 +89,6 @@ export function PaymentMethodForm({ onSuccess, onError, loading: externalLoading
         </div>
       </div>
 
-      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-        <div className="text-sm text-green-700 space-y-1">
-          <p className="font-medium mb-2">✨ Pro Plan Benefits:</p>
-          <p>• Unlimited team members</p>
-          <p>• Unlimited incidents</p>
-          <p>• All integrations included</p>
-          <p>• Priority support</p>
-          <p>• Advanced reporting & analytics</p>
-        </div>
-      </div>
 
       <Button
         onClick={handleCheckout}

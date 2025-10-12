@@ -756,39 +756,6 @@ export function IntegrationsManager() {
           )}
         </div>
 
-        {/* Usage & Limits */}
-        <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Usage & Limits</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">
-                {billingConfig.currentPlan === 'free' ? '5' : '∞'}
-              </div>
-              <div className="text-sm text-gray-600">Team Members</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {billingConfig.currentPlan === 'free' ? 'Up to 5 members' : 'Unlimited'}
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">
-                {billingConfig.currentPlan === 'free' ? '100' : '∞'}
-              </div>
-              <div className="text-sm text-gray-600">Incidents/Month</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {billingConfig.currentPlan === 'free' ? 'Up to 100/month' : 'Unlimited'}
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">
-                {billingConfig.currentPlan === 'free' ? '3' : '∞'}
-              </div>
-              <div className="text-sm text-gray-600">Integrations</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {billingConfig.currentPlan === 'free' ? 'Basic integrations' : 'All integrations'}
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Billing Information */}
         {hasBillingPermission && (
