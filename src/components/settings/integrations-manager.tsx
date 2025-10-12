@@ -177,6 +177,24 @@ export function IntegrationsManager() {
     }
   }, [webhookUrlGenerated])
 
+  // Check for Stripe checkout success/cancel on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const canceled = urlParams.get('canceled')
+    const sessionId = urlParams.get('session_id')
+
+    if (success === 'true') {
+      setMessage({ type: 'success', text: 'Payment successful! Your Pro subscription is now active.' })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings?tab=integrations')
+    } else if (canceled === 'true') {
+      setMessage({ type: 'error', text: 'Payment was canceled. You can try again anytime.' })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings?tab=integrations')
+    }
+  }, [])
+
   // Fetch existing configuration
   useEffect(() => {
     const fetchConfiguration = async () => {
@@ -366,46 +384,10 @@ export function IntegrationsManager() {
     }
   }
 
-  const handlePaymentMethodSuccess = async (paymentMethodId: string) => {
-    setSaving(true)
-    setMessage(null)
-    
-    try {
-      // Detect user currency
-      const currency = getUserCurrency()
-      
-      const response = await fetch('/api/integrations/billing/payment-methods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          payment_method_id: paymentMethodId,
-          currency: currency
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setBillingConfig(data.integration)
-        setShowPaymentForm(false)
-        setMessage({ type: 'success', text: data.message || 'Payment method added successfully' })
-        
-        // Refresh payment methods list
-        const paymentMethodsResponse = await fetch('/api/integrations/billing/payment-methods')
-        if (paymentMethodsResponse.ok) {
-          const paymentMethodsData = await paymentMethodsResponse.json()
-          if (paymentMethodsData.paymentMethods) {
-            setPaymentMethods(paymentMethodsData.paymentMethods)
-          }
-        }
-      } else {
-        const errorData = await response.json()
-        setMessage({ type: 'error', text: errorData.error || 'Failed to add payment method' })
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to add payment method' })
-    } finally {
-      setSaving(false)
-    }
+  const handleCheckoutSuccess = () => {
+    setShowPaymentForm(false)
+    setMessage({ type: 'success', text: 'Redirecting to secure checkout...' })
+    // The actual success handling will happen on return from Stripe
   }
 
   const handlePaymentMethodError = (error: string) => {
@@ -693,20 +675,11 @@ export function IntegrationsManager() {
                   </Button>
                 </div>
                 <div className="bg-white p-4 rounded-lg">
-                  <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-                    <h6 className="font-medium text-indigo-900 mb-1">Pro Plan Benefits</h6>
-                    <ul className="text-sm text-indigo-700 space-y-1">
-                      <li>• Unlimited team members</li>
-                      <li>• Unlimited incidents</li>
-                      <li>• All integrations</li>
-                      <li>• Priority support</li>
-                      <li>• Monthly billing: {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / month</li>
-                    </ul>
-                  </div>
                   <PaymentMethodForm
-                    onSuccess={handlePaymentMethodSuccess}
+                    onSuccess={handleCheckoutSuccess}
                     onError={handlePaymentMethodError}
                     loading={saving}
+                    currency={getUserCurrency()}
                   />
                 </div>
               </div>
