@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-enhanced'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { STRIPE_CONFIG, formatPrice } from '@/lib/stripe'
 
 // Build subscription plans with real Stripe pricing
@@ -11,12 +11,11 @@ const buildSubscriptionPlans = () => {
       name: 'Free',
       description: 'Perfect for small teams getting started',
       price: 0,
-      yearlyPrice: 0,
+      weeklyPrice: 0,
       interval: null,
       features: [
         'Up to 5 team members',
         'Up to 100 incidents per month',
-        '1GB storage',
         'Basic integrations',
         'Email support'
       ],
@@ -27,76 +26,22 @@ const buildSubscriptionPlans = () => {
         integrations: ['pagerduty', 'grafana', 'email']
       }
     },
-    starter: {
-      id: 'starter',
-      name: 'Starter',
-      description: 'Great for growing teams',
-      price: STRIPE_CONFIG.prices.starter_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.starter_yearly.amount,
+    pro: {
+      id: 'pro',
+      name: 'Pro',
+      description: 'Professional features for growing teams',
+      price: STRIPE_CONFIG.prices.pro_monthly_usd.amount,
+      monthlyPrice: STRIPE_CONFIG.prices.pro_monthly_usd.amount,
       interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.starter_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.starter_yearly.amount),
-      features: [
-        'Up to 25 team members',
-        'Unlimited incidents',
-        '10GB storage',
-        'All integrations',
-        'Priority support',
-        'Advanced reporting'
-      ],
-      limits: {
-        seats: 25,
-        incidents: -1,
-        storage: 10,
-        integrations: 'all'
-      }
-    },
-    professional: {
-      id: 'professional',
-      name: 'Professional',
-      description: 'Perfect for established teams',
-      price: STRIPE_CONFIG.prices.professional_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.professional_yearly.amount,
-      interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.professional_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.professional_yearly.amount),
+      formattedPrice: formatPrice(STRIPE_CONFIG.prices.pro_monthly_usd.amount),
+      formattedPriceEur: formatPrice(STRIPE_CONFIG.prices.pro_monthly_eur.amount, 'eur'),
       features: [
         'Unlimited team members',
         'Unlimited incidents',
-        '100GB storage',
         'All integrations',
         'Priority support',
         'Advanced reporting',
-        'SSO authentication',
-        'API access'
-      ],
-      limits: {
-        seats: -1,
-        incidents: -1,
-        storage: 100,
-        integrations: 'all'
-      }
-    },
-    enterprise: {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'For large organizations with advanced needs',
-      price: STRIPE_CONFIG.prices.enterprise_monthly.amount,
-      yearlyPrice: STRIPE_CONFIG.prices.enterprise_yearly.amount,
-      interval: 'month',
-      formattedPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_monthly.amount),
-      formattedYearlyPrice: formatPrice(STRIPE_CONFIG.prices.enterprise_yearly.amount),
-      features: [
-        'Unlimited everything',
-        'Unlimited storage',
-        'All integrations',
-        'Dedicated support',
-        'Advanced reporting',
-        'SSO authentication',
-        'API access',
-        'Custom workflows',
-        'On-premise deployment',
-        'SLA guarantees'
+        'Monthly billing on organization anniversary'
       ],
       limits: {
         seats: -1,
@@ -117,7 +62,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { user } = authContext
-    const supabase = await createSupabaseServerClient()
+    
+    // Use service role client to bypass RLS for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Get current billing configuration
     const { data: integration, error: integrationError } = await supabase
@@ -150,7 +106,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { user } = authContext
-    const supabase = await createSupabaseServerClient()
+    
+    // Use service role client to bypass RLS for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Check if user has permission to modify billing (owners and admins only)
     if (!['owner', 'admin'].includes(user.role)) {
@@ -200,14 +167,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session for paid plans
-    const { stripe, STRIPE_CONFIG } = await import('@/lib/stripe')
+    const { stripe, STRIPE_CONFIG, getUserCurrency } = await import('@/lib/stripe')
     
-    // Find the appropriate price ID
-    const priceKey = `${plan_id}_${interval || 'monthly'}`
+    // For Pro plan, determine currency based on user preference
+    const currency = getUserCurrency()
+    const priceKey = `${plan_id}_monthly_${currency}`
     const priceConfig = STRIPE_CONFIG.prices[priceKey as keyof typeof STRIPE_CONFIG.prices]
     
     if (!priceConfig) {
-      return NextResponse.json({ error: 'Invalid plan or interval' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid plan or currency' }, { status: 400 })
     }
 
     // Create or get Stripe customer

@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail, BarChart3, CreditCard } from 'lucide-react'
+import { AlertTriangle, Check, Copy, ExternalLink, RefreshCw, Settings, Zap, Webhook, MessageSquare, Mail, BarChart3, CreditCard, Plus, Trash2 } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm'
 
 interface PagerDutyIntegration {
   id?: string
@@ -39,11 +40,20 @@ interface BillingIntegration {
   enabled: boolean
   stripeCustomerId?: string
   subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | null
-  currentPlan: 'free' | 'starter' | 'professional' | 'enterprise'
+  currentPlan: 'free' | 'pro'
   billingEmail?: string
   organizationId: string
   createdAt?: string
   updatedAt?: string
+}
+
+interface PaymentMethod {
+  id: string
+  brand: string
+  last4: string
+  exp_month: number
+  exp_year: number
+  created: number
 }
 
 interface Integration {
@@ -79,12 +89,14 @@ export function IntegrationsManager() {
     currentPlan: 'free',
     organizationId: ''
   })
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [webhookUrlGenerated, setWebhookUrlGenerated] = useState(false)
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
 
   // Check if user has permission to manage integrations
   const hasIntegrationPermission = user?.role && ['owner', 'admin', 'manager'].includes(user.role)
@@ -165,6 +177,24 @@ export function IntegrationsManager() {
     }
   }, [webhookUrlGenerated])
 
+  // Check for Stripe checkout success/cancel on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const canceled = urlParams.get('canceled')
+    const sessionId = urlParams.get('session_id')
+
+    if (success === 'true') {
+      setMessage({ type: 'success', text: 'Payment successful! Your Pro subscription is now active.' })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings?tab=integrations')
+    } else if (canceled === 'true') {
+      setMessage({ type: 'error', text: 'Payment was canceled. You can try again anytime.' })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings?tab=integrations')
+    }
+  }, [])
+
   // Fetch existing configuration
   useEffect(() => {
     const fetchConfiguration = async () => {
@@ -196,6 +226,15 @@ export function IntegrationsManager() {
           const billingData = await billingResponse.json()
           if (billingData.integration) {
             setBillingConfig(billingData.integration)
+          }
+        }
+
+        // Fetch Payment Methods
+        const paymentMethodsResponse = await fetch('/api/integrations/billing/payment-methods')
+        if (paymentMethodsResponse.ok) {
+          const paymentMethodsData = await paymentMethodsResponse.json()
+          if (paymentMethodsData.paymentMethods) {
+            setPaymentMethods(paymentMethodsData.paymentMethods)
           }
         }
       } catch (error) {
@@ -343,6 +382,24 @@ export function IntegrationsManager() {
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to open customer portal' })
     }
+  }
+
+  const handleCheckoutSuccess = () => {
+    setShowPaymentForm(false)
+    setMessage({ type: 'success', text: 'Redirecting to secure checkout...' })
+    // The actual success handling will happen on return from Stripe
+  }
+
+  const handlePaymentMethodError = (error: string) => {
+    setMessage({ type: 'error', text: error })
+  }
+
+  // Helper function to detect user's currency preference
+  const getUserCurrency = (): 'usd' | 'eur' => {
+    const locale = typeof window !== 'undefined' ? navigator.language : 'en-US'
+    const europeanLocales = ['de', 'fr', 'es', 'it', 'nl', 'pt', 'pl', 'sv', 'no', 'dk', 'fi']
+    const isEuropean = europeanLocales.some(lang => locale.toLowerCase().startsWith(lang))
+    return isEuropean || locale.toLowerCase().startsWith('en-gb') ? 'eur' : 'usd'
   }
 
   const renderPagerDutyConfig = () => (
@@ -565,6 +622,11 @@ export function IntegrationsManager() {
                   {billingConfig.subscriptionStatus || 'Free'}
                 </span>
               </p>
+              {billingConfig.currentPlan === 'pro' && (
+                <p className="text-sm text-indigo-600 mt-1">
+                  {getUserCurrency() === 'eur' ? '€9.99' : '$9.99'} / month (billed monthly on organization anniversary)
+                </p>
+              )}
             </div>
             <div className="text-right">
               <Badge 
@@ -582,44 +644,116 @@ export function IntegrationsManager() {
           </div>
         </div>
 
-        {/* Billing Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <CreditCard className="w-5 h-5 text-blue-600" />
-              <h4 className="font-medium">Payment Methods</h4>
+        {/* Payment Methods Management */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-gray-900">Subscription Management</h4>
+            <div className="flex space-x-2">
+              {/* Debug info - remove in production */}
+              <div className="text-xs text-gray-500">
+                Plan: {billingConfig.currentPlan || 'unknown'} | 
+                Status: {billingConfig.subscriptionStatus || 'none'}
+              </div>
+              
+              {billingConfig.currentPlan === 'free' && !showPaymentForm && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowPaymentForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              )}
+              
+              {billingConfig.currentPlan === 'pro' && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleCustomerPortal}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Manage Subscription
+                </Button>
+              )}
+              
+              {/* Fallback button if no plan is detected */}
+              {!billingConfig.currentPlan && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowPaymentForm(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Subscribe to Pro
+                </Button>
+              )}
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Manage your payment methods and billing details
-            </p>
+          </div>
+
+          {/* Payment Method Form */}
+          {showPaymentForm && (
+            <Card className="p-4 border-2 border-blue-200 bg-blue-50">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-medium text-blue-900">Add Payment Method & Upgrade to Pro</h5>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPaymentForm(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+                <div className="bg-white p-4 rounded-lg">
+                  <PaymentMethodForm
+                    onSuccess={handleCheckoutSuccess}
+                    onError={handlePaymentMethodError}
+                    loading={saving}
+                    currency={getUserCurrency()}
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Existing Payment Methods */}
+          {paymentMethods.length > 0 && (
+            <div className="space-y-2">
+              {paymentMethods.map((pm) => (
+                <Card key={pm.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <p className="font-medium capitalize">
+                          {pm.brand} **** **** **** {pm.last4}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Expires {pm.exp_month.toString().padStart(2, '0')}/{pm.exp_year}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">Default</Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Customer Portal Link */}
+          {billingConfig.stripeCustomerId && (
             <Button 
               variant="outline" 
               className="w-full" 
               onClick={handleCustomerPortal}
-              disabled={!billingConfig.stripeCustomerId}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Manage Payment Methods
-            </Button>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <RefreshCw className="w-5 h-5 text-green-600" />
-              <h4 className="font-medium">Subscription Plans</h4>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Upgrade or change your subscription plan
-            </p>
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => window.open('/api/integrations/billing/plans', '_blank')}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              View Plans & Pricing
+              Manage Billing & Invoices
             </Button>
-          </Card>
+          )}
         </div>
 
         {/* Usage & Limits */}
@@ -627,21 +761,27 @@ export function IntegrationsManager() {
           <h4 className="font-medium text-gray-900">Usage & Limits</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">∞</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '5' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Team Members</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Up to 5 members' : 'Unlimited'}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">∞</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '100' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Incidents/Month</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Up to 100/month' : 'Unlimited'}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">✓</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {billingConfig.currentPlan === 'free' ? '3' : '∞'}
+              </div>
               <div className="text-sm text-gray-600">Integrations</div>
               <div className="text-xs text-gray-500 mt-1">
                 {billingConfig.currentPlan === 'free' ? 'Basic integrations' : 'All integrations'}
@@ -908,6 +1048,29 @@ export function IntegrationsManager() {
               <p className="text-gray-500 text-sm mt-2">
                 Current role: <span className="font-medium">{user?.role || 'member'}</span>
               </p>
+              {!hasBillingPermission && (
+                <p className="text-amber-600 text-sm mt-2 font-medium">
+                  💡 Note: Billing & subscription management requires 'owner' or 'admin' role
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Billing Permission Notice for non-billing users */}
+      {!authLoading && hasIntegrationPermission && !hasBillingPermission && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="w-5 h-5 text-amber-600" />
+              <div>
+                <h4 className="font-medium text-amber-900">Billing & Subscription Management</h4>
+                <p className="text-sm text-amber-700">
+                  To configure payment and subscription settings, you need 'owner' or 'admin' role.
+                  Current role: <span className="font-medium">{user?.role}</span>
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

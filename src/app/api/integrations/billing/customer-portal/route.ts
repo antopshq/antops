@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-enhanced'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { user } = authContext
-    const supabase = await createSupabaseServerClient()
+    
+    // Use service role client to bypass RLS for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Check if user has permission to access billing (owners and admins only)
     if (!['owner', 'admin'].includes(user.role)) {
