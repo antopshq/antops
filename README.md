@@ -1,6 +1,6 @@
-# ANTOPS - Open Source ITIL Incident Management Platform
+# ANTOPS - AI powered IT operations platform
 
-> A modern, real-time incident management platform built with Next.js, Supabase, and AI-powered insights.
+> A modern, real-time IT operations platform built with Next.js, Supabase, and AI-powered insights.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15.4-black)](https://nextjs.org/)
