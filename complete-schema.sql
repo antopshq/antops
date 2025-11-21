@@ -3772,5 +3772,3 @@ ALTER TABLE public.slo_configurations ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ***REMOVED***
-
