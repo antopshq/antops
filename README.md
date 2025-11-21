@@ -1,36 +1,220 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ANTOPS - Open Source ITIL Incident Management Platform
 
-## Getting Started
+> A modern, real-time incident management platform built with Next.js, Supabase, and AI-powered insights.
 
-First, run the development server:
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15.4-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+
+## ✨ Features
+
+### Core ITIL Management
+- **📋 Incident Management** - Track, prioritize, and resolve incidents with full lifecycle management
+- **🔍 Problem Management** - Root cause analysis, workarounds, and permanent solutions
+- **🔄 Change Management** - Approval workflows, scheduling, and rollback planning
+- **🏗️ Infrastructure Mapping** - Visual network topology with drag-and-drop interface
+
+### Collaboration
+- **💬 Real-time Comments** - WebSocket-powered live collaboration
+- **👥 Mentions & Notifications** - @mention team members, instant notifications
+- **📎 File Attachments** - Attach files to incidents, problems, and changes
+- **🔔 Smart Notifications** - Context-aware alerts for assignments and updates
+
+### AI-Powered Features
+- **🤖 Risk Analysis** - AI-powered component risk scoring
+- **📊 Impact Assessment** - Automatic dependency analysis
+- **💡 Insights** - Intelligent recommendations for incident resolution
+- **🎯 Failure Prediction** - Proactive identification of potential issues
+
+### Integrations
+- **📟 PagerDuty** - Automatic incident creation from PagerDuty alerts
+- **📈 Grafana** - Webhook integration for monitoring alerts
+- **🔌 REST API** - Full API for custom integrations
+- **🔐 API Tokens** - Secure programmatic access
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 20+
+- npm or yarn
+- Supabase account (free tier works)
+- OpenAI API key (optional, for AI features)
+
+### Installation
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/antopshq/antops.git
+cd antops/antops-app
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Set up Supabase**
+
+- Create a new project at [supabase.com](https://supabase.com)
+- Run the database schema:
+  - Copy contents of `supabase-schema.sql`
+  - Run in Supabase SQL Editor
+  - Run migration files in `database-migrations/` directory
+
+4. **Configure environment variables**
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# OpenAI (optional, for AI features)
+OPENAI_API_KEY=sk-your-key
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+5. **Run the development server**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. **Open the app**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Visit [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏗️ Tech Stack
 
-## Learn More
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Node.js custom server (WebSocket)
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Storage**: Supabase Storage
+- **AI**: OpenAI GPT-4o-mini
+- **Real-time**: Socket.io
+- **UI Components**: Radix UI, shadcn/ui
+- **Rich Text**: Tiptap
+- **Diagrams**: ReactFlow
 
-To learn more about Next.js, take a look at the following resources:
+## 📁 Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+antops-app/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── api/               # API routes
+│   │   ├── incidents/         # Incident management pages
+│   │   ├── problems/          # Problem management pages
+│   │   ├── changes/           # Change management pages
+│   │   └── infrastructure/    # Infrastructure mapping
+│   ├── components/            # React components
+│   │   ├── ui/               # Base UI components
+│   │   ├── incidents/        # Incident-specific components
+│   │   ├── problems/         # Problem-specific components
+│   │   └── changes/          # Change-specific components
+│   └── lib/                   # Utility functions
+│       ├── supabase/         # Supabase client
+│       ├── store.ts          # Data access layer
+│       ├── openai-client.ts  # AI integration
+│       └── websocket-server.ts # Real-time server
+├── server.js                  # Custom Node.js server (WebSocket)
+├── public/                    # Static assets
+└── package.json              # Dependencies
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔧 Configuration
 
-## Deploy on Vercel
+### Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (server-side only) |
+| `OPENAI_API_KEY` | No | OpenAI API key for AI features |
+| `STRIPE_SECRET_KEY` | No | Stripe key for billing (if using) |
+| `PAGERDUTY_API_KEY` | No | PagerDuty integration key |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Database Setup
+
+The complete database schema is in `supabase-schema.sql`. Run migrations in order:
+
+```bash
+1. supabase-schema.sql           # Core tables
+2. database-migrations.sql       # Notifications & invitations
+3. database-migrations/*.sql     # Feature-specific tables
+```
+
+## 📚 Documentation
+
+- **API Documentation**: See `/docs/API.md` (coming soon)
+- **Deployment Guide**: See `/docs/DEPLOYMENT.md` (coming soon)
+- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 🗺️ Roadmap
+
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Custom workflows builder
+- [ ] Slack integration
+- [ ] MS Teams integration
+- [ ] Jira synchronization
+- [ ] Advanced SLA management
+- [ ] Multi-language support
+- [ ] Theme customization
+- [ ] Self-hosted deployment option
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔒 Security
+
+See [SECURITY.md](SECURITY.md) for security policy and reporting vulnerabilities.
+
+**Important**: Never commit sensitive data:
+- Don't commit `.env.local` files
+- Don't include API keys in code
+- Use environment variables for secrets
+
+## 💬 Support
+
+- **Issues**: [GitHub Issues](https://github.com/antopshq/antops/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/antopshq/antops/discussions)
+- **Email**: samer.naffah@antopshq.com
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Powered by [Supabase](https://supabase.com/)
+- AI by [OpenAI](https://openai.com/)
+- UI components from [Radix UI](https://radix-ui.com/)
+- Icons from [Lucide](https://lucide.dev/)
+
+---
+
+**Made with ❤️ by the ANTOPS team**
