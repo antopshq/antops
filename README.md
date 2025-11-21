@@ -59,10 +59,11 @@ npm install
 3. **Set up Supabase**
 
 - Create a new project at [supabase.com](https://supabase.com)
-- Run the database schema:
-  - Copy contents of `supabase-schema.sql`
-  - Run in Supabase SQL Editor
-  - Run migration files in `database-migrations/` directory
+- Run the complete database schema:
+  - Copy contents of `complete-schema.sql`
+  - Paste in Supabase SQL Editor
+  - Click "Run" to create all tables, functions, and policies
+  - This includes all 28 tables, RLS policies, triggers, and views
 
 4. **Configure environment variables**
 
@@ -149,13 +150,22 @@ antops-app/
 
 ### Database Setup
 
-The complete database schema is in `supabase-schema.sql`. Run migrations in order:
+The complete database schema is in **`complete-schema.sql`** (single source of truth).
 
-```bash
-1. supabase-schema.sql           # Core tables
-2. database-migrations.sql       # Notifications & invitations
-3. database-migrations/*.sql     # Feature-specific tables
-```
+**What's included:**
+- ✅ All 28 tables (incidents, problems, changes, infrastructure, integrations, etc.)
+- ✅ All Row Level Security (RLS) policies
+- ✅ All triggers and functions
+- ✅ All indexes and constraints
+- ✅ All views and sequences
+- ✅ Complete with sample data structure
+
+**To set up:**
+1. Copy the entire contents of `complete-schema.sql`
+2. Paste into Supabase SQL Editor
+3. Run once - that's it!
+
+No need for incremental migrations - everything is included.
 
 ## 📚 Documentation
 
