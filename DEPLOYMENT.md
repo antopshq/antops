@@ -49,22 +49,6 @@ ANTOPS is **open source** but requires external services to run. This means the 
 - Failure predictions
 - AI-powered recommendations
 
-### 3. Stripe (Billing) - **Optional**
-
-**What it is:** Payment processing for subscriptions
-
-**Cost:**
-- Free to set up
-- 2.9% + $0.30 per transaction
-- [Pricing details](https://stripe.com/pricing)
-
-**Setup:**
-1. Create account at [stripe.com](https://stripe.com)
-2. Get API keys
-3. Add to `.env.local`
-
-**Why optional:** Only needed if you want to charge users
-
 ## Deployment Options
 
 ### Option 1: Vercel (Recommended)
@@ -135,7 +119,6 @@ This is a future enhancement, not currently available.
 - Domain name (optional)
 - SSL certificate (Let's Encrypt is free)
 - OpenAI API key (optional, for AI features)
-- Stripe account (optional, for billing)
 
 ## Cost Estimate
 
@@ -150,7 +133,7 @@ This is a future enhancement, not currently available.
 - Vercel Pro: $20/month
 - OpenAI: ~$5/month (typical usage)
 - Domain + SSL: ~$12/year
-- **Total: ~$50-55/month**
+- **Total: ~$50/month**
 
 **Self-Hosted Alternative (if implemented):**
 - VPS (4GB RAM): $20/month
@@ -208,7 +191,7 @@ This is a future enhancement, not currently available.
 1. **Choose your path:** Open source deployment (ready now)
 2. **Set up Supabase:** Create project and run schema
 3. **Deploy application:** Vercel, VPS, or other platform
-4. **Configure integrations:** OpenAI, Stripe (optional)
+4. **Configure integrations:** OpenAI (optional)
 5. **Invite your team:** Start using ANTOPS!
 
 ## Support

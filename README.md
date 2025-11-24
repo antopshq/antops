@@ -145,7 +145,6 @@ antops-app/
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (server-side only) |
 | `OPENAI_API_KEY` | No | OpenAI API key for AI features |
-| `STRIPE_SECRET_KEY` | No | Stripe key for billing (if using) |
 | `PAGERDUTY_API_KEY` | No | PagerDuty integration key |
 
 ### Database Setup
