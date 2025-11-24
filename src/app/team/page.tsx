@@ -9,14 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip } from '@/components/ui/tooltip'
-import { Users, Mail, UserPlus, Shield, X, Building, Calendar, Crown, Edit3, Trash2, AlertTriangle, CreditCard, Clock, Search, Settings } from 'lucide-react'
+import { Users, Mail, UserPlus, Shield, X, Building, Calendar, Crown, Edit3, Trash2, AlertTriangle, Search, Settings, Clock } from 'lucide-react'
 import { UserRole, Organization, Profile } from '@/lib/types'
 import { getRoleDisplayName, getRoleDescription, getRoleColor, hasPermission, canManageUser, getAvailableRolesForUser, PERMISSIONS } from '@/lib/rbac'
 import { useAuth } from '@/hooks/useAuth'
 import { ProfileEditModal } from '@/components/profile/profile-edit-modal'
 import { SLAConfigurationModal } from '@/components/team/sla-configuration-modal'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getBillingInfo, formatExpirationDate } from '@/lib/billing'
 
 
 
@@ -386,43 +385,6 @@ export default function TeamPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Billing Plan
-              </CardTitle>
-              {organization?.billingTier === 'pro' ? (
-                <CreditCard className="w-4 h-4 text-green-600" />
-              ) : (
-                <Clock className="w-4 h-4 text-blue-600" />
-              )}
-            </CardHeader>
-            <CardContent>
-              {organization ? (() => {
-                const billingInfo = getBillingInfo(organization)
-                return (
-                  <>
-                    <div className={`text-2xl font-bold ${billingInfo.statusColor}`}>
-                      {billingInfo.tier === 'pro' ? 'Pro' : 'Free'}
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {billingInfo.tier === 'pro' 
-                        ? 'Active subscription' 
-                        : billingInfo.isExpired 
-                          ? 'Trial expired'
-                          : `${billingInfo.daysRemaining} days left`
-                      }
-                    </p>
-                  </>
-                )
-              })() : (
-                <>
-                  <div className="text-2xl font-bold text-gray-900">--</div>
-                  <p className="text-xs text-gray-600 mt-1">Loading...</p>
-                </>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Team Members List */}
