@@ -1,7 +1,31 @@
 {
-  "name": "incident-management",
-  "version": "0.1.0",
-  "private": true,
+  "name": "antops",
+  "version": "1.0.0",
+  "description": "AI-powered IT operations platform with incident, problem, and change management",
+  "private": false,
+  "license": "MIT",
+  "author": "ANTOPS (https://github.com/antopshq)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antopshq/antops.git"
+  },
+  "bugs": {
+    "url": "https://github.com/antopshq/antops/issues"
+  },
+  "homepage": "https://github.com/antopshq/antops#readme",
+  "keywords": [
+    "itil",
+    "incident-management",
+    "problem-management",
+    "change-management",
+    "infrastructure",
+    "monitoring",
+    "nextjs",
+    "supabase",
+    "typescript",
+    "ai",
+    "websocket"
+  ],
   "scripts": {
     "dev": "node server.js",
     "build": "next build",

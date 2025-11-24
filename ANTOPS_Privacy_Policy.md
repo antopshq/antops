@@ -172,16 +172,16 @@ We may share information with:
 ## Contact Information
 
 ### Privacy Questions
-- **Email**: privacy@antopshq.com
+- **Email**: contact@antopshq.com
 - **Subject Line**: "ANTOPS Privacy Policy"
 
 ### Data Protection Officer
-- **Email**: dpo@antopshq.com
+- **Email**: admin@antopshq.com
 - **For**: GDPR-related requests and concerns
 
 ### General Support
 - **Email**: support@antopshq.com
-- **Website**: https://antopshq.com/support
+- **Website**: https://www.antopshq.com
 
 ---
 

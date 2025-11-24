@@ -207,14 +207,14 @@ You agree to indemnify and hold us harmless from:
 
 ### General Questions
 - **Email**: support@antopshq.com
-- **Website**: https://antopshq.com/support
+- **Website**: https://www.antopshq.com
 
 ### Legal Notices
-- **Email**: legal@antopshq.com
-- **Mail**: ANTOPS, Inc., Legal Department, [Address TBD]
+- **Email**: admin@antopshq.com
+- **For**: Legal inquiries and compliance matters
 
 ### Abuse Reports
-- **Email**: abuse@antopshq.com
+- **Email**: admin@antopshq.com
 - **For**: Terms violations, security issues
 
 ---
