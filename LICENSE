@@ -19,3 +19,33 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+TRADEMARK NOTICE
+
+ANTOPS™ is a trademark of ANTOPS. Use of the ANTOPS name, logo, or trademarks 
+for commercial purposes, including but not limited to:
+
+- Using "ANTOPS" in product names or company names
+- Replicating the ANTOPS branding and visual identity
+- Creating derivative products that compete directly with ANTOPS
+
+requires explicit written permission from the copyright holder.
+
+ATTRIBUTION REQUIREMENT
+
+Products, services, or derivative works based on this software must include 
+visible attribution in one of the following forms:
+
+1. In the application's "About" section: "Powered by ANTOPS"
+2. In documentation: "This product is built using ANTOPS open source software"
+3. In the footer of web applications: "Powered by ANTOPS™"
+
+The attribution must be visible to end users and include a link to 
+https://github.com/antopshq/antops when possible.
+
+COMMERCIAL LICENSE
+
+For commercial use without attribution requirements or for white-label 
+licensing opportunities, please contact: naffahsamer@gmail.com
