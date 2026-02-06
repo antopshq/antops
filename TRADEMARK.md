@@ -1,0 +1,1 @@
+ANTOPS and the ANTOPS logo are trademarks of Samer NAFFAH. You may use the source code under the MIT License, but you may not use the ANTOPS name or logo for your own SaaS or public service without explicit permission.
