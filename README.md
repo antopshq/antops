@@ -213,4 +213,5 @@ See [SECURITY.md](SECURITY.md) for security policy and reporting vulnerabilities
 
 ---
 
-**Made with ❤️ by the ANTOPS team**
+**Made with ❤️ by Samex**
+**ANTOPS is an open‑source IT‑ops platform founded by Samer Naffah.**
