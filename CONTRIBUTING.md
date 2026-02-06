@@ -1,6 +1,6 @@
 # Contributing to ANTOPS
 
-Thank you for your interest in contributing to ANTOPS! We welcome contributions from the community.
+Thank you for your interest in contributing to ANTOPS! We welcome contributions from the community.By contributing, you agree that your code will be licensed under MIT.
 
 ## Code of Conduct
 
